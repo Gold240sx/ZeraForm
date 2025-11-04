@@ -1,0 +1,4 @@
+module PostgREST {
+    header "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PostgREST.build/PostgREST-Swift.h"
+    requires objc
+}

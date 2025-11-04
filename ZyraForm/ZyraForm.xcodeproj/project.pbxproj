@@ -214,6 +214,7 @@
 				E6B29E512EBA52950033C2FA /* XCRemoteSwiftPackageReference "powersync-swift" */,
 				E6B2A24B2EBA62600033C2FA /* XCRemoteSwiftPackageReference "supabase-swift" */,
 				E6B2A2522EBA69570033C2FA /* XCRemoteSwiftPackageReference "highlightswift" */,
+				E6B2A25C2EBA76C50033C2FA /* XCRemoteSwiftPackageReference "ZeraForm" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E6B29E272EBA51700033C2FA /* Products */;
@@ -637,6 +638,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.9;
+			};
+		};
+		E6B2A25C2EBA76C50033C2FA /* XCRemoteSwiftPackageReference "ZeraForm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Gold240sx/ZeraForm.git";
+			requirement = {
+				branch = main;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

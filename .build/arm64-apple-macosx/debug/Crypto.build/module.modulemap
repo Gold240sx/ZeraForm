@@ -1,0 +1,4 @@
+module Crypto {
+    header "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Crypto.build/Crypto-Swift.h"
+    requires objc
+}

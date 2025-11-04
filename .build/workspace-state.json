@@ -1,0 +1,197 @@
+{
+  "object" : {
+    "artifacts" : [
+      {
+        "kind" : "xcframework",
+        "packageRef" : {
+          "identity" : "powersync-sqlite-core-swift",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/powersync-ja/powersync-sqlite-core-swift.git",
+          "name" : "PowerSyncSQLiteCore"
+        },
+        "path" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/artifacts/powersync-sqlite-core-swift/PowerSyncSQLiteCore/powersync-sqlite-core.xcframework",
+        "source" : {
+          "checksum" : "db5b91aca43fe74ce8340af94cfe5e35fbe36e99f0c49008b6e77246aaccb4cd",
+          "type" : "remote",
+          "url" : "https://github.com/powersync-ja/powersync-sqlite-core/releases/download/v0.4.6/powersync-sqlite-core.xcframework.zip"
+        },
+        "targetName" : "PowerSyncSQLiteCore"
+      },
+      {
+        "kind" : "xcframework",
+        "packageRef" : {
+          "identity" : "powersync-swift",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/powersync-ja/powersync-swift.git",
+          "name" : "PowerSync"
+        },
+        "path" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/artifacts/powersync-swift/PowerSyncKotlin/PowerSyncKotlin.xcframework",
+        "source" : {
+          "checksum" : "4f70331c11e30625eecf4ebcebe7b562e2e0165774890d2a43480ebc3a9081cc",
+          "type" : "remote",
+          "url" : "https://github.com/powersync-ja/powersync-kotlin/releases/download/v1.6.0/PowersyncKotlinRelease.zip"
+        },
+        "targetName" : "PowerSyncKotlin"
+      }
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "powersync-sqlite-core-swift",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/powersync-ja/powersync-sqlite-core-swift.git",
+          "name" : "PowerSyncSQLiteCore"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "b2a81af14e9ad83393eb187bb02e62e6db8b5ad6",
+            "version" : "0.4.6"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "powersync-sqlite-core-swift"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "powersync-swift",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/powersync-ja/powersync-swift.git",
+          "name" : "PowerSync"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "08fd253c757cb9b425af031457610865611878e8",
+            "version" : "1.6.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "powersync-swift"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "supabase-swift",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/supabase/supabase-swift",
+          "name" : "Supabase"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "65507b524f0ec09ebb6f6b1db0db1a8e4265436e",
+            "version" : "2.37.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "supabase-swift"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-asn1",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/apple/swift-asn1.git",
+          "name" : "swift-asn1"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "40d25bbb2fc5b557a9aa8512210bded327c0f60d",
+            "version" : "1.5.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-asn1"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-clocks",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/pointfreeco/swift-clocks",
+          "name" : "swift-clocks"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "cc46202b53476d64e824e0b6612da09d84ffde8e",
+            "version" : "1.0.6"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-clocks"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-concurrency-extras",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/pointfreeco/swift-concurrency-extras",
+          "name" : "swift-concurrency-extras"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "5a3825302b1a0d744183200915a47b508c828e6f",
+            "version" : "1.3.2"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-concurrency-extras"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-crypto",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/apple/swift-crypto.git",
+          "name" : "swift-crypto"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "e8ed8867ec23bccf5f3bb9342148fa8deaff9b49",
+            "version" : "4.1.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-crypto"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-http-types",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/apple/swift-http-types.git",
+          "name" : "swift-http-types"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "45eb0224913ea070ec4fba17291b9e7ecf4749ca",
+            "version" : "1.5.1"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-http-types"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "xctest-dynamic-overlay",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
+          "name" : "xctest-dynamic-overlay"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "4c27acf5394b645b70d8ba19dc249c0472d5f618",
+            "version" : "1.7.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "xctest-dynamic-overlay"
+      }
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}

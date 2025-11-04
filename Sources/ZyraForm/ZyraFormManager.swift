@@ -7,7 +7,6 @@
 
 import Foundation
 import PowerSync
-import Supabase
 
 /// Main manager for ZyraForm - initialize once with your configuration
 @MainActor
@@ -15,11 +14,12 @@ public class ZyraFormManager {
     public static var shared: ZyraFormManager?
     
     public let config: ZyraFormConfig
-    public let database: PowerSyncDatabase
-    public let supabaseConnector: SupabaseConnector
+    public let database: PowerSync.PowerSyncDatabaseProtocol
+    public let connector: PowerSyncBackendConnectorProtocol
     
     private init(config: ZyraFormConfig) {
         self.config = config
+        self.connector = config.connector
         
         // Initialize PowerSync database
         let powerSyncSchema = PowerSync.Schema(
@@ -31,14 +31,6 @@ public class ZyraFormManager {
             dbFilename: config.dbFilename
         )
         
-        // Initialize Supabase connector
-        self.supabaseConnector = SupabaseConnector(
-            supabaseURL: config.supabaseURL,
-            supabaseKey: config.supabaseKey,
-            powerSyncEndpoint: config.powerSyncEndpoint,
-            powerSyncPassword: config.powerSyncPassword
-        )
-        
         // Set encryption password
         SecureEncryptionManager.shared.setPassword(config.powerSyncPassword)
     }
@@ -46,20 +38,19 @@ public class ZyraFormManager {
     /// Initialize ZyraForm with your configuration
     public static func initialize(with config: ZyraFormConfig) async throws {
         ZyraFormLogger.info("🚀 Initializing ZyraForm...")
-        ZyraFormLogger.info("📋 Supabase URL: \(config.supabaseURL.absoluteString)")
-        ZyraFormLogger.info("📋 PowerSync Endpoint: \(config.powerSyncEndpoint)")
+        ZyraFormLogger.info("📋 PowerSync Endpoint: (provided by connector)")
         ZyraFormLogger.info("📋 Database: \(config.dbFilename)")
         ZyraFormLogger.info("📋 User ID: \(config.userId)")
         
         shared = ZyraFormManager(config: config)
         
-        // Connect to PowerSync/Supabase
+        // Connect to PowerSync
         do {
             ZyraFormLogger.info("🔄 Connecting to PowerSync...")
-            try await shared?.database.connect(connector: shared!.supabaseConnector)
-            ZyraFormLogger.info("✅ Successfully connected to PowerSync and Supabase")
+            try await shared?.database.connect(connector: shared!.connector)
+            ZyraFormLogger.info("✅ Successfully connected to PowerSync")
         } catch {
-            ZyraFormLogger.error("❌ Failed to connect to PowerSync/Supabase")
+            ZyraFormLogger.error("❌ Failed to connect to PowerSync")
             ZyraFormLogger.error("📋 Error: \(error.localizedDescription)")
             
             // Check for PowerSync-specific errors
@@ -70,8 +61,7 @@ public class ZyraFormManager {
                 ZyraFormLogger.error("💡 Possible causes:")
                 ZyraFormLogger.error("   1. PowerSync endpoint URL is incorrect")
                 ZyraFormLogger.error("   2. PowerSync password/key is incorrect")
-                ZyraFormLogger.error("   3. Supabase session token is invalid")
-                ZyraFormLogger.error("💡 Check your PowerSync endpoint URL format: https://ID.powersync.journeyapps.com")
+                ZyraFormLogger.error("   3. Authentication token is invalid")
             }
             
             if errorString.contains("cannot connect") || errorString.contains("host") {
@@ -80,14 +70,12 @@ public class ZyraFormManager {
                 ZyraFormLogger.error("   1. PowerSync endpoint URL is incorrect")
                 ZyraFormLogger.error("   2. Network connectivity issues")
                 ZyraFormLogger.error("   3. Firewall blocking connection")
-                ZyraFormLogger.error("💡 Verify your PowerSync endpoint: \(config.powerSyncEndpoint)")
             }
             
             if errorString.contains("404") || errorString.contains("not found") {
                 ZyraFormLogger.error("❌ [404 ERROR]")
                 ZyraFormLogger.error("💡 PowerSync endpoint not found")
                 ZyraFormLogger.error("💡 Verify your PowerSync endpoint URL is correct")
-                ZyraFormLogger.error("💡 Format should be: https://YOUR-ID.powersync.journeyapps.com")
             }
             
             throw error

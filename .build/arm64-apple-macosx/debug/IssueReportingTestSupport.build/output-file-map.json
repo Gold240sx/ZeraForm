@@ -1,0 +1,17 @@
+{
+  "": {
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingTestSupport.build/master.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/xctest-dynamic-overlay/Sources/IssueReportingTestSupport/SwiftTesting.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingTestSupport.build/SwiftTesting.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingTestSupport.build/SwiftTesting.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingTestSupport.build/SwiftTesting~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingTestSupport.build/SwiftTesting.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/xctest-dynamic-overlay/Sources/IssueReportingTestSupport/XCTest.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingTestSupport.build/XCTest.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingTestSupport.build/XCTest.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingTestSupport.build/XCTest~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingTestSupport.build/XCTest.swiftdeps"
+  }
+}

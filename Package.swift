@@ -12,22 +12,32 @@ let package = Package(
     products: [
         .library(
             name: "ZyraForm",
-            targets: ["ZyraForm"])
+            targets: ["ZyraForm"]),
+        .library(
+            name: "ZyraFormSupabase",
+            targets: ["ZyraFormSupabase"])
     ],
     dependencies: [
-        .package(url: "https://github.com/journeyapps/powersync-swift", "0.4.0"..<"1.0.0"),
+        .package(url: "https://github.com/powersync-ja/powersync-swift.git", from: "1.6.0"),
         .package(url: "https://github.com/supabase/supabase-swift", from: "2.0.0")
     ],
     targets: [
         .target(
             name: "ZyraForm",
             dependencies: [
-                .product(name: "PowerSync", package: "powersync-swift"),
-                .product(name: "Supabase", package: "supabase-swift")
+                .product(name: "PowerSync", package: "powersync-swift")
             ]),
+        .target(
+            name: "ZyraFormSupabase",
+            dependencies: [
+                "ZyraForm",
+                .product(name: "Supabase", package: "supabase-swift")
+            ],
+            path: "Sources/ZyraFormSupabase"),
         .testTarget(
             name: "ZyraFormTests",
-            dependencies: ["ZyraForm"])
+            dependencies: ["ZyraForm"],
+            path: "Tests/ZyraFormTests")
     ]
 )
 

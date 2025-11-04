@@ -9,5 +9,4 @@
 @_exported import Foundation
 @_exported import SwiftUI
 @_exported import PowerSync
-@_exported import Supabase
 

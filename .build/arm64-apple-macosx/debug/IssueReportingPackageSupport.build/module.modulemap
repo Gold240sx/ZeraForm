@@ -1,0 +1,4 @@
+module IssueReportingPackageSupport {
+    header "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingPackageSupport.build/IssueReportingPackageSupport-Swift.h"
+    requires objc
+}

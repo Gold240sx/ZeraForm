@@ -1,0 +1,11 @@
+{
+  "": {
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraFormSupabase.build/master.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraFormSupabase/SupabaseConnector.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraFormSupabase.build/SupabaseConnector.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraFormSupabase.build/SupabaseConnector.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraFormSupabase.build/SupabaseConnector~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraFormSupabase.build/SupabaseConnector.swiftdeps"
+  }
+}

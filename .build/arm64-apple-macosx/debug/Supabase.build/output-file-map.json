@@ -1,0 +1,35 @@
+{
+  "": {
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/master.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/supabase-swift/Sources/Supabase/Constants.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Constants.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Constants.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Constants~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Constants.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/supabase-swift/Sources/Supabase/Deprecated.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Deprecated.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Deprecated.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Deprecated~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Deprecated.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/supabase-swift/Sources/Supabase/Exports.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Exports.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Exports.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Exports~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Exports.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/supabase-swift/Sources/Supabase/SupabaseClient.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/SupabaseClient.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/SupabaseClient.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/SupabaseClient~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/SupabaseClient.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/supabase-swift/Sources/Supabase/Types.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Types.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Types.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Types~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/Supabase.build/Types.swiftdeps"
+  }
+}

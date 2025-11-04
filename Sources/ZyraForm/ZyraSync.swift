@@ -14,7 +14,7 @@ import SwiftUI
 /// ZyraSync service for CRUD operations on any table
 @MainActor
 public class ZyraSync: ObservableObject {
-    private let powerSync: PowerSyncDatabase
+    private let powerSync: PowerSync.PowerSyncDatabaseProtocol
     private let userId: String
     private let encryptionManager: SecureEncryptionManager
     private let tableName: String
@@ -24,7 +24,7 @@ public class ZyraSync: ObservableObject {
     private var watchTask: Task<Void, Never>?
     
     /// Initialize with table name, user ID, database, and optional encryption manager
-    public init(tableName: String, userId: String, database: PowerSyncDatabase, encryptionManager: SecureEncryptionManager? = nil) {
+    public init(tableName: String, userId: String, database: PowerSync.PowerSyncDatabaseProtocol, encryptionManager: SecureEncryptionManager? = nil) {
         self.tableName = tableName
         self.userId = userId
         self.powerSync = database

@@ -10,14 +10,8 @@ import PowerSync
 
 /// Configuration for ZyraForm
 public struct ZyraFormConfig {
-    /// Supabase URL
-    public let supabaseURL: URL
-    
-    /// Supabase anon key
-    public let supabaseKey: String
-    
-    /// PowerSync endpoint (from PowerSync dashboard: https://ID.powersync.journeyapps.com)
-    public let powerSyncEndpoint: String
+    /// PowerSync backend connector (users provide their own implementation)
+    public let connector: PowerSyncBackendConnectorProtocol
     
     /// PowerSync encryption password
     public let powerSyncPassword: String
@@ -35,18 +29,14 @@ public struct ZyraFormConfig {
     public let dbFilename: String
     
     public init(
-        supabaseURL: URL,
-        supabaseKey: String,
-        powerSyncEndpoint: String,
+        connector: PowerSyncBackendConnectorProtocol,
         powerSyncPassword: String,
         dbPrefix: String = "",
         userId: String,
         schema: ZyraSchema,
         dbFilename: String = "ZyraForm.sqlite"
     ) {
-        self.supabaseURL = supabaseURL
-        self.supabaseKey = supabaseKey
-        self.powerSyncEndpoint = powerSyncEndpoint
+        self.connector = connector
         self.powerSyncPassword = powerSyncPassword
         self.dbPrefix = dbPrefix
         self.userId = userId

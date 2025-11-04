@@ -1,0 +1,11 @@
+{
+  "": {
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingPackageSupport.build/master.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/xctest-dynamic-overlay/Sources/IssueReportingPackageSupport/_Test.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingPackageSupport.build/_Test.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingPackageSupport.build/_Test.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingPackageSupport.build/_Test~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/IssueReportingPackageSupport.build/_Test.swiftdeps"
+  }
+}

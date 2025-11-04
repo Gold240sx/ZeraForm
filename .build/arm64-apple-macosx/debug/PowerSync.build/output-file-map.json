@@ -1,0 +1,329 @@
+{
+  "": {
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/master.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/DatabaseLogger.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/DatabaseLogger.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/DatabaseLogger.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/DatabaseLogger~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/DatabaseLogger.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/KotlinAdapter.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinAdapter.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinAdapter.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinAdapter~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinAdapter.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/KotlinNetworkLogger.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinNetworkLogger.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinNetworkLogger.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinNetworkLogger~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinNetworkLogger.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/KotlinPowerSyncDatabaseImpl.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinPowerSyncDatabaseImpl.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinPowerSyncDatabaseImpl.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinPowerSyncDatabaseImpl~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinPowerSyncDatabaseImpl.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/KotlinTypes.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinTypes.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinTypes.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinTypes~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinTypes.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/PowerSyncBackendConnectorAdapter.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncBackendConnectorAdapter.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncBackendConnectorAdapter.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncBackendConnectorAdapter~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncBackendConnectorAdapter.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/SafeCastError.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SafeCastError.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SafeCastError.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SafeCastError~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SafeCastError.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/db/KotlinConnectionContext.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinConnectionContext.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinConnectionContext.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinConnectionContext~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinConnectionContext.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/db/KotlinCrudBatch.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudBatch.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudBatch.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudBatch~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudBatch.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/db/KotlinCrudEntry.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudEntry.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudEntry.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudEntry~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudEntry.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/db/KotlinCrudTransaction.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudTransaction.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudTransaction.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudTransaction~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudTransaction.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/db/KotlinCrudTransactions.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudTransactions.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudTransactions.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudTransactions~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinCrudTransactions.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/db/KotlinJsonParam.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinJsonParam.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinJsonParam.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinJsonParam~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinJsonParam.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/db/KotlinSqlCursor.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSqlCursor.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSqlCursor.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSqlCursor~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSqlCursor.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/sync/KotlinSyncStatus.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSyncStatus.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSyncStatus.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSyncStatus~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSyncStatus.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/sync/KotlinSyncStatusData.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSyncStatusData.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSyncStatusData.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSyncStatusData~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/KotlinSyncStatusData.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Kotlin/wrapQueryCursor.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/wrapQueryCursor.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/wrapQueryCursor.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/wrapQueryCursor~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/wrapQueryCursor.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Logger.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Logger.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Logger.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Logger~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Logger.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/PowerSyncCredentials.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncCredentials.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncCredentials.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncCredentials~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncCredentials.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/PowerSyncDatabase.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncDatabase.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncDatabase.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncDatabase~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncDatabase.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/LoggerProtocol.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/LoggerProtocol.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/LoggerProtocol.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/LoggerProtocol~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/LoggerProtocol.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/PowerSyncBackendConnector.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncBackendConnector.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncBackendConnector.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncBackendConnector~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncBackendConnector.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/PowerSyncDatabaseProtocol.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncDatabaseProtocol.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncDatabaseProtocol.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncDatabaseProtocol~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncDatabaseProtocol.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/PowerSyncError.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncError.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncError.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncError~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSyncError.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/QueriesProtocol.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/QueriesProtocol.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/QueriesProtocol.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/QueriesProtocol~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/QueriesProtocol.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/Schema/Column.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Column.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Column.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Column~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Column.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/Schema/Index.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Index.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Index.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Index~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Index.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/Schema/IndexedColumn.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/IndexedColumn.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/IndexedColumn.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/IndexedColumn~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/IndexedColumn.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/Schema/RawTable.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/RawTable.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/RawTable.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/RawTable~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/RawTable.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/Schema/Schema.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Schema.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Schema.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Schema~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Schema.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/Schema/Table.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Table.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Table.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Table~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Table.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/SyncRequestLogger.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncRequestLogger.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncRequestLogger.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncRequestLogger~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncRequestLogger.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/db/ConnectionContext.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/ConnectionContext.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/ConnectionContext.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/ConnectionContext~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/ConnectionContext.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/db/CrudBatch.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudBatch.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudBatch.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudBatch~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudBatch.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/db/CrudEntry.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudEntry.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudEntry.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudEntry~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudEntry.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/db/CrudTransaction.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudTransaction.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudTransaction.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudTransaction~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/CrudTransaction.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/db/JsonParam.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/JsonParam.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/JsonParam.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/JsonParam~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/JsonParam.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/db/SqlCursor.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SqlCursor.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SqlCursor.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SqlCursor~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SqlCursor.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/db/Transaction.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Transaction.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Transaction.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Transaction~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Transaction.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/sync/BucketPriority.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/BucketPriority.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/BucketPriority.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/BucketPriority~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/BucketPriority.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/sync/DownloadProgress.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/DownloadProgress.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/DownloadProgress.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/DownloadProgress~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/DownloadProgress.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/sync/PriorityStatusEntry.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PriorityStatusEntry.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PriorityStatusEntry.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PriorityStatusEntry~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PriorityStatusEntry.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/Protocol/sync/SyncStatusData.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncStatusData.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncStatusData.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncStatusData~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncStatusData.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/Attachment.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Attachment.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Attachment.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Attachment~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/Attachment.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/AttachmentContext.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentContext.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentContext.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentContext~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentContext.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/AttachmentQueue.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentQueue.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentQueue.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentQueue~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentQueue.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/AttachmentService.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentService.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentService.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentService~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentService.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/AttachmentTable.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentTable.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentTable.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentTable~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/AttachmentTable.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/FileManagerLocalStorage.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/FileManagerLocalStorage.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/FileManagerLocalStorage.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/FileManagerLocalStorage~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/FileManagerLocalStorage.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/LocalStorage.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/LocalStorage.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/LocalStorage.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/LocalStorage~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/LocalStorage.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/RemoteStorage.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/RemoteStorage.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/RemoteStorage.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/RemoteStorage~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/RemoteStorage.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/SyncErrorHandler.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncErrorHandler.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncErrorHandler.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncErrorHandler~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncErrorHandler.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/SyncingService.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncingService.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncingService.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncingService~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/SyncingService.swiftdeps"
+  },
+  "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/checkouts/powersync-swift/Sources/PowerSync/attachments/WatchedAttachmentItem.swift": {
+    "dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/WatchedAttachmentItem.d",
+    "object": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/WatchedAttachmentItem.swift.o",
+    "swiftmodule": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/WatchedAttachmentItem~partial.swiftmodule",
+    "swift-dependencies": "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/WatchedAttachmentItem.swiftdeps"
+  }
+}

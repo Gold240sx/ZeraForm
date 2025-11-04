@@ -1,0 +1,4 @@
+module SwiftASN1 {
+    header "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/SwiftASN1.build/SwiftASN1-Swift.h"
+    requires objc
+}

@@ -1,0 +1,4 @@
+module CryptoExtras {
+    header "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/CryptoExtras.build/CryptoExtras-Swift.h"
+    requires objc
+}

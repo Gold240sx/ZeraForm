@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import PowerSync
 
 // MARK: - Form Values Protocol
 
@@ -288,19 +289,22 @@ public class ZyraForm<Values: FormValues>: ObservableObject {
         return isValid
     }
     
-    public func validateField(_ field: String) {
-        guard let column = schema.columns.first(where: { $0.name == field }) else { return }
+    @discardableResult
+    public func validateField(_ field: String) -> Bool {
+        guard let column = schema.columns.first(where: { $0.name == field }) else { return true }
         
         let value = getValue(for: field)
         let error = validateColumn(column, value: value)
         
         if let error = error {
             errors.set(error, for: field)
+            isValid = errors.errors.isEmpty
+            return false
         } else {
             errors.remove(field)
+            isValid = errors.errors.isEmpty
+            return true
         }
-        
-        isValid = errors.errors.isEmpty
     }
     
     private func validateColumn(_ column: ColumnMetadata, value: Any?) -> String? {
@@ -398,7 +402,7 @@ public class ZyraForm<Values: FormValues>: ObservableObject {
         isSubmitting = false
     }
     
-    public func submit(handler: @escaping (Values) async throws -> Void) async {
+    public func submit(handler: @escaping (Values) async throws -> Void) async throws {
         guard validate() else { return }
         
         isSubmitting = true
@@ -422,8 +426,8 @@ public class ZyraForm<Values: FormValues>: ObservableObject {
         submit(handler: handler)
     }
     
-    public func handleSubmit(handler: @escaping (Values) async throws -> Void) async {
-        await submit(handler: handler)
+    public func handleSubmit(handler: @escaping (Values) async throws -> Void) async throws {
+        try await submit(handler: handler)
     }
     
     // MARK: - Field Watching
@@ -483,7 +487,7 @@ public class ZyraForm<Values: FormValues>: ObservableObject {
         recordId: String,
         tableName: String,
         userId: String,
-        database: PowerSyncDatabase,
+        database: PowerSync.PowerSyncDatabaseProtocol,
         fields: [String]? = nil
     ) async throws {
         let service = ZyraSync(tableName: tableName, userId: userId, database: database)

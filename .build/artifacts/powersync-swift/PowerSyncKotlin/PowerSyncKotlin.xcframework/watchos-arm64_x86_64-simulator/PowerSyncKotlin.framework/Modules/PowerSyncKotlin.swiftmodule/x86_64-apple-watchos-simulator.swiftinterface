@@ -1,0 +1,1398 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.1.2 effective-5.10 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)
+// swift-module-flags: -target x86_64-apple-watchos7.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -O -module-name PowerSyncKotlin
+// swift-module-flags-ignorable:  -interface-compiler-version 6.1.2
+import Foundation
+@_exported import PowerSyncKotlin
+import Swift
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+public enum Skie {
+  public enum KotlinxCoroutinesCore {
+    public enum Flow {
+      public typealias __Kotlin = PowerSyncKotlin.Kotlinx_coroutines_coreFlow
+    }
+    public enum SharedFlow {
+      public typealias __Kotlin = PowerSyncKotlin.Kotlinx_coroutines_coreSharedFlow
+    }
+    public enum StateFlow {
+      public typealias __Kotlin = PowerSyncKotlin.Kotlinx_coroutines_coreStateFlow
+    }
+    public enum MutableSharedFlow {
+      public typealias __Kotlin = PowerSyncKotlin.Kotlinx_coroutines_coreMutableSharedFlow
+    }
+    public enum MutableStateFlow {
+      public typealias __Kotlin = PowerSyncKotlin.Kotlinx_coroutines_coreMutableStateFlow
+    }
+    public enum Runnable {
+      public typealias __Kotlin = PowerSyncKotlin.Kotlinx_coroutines_coreRunnable
+    }
+    public enum SelectClause0 {
+    }
+    public enum SelectClause {
+    }
+    public enum SelectInstance {
+    }
+    public enum SelectClause1 {
+    }
+    public enum SelectClause2 {
+    }
+  }
+  public typealias org_jetbrains_kotlinx__kotlinx_coroutines_core = PowerSyncKotlin.Skie.KotlinxCoroutinesCore
+  public enum RuntimeKotlin {
+    public enum SkieColdFlowIterator {
+      public typealias __Kotlin = PowerSyncKotlin.SkieColdFlowIterator
+    }
+    public enum SkieKotlinFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinFlow
+    }
+    public enum SkieKotlinMutableSharedFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinMutableSharedFlow
+    }
+    public enum SkieKotlinMutableStateFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinMutableStateFlow
+    }
+    public enum SkieKotlinOptionalFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinOptionalFlow
+    }
+    public enum SkieKotlinOptionalMutableSharedFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow
+    }
+    public enum SkieKotlinOptionalMutableStateFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow
+    }
+    public enum SkieKotlinOptionalSharedFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinOptionalSharedFlow
+    }
+    public enum SkieKotlinOptionalStateFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinOptionalStateFlow
+    }
+    public enum SkieKotlinSharedFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinSharedFlow
+    }
+    public enum SkieKotlinStateFlow {
+      public typealias __Kotlin = PowerSyncKotlin.SkieKotlinStateFlow
+    }
+    public enum Skie_CancellationHandler {
+      public typealias __Kotlin = PowerSyncKotlin.Skie_CancellationHandler
+    }
+    public enum Skie_DispatcherDelegate {
+      public typealias __Kotlin = PowerSyncKotlin.Skie_DispatcherDelegate
+    }
+    public enum Skie_SuspendHandler {
+      public typealias __Kotlin = PowerSyncKotlin.Skie_SuspendHandler
+    }
+    public enum Skie_SuspendResult {
+      public typealias __Kotlin = PowerSyncKotlin.Skie_SuspendResult
+      public enum Success {
+        public typealias __Kotlin = PowerSyncKotlin.Skie_SuspendResult.Success
+      }
+      public enum Error {
+        public typealias __Kotlin = PowerSyncKotlin.Skie_SuspendResult.Error
+      }
+      public enum Canceled {
+        public typealias __Kotlin = PowerSyncKotlin.Skie_SuspendResult.Canceled
+      }
+    }
+  }
+  public typealias co_touchlab_skie__runtime_kotlin = PowerSyncKotlin.Skie.RuntimeKotlin
+  public enum Core {
+    public enum BaseTable {
+    }
+    public enum PendingStatementParameter {
+    }
+    public enum SyncClientConfiguration {
+    }
+    public enum JsonParam {
+    }
+  }
+  public typealias com_powersync__core = PowerSyncKotlin.Skie.Core
+  public enum KotlinxSerializationCore {
+    public enum SerialKind {
+    }
+    public enum SerializersModule {
+    }
+    public enum PolymorphicKind {
+    }
+    public enum PrimitiveKind {
+    }
+    public enum StructureKind {
+    }
+  }
+  public typealias org_jetbrains_kotlinx__kotlinx_serialization_core = PowerSyncKotlin.Skie.KotlinxSerializationCore
+  public enum KotlinxIoCore {
+    public enum FileSystem {
+    }
+    public enum Source {
+    }
+    public enum Sink {
+    }
+  }
+  public typealias org_jetbrains_kotlinx__kotlinx_io_core = PowerSyncKotlin.Skie.KotlinxIoCore
+  public enum KotlinxSerializationJson {
+    public enum JsonElement {
+    }
+    public enum JsonPrimitive {
+    }
+  }
+  public typealias org_jetbrains_kotlinx__kotlinx_serialization_json = PowerSyncKotlin.Skie.KotlinxSerializationJson
+  public enum com_powersync__PowerSyncKotlin {
+    public enum PowerSyncResult {
+    }
+  }
+  public typealias com_powersync__PowerSyncKotlin_ = PowerSyncKotlin.Skie.com_powersync__PowerSyncKotlin
+}
+@_hasMissingDesignatedInitializers public class SkieSwiftFlowIterator<T> : _Concurrency.AsyncIteratorProtocol {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func next() async -> T?
+  @objc deinit
+  public typealias Element = T
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncIteratorProtocol, Failure) public typealias __AsyncIteratorProtocol_Failure = Swift.Never
+}
+public protocol SkieSwiftFlowProtocol<Element> : _Concurrency.AsyncSequence {
+  associatedtype Element
+  associatedtype Delegate : PowerSyncKotlin.Kotlinx_coroutines_coreFlow
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias Element = T
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftOptionalFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinOptionalFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias Element = T?
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinOptionalFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftSharedFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  final public var replayCache: [T] {
+    get
+  }
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinSharedFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftSharedFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinSharedFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftSharedFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinSharedFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinSharedFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias Element = T
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinSharedFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreSharedFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftOptionalSharedFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  final public var replayCache: [T?] {
+    get
+  }
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalSharedFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalSharedFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalSharedFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias Element = T?
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinOptionalSharedFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreSharedFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftMutableSharedFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  final public var subscriptionCount: PowerSyncKotlin.SkieSwiftStateFlow<PowerSyncKotlin.KotlinInt> {
+    get
+  }
+  final public var replayCache: [T] {
+    get
+  }
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  final public func emit(value: T) async throws
+  final public func tryEmit(value: T) -> Swift.Bool
+  final public func resetReplayCache()
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinMutableSharedFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinMutableSharedFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinMutableSharedFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinMutableSharedFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias Element = T
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinMutableSharedFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreMutableSharedFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftOptionalMutableSharedFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  final public var subscriptionCount: PowerSyncKotlin.SkieSwiftStateFlow<PowerSyncKotlin.KotlinInt> {
+    get
+  }
+  final public var replayCache: [T?] {
+    get
+  }
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  final public func emit(value: T?) async throws
+  final public func tryEmit(value: T?) -> Swift.Bool
+  final public func resetReplayCache()
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias Element = T?
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreMutableSharedFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftStateFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  final public var value: T {
+    get
+  }
+  final public var replayCache: [T] {
+    get
+  }
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinStateFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftStateFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinStateFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftStateFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinStateFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinStateFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias Element = T
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinStateFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreStateFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftOptionalStateFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  final public var value: T? {
+    get
+  }
+  final public var replayCache: [T?] {
+    get
+  }
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalStateFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalStateFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalStateFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinOptionalStateFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias Element = T?
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinOptionalStateFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreStateFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftMutableStateFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  final public var value: T {
+    get
+    set(value)
+  }
+  final public var replayCache: [T] {
+    get
+  }
+  final public var subscriptionCount: PowerSyncKotlin.SkieSwiftStateFlow<PowerSyncKotlin.KotlinInt> {
+    get
+  }
+  final public func compareAndSet(expect: T, update: T) -> Swift.Bool
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  final public func emit(value: T) async throws
+  final public func tryEmit(value: T) -> Swift.Bool
+  final public func resetReplayCache()
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinMutableStateFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftMutableStateFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinMutableStateFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftMutableStateFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinMutableStateFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinMutableStateFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T>
+  public typealias Element = T
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinMutableStateFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreMutableStateFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers final public class SkieSwiftOptionalMutableStateFlow<T> : PowerSyncKotlin.SkieSwiftFlowProtocol, Swift._ObjectiveCBridgeable {
+  final public var value: T? {
+    get
+    set(value)
+  }
+  final public var replayCache: [T?] {
+    get
+  }
+  final public var subscriptionCount: PowerSyncKotlin.SkieSwiftStateFlow<PowerSyncKotlin.KotlinInt> {
+    get
+  }
+  final public func compareAndSet(expect: T?, update: T?) -> Swift.Bool
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  final public func emit(value: T?) async throws
+  final public func tryEmit(value: T?) -> Swift.Bool
+  final public func resetReplayCache()
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<Swift.AnyObject>, result: inout PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<Swift.AnyObject>?) -> Self
+  final public func _bridgeToObjectiveC() -> PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<Swift.AnyObject>
+  final public func makeAsyncIterator() -> PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias AsyncIterator = PowerSyncKotlin.SkieSwiftFlowIterator<T?>
+  public typealias Element = T?
+  public typealias _ObjectiveCType = PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<Swift.AnyObject>
+  public typealias Delegate = any PowerSyncKotlin.Kotlinx_coroutines_coreMutableStateFlow
+  @available(iOS 18.0, tvOS 18.0, watchOS 11.0, visionOS 2.0, macOS 15.0, *)
+  @_implements(_Concurrency.AsyncSequence, Failure) public typealias __AsyncSequence_Failure = Swift.Never
+  @objc deinit
+}
+extension PowerSyncKotlin.FunctionsKt {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  @available(*, deprecated, message: "Use runWrapped instead")
+  public static func runWrappedSuspending(block: any PowerSyncKotlin.KotlinSuspendFunction0) async throws -> Any?
+}
+public func runWrapped(block: @escaping () -> Any?) -> Any?
+@available(*, deprecated, message: "Use runWrapped instead")
+public func __runWrappedSuspending(block: any PowerSyncKotlin.KotlinSuspendFunction0, completionHandler: @escaping (Any?, (any Swift.Error)?) -> Swift.Void)
+@available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+@available(*, deprecated, message: "Use runWrapped instead")
+public func runWrappedSuspending(block: any PowerSyncKotlin.KotlinSuspendFunction0) async throws -> Any?
+extension PowerSyncKotlin.PowerSyncDatabase {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func close() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func connect(connector: PowerSyncKotlin.PowerSyncBackendConnector, crudThrottleMs: Swift.Int64, retryDelayMs: Swift.Int64, params: [Swift.String : Any], options: PowerSyncKotlin.SyncOptions) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func disconnect() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func disconnectAndClear(clearLocal: Swift.Bool) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getCrudBatch(limit: Swift.Int32) async throws -> PowerSyncKotlin.CrudBatch?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getNextCrudTransaction() async throws -> PowerSyncKotlin.CrudTransaction?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getPowerSyncVersion() async throws -> Swift.String
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func updateSchema(schema: PowerSyncKotlin.Schema) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func waitForFirstSync() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func waitForFirstSync(priority: Swift.Int32) async throws
+}
+extension PowerSyncKotlin.KotlinSuspendFunction1 {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func invoke(p1: Any?) async throws -> Any?
+}
+extension PowerSyncKotlin.Kotlinx_coroutines_coreFlow {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func collect(collector: any PowerSyncKotlin.Kotlinx_coroutines_coreFlowCollector) async throws
+}
+extension PowerSyncKotlin.Kotlinx_coroutines_coreFlowCollector {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func emit(value: Any?) async throws
+}
+extension PowerSyncKotlin.PowerSyncBackendConnector {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func fetchCredentials() async throws -> PowerSyncKotlin.PowerSyncCredentials?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getCredentialsCached() async throws -> PowerSyncKotlin.PowerSyncCredentials?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func updateCredentials() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func uploadData(database: any PowerSyncKotlin.PowerSyncDatabase) async throws
+}
+extension PowerSyncKotlin.Kotlinx_coroutines_coreJob {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func join() async throws
+}
+extension PowerSyncKotlin.Queries {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func execute(sql: Swift.String, parameters: [Any]?) async throws -> PowerSyncKotlin.KotlinLong
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func get(sql: Swift.String, parameters: [Any]?, mapper: @escaping (any PowerSyncKotlin.SqlCursor) -> Any) async throws -> Any
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getAll(sql: Swift.String, parameters: [Any]?, mapper: @escaping (any PowerSyncKotlin.SqlCursor) -> Any) async throws -> [Any]
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getOptional(sql: Swift.String, parameters: [Any]?, mapper: @escaping (any PowerSyncKotlin.SqlCursor) -> Any) async throws -> Any?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func readLock(callback: any PowerSyncKotlin.ThrowableLockCallback) async throws -> Any?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func readTransaction(callback: any PowerSyncKotlin.ThrowableTransactionCallback) async throws -> Any?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func writeLock(callback: any PowerSyncKotlin.ThrowableLockCallback) async throws -> Any?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func writeTransaction(callback: any PowerSyncKotlin.ThrowableTransactionCallback) async throws -> Any?
+}
+extension PowerSyncKotlin.SQLiteConnectionPool {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func close() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func read(callback: any PowerSyncKotlin.KotlinSuspendFunction1) async throws -> Any?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func withAllConnections(action: any PowerSyncKotlin.KotlinSuspendFunction2) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func write(callback: any PowerSyncKotlin.KotlinSuspendFunction1) async throws -> Any?
+}
+extension PowerSyncKotlin.KotlinSuspendFunction2 {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func invoke(p1: Any?, p2: Any?) async throws -> Any?
+}
+extension PowerSyncKotlin.AttachmentQueue {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func clearQueue() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func close() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func deleteFile(attachmentId: Swift.String, updateHook: @escaping (any PowerSyncKotlin.ConnectionContext, PowerSyncKotlin.Attachment) -> Swift.Void) async throws -> PowerSyncKotlin.Attachment
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func expireCache() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func processWatchedAttachments(items: [PowerSyncKotlin.WatchedAttachmentItem]) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func resolveNewAttachmentFilename(attachmentId: Swift.String, fileExtension: Swift.String?) async throws -> Swift.String
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func saveFile(data: PowerSyncKotlin.SkieSwiftFlow<PowerSyncKotlin.KotlinByteArray>, mediaType: Swift.String, fileExtension: Swift.String?, metaData: Swift.String?, updateHook: @escaping (any PowerSyncKotlin.ConnectionContext, PowerSyncKotlin.Attachment) -> Swift.Void) async throws -> PowerSyncKotlin.Attachment
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func startSync() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func stopSyncing() async throws
+}
+extension PowerSyncKotlin.RemoteStorage {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func deleteFile(attachment: PowerSyncKotlin.Attachment) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func downloadFile(attachment: PowerSyncKotlin.Attachment) async throws -> any PowerSyncKotlin.Kotlinx_coroutines_coreFlow
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func uploadFile(fileData: PowerSyncKotlin.SkieSwiftFlow<PowerSyncKotlin.KotlinByteArray>, attachment: PowerSyncKotlin.Attachment) async throws
+}
+extension PowerSyncKotlin.LocalStorage {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func doCopyFile(sourcePath: Swift.String, targetPath: Swift.String) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func deleteFile(filePath: Swift.String) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func fileExists(filePath: Swift.String) async throws -> PowerSyncKotlin.KotlinBoolean
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func makeDir(path: Swift.String) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func readFile(filePath: Swift.String, mediaType: Swift.String?) async throws -> any PowerSyncKotlin.Kotlinx_coroutines_coreFlow
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func rmDir(path: Swift.String) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func saveFile(filePath: Swift.String, data: PowerSyncKotlin.SkieSwiftFlow<PowerSyncKotlin.KotlinByteArray>) async throws -> PowerSyncKotlin.KotlinLong
+}
+extension PowerSyncKotlin.AttachmentService {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func withContext(action: any PowerSyncKotlin.KotlinSuspendFunction1) async throws -> Any?
+}
+extension PowerSyncKotlin.SyncErrorHandler {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func onDeleteError(attachment: PowerSyncKotlin.Attachment, exception: PowerSyncKotlin.KotlinException) async throws -> PowerSyncKotlin.KotlinBoolean
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func onDownloadError(attachment: PowerSyncKotlin.Attachment, exception: PowerSyncKotlin.KotlinException) async throws -> PowerSyncKotlin.KotlinBoolean
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func onUploadError(attachment: PowerSyncKotlin.Attachment, exception: PowerSyncKotlin.KotlinException) async throws -> PowerSyncKotlin.KotlinBoolean
+}
+extension PowerSyncKotlin.AttachmentContext {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func clearQueue() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func deleteArchivedAttachments(callback: any PowerSyncKotlin.KotlinSuspendFunction1) async throws -> PowerSyncKotlin.KotlinBoolean
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func deleteAttachment(id: Swift.String) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getActiveAttachments() async throws -> [PowerSyncKotlin.Attachment]
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getAttachment(id: Swift.String) async throws -> PowerSyncKotlin.Attachment?
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getAttachmentIds() async throws -> [Swift.String]
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func getAttachments() async throws -> [PowerSyncKotlin.Attachment]
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func ignoreAttachment(id: Swift.String) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func saveAttachment(attachment: PowerSyncKotlin.Attachment) async throws -> PowerSyncKotlin.Attachment
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func saveAttachments(attachments: [PowerSyncKotlin.Attachment]) async throws
+}
+extension PowerSyncKotlin.SyncingService {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func close() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func deleteArchivedAttachments(context: any PowerSyncKotlin.AttachmentContext) async throws -> PowerSyncKotlin.KotlinBoolean
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func startSync(period: Swift.Int64) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func stopSync() async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func triggerSync() async throws
+}
+extension PowerSyncKotlin.KotlinSuspendFunction0 {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func invoke() async throws -> Any?
+}
+extension PowerSyncKotlin.SQLiteConnectionLease {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func execSQL(sql: Swift.String) async throws
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func isInTransaction() async throws -> PowerSyncKotlin.KotlinBoolean
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func usePrepared(sql: Swift.String, block: @escaping (any PowerSyncKotlin.SqliteSQLiteStatement) -> Any?) async throws -> Any?
+}
+extension PowerSyncKotlin.Skie.RuntimeKotlin.SkieColdFlowIterator {
+  public struct __Suspend<E> where E : AnyObject {
+    public let __kotlinObject: PowerSyncKotlin.SkieColdFlowIterator<E>
+    public init(_ __kotlinObject: PowerSyncKotlin.SkieColdFlowIterator<E>)
+  }
+}
+public func skie<E>(_ kotlinObject: PowerSyncKotlin.SkieColdFlowIterator<E>) -> PowerSyncKotlin.Skie.RuntimeKotlin.SkieColdFlowIterator.__Suspend<E> where E : AnyObject
+extension PowerSyncKotlin.Skie.RuntimeKotlin.SkieColdFlowIterator.__Suspend {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func hasNext() async throws -> PowerSyncKotlin.KotlinBoolean
+}
+extension PowerSyncKotlin.SwiftBackendConnector {
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func fetchCredentials() async throws -> PowerSyncKotlin.PowerSyncResult
+  @available(iOS 13, macOS 10.15, watchOS 6, tvOS 13, *)
+  public func uploadData() async throws -> PowerSyncKotlin.PowerSyncResult
+}
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T> where T : AnyObject
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T> where T : AnyObject
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T> where T : AnyObject
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T> where T : AnyObject
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T> where T : AnyObject
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+}
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T> where T : AnyObject
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftOptionalFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftOptionalFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>)
+}
+public func SkieKotlinSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinSharedFlow<T> where T : AnyObject
+public func SkieKotlinSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinSharedFlow<T> where T : AnyObject
+public func SkieKotlinSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinSharedFlow<T> where T : AnyObject
+public func SkieKotlinSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinSharedFlow<T> where T : AnyObject
+public func SkieKotlinSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftSharedFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftSharedFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+}
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftOptionalSharedFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftOptionalSharedFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>)
+}
+public func SkieKotlinMutableSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinMutableSharedFlow<T> where T : AnyObject
+public func SkieKotlinMutableSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinMutableSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftMutableSharedFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftMutableSharedFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+}
+public func SkieKotlinOptionalMutableSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalMutableSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T> where T : AnyObject
+public func SkieKotlinOptionalMutableSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalMutableSharedFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableSharedFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableSharedFlow<T>)
+}
+public func SkieKotlinStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinStateFlow<T> where T : AnyObject
+public func SkieKotlinStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinStateFlow<T> where T : AnyObject
+public func SkieKotlinStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinStateFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinStateFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftStateFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftStateFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+}
+public func SkieKotlinOptionalStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalStateFlow<T> where T : AnyObject
+public func SkieKotlinOptionalStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalStateFlow<T> where T : AnyObject
+public func SkieKotlinOptionalStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalStateFlow<T> where T : AnyObject
+public func SkieKotlinOptionalStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalStateFlow<T> where T : AnyObject
+public func SkieKotlinOptionalStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalStateFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalStateFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalStateFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalStateFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftOptionalStateFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftOptionalStateFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>)
+}
+public func SkieKotlinMutableStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinMutableStateFlow<T> where T : AnyObject
+public func SkieKotlinMutableStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinMutableStateFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftMutableStateFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftMutableStateFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+}
+public func SkieKotlinOptionalMutableStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T> where T : AnyObject
+public func SkieKotlinOptionalMutableStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T> where T : AnyObject
+public func SkieKotlinOptionalMutableStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+public func SkieKotlinOptionalMutableStateFlow<T>(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>) -> PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T._ObjectiveCType> where T : Swift._ObjectiveCBridgeable
+extension PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow where T : AnyObject {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>)
+}
+extension PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow where T : Swift._ObjectiveCBridgeable {
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieKotlinOptionalMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T._ObjectiveCType>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftMutableStateFlow<T>)
+  convenience public init(_ flow: PowerSyncKotlin.SkieSwiftOptionalMutableStateFlow<T>)
+}
+@frozen public enum ColumnType : Swift.Hashable, Swift.CaseIterable, Swift._ObjectiveCBridgeable {
+  case integer
+  case text
+  case real
+  public var name: Swift.String {
+    get
+  }
+  public var ordinal: Swift.Int32 {
+    get
+  }
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.__ColumnType, result: inout PowerSyncKotlin.ColumnType?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__ColumnType, result: inout PowerSyncKotlin.ColumnType?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__ColumnType?) -> PowerSyncKotlin.ColumnType
+  public func _bridgeToObjectiveC() -> PowerSyncKotlin.__ColumnType
+  public typealias _ObjectiveCType = PowerSyncKotlin.__ColumnType
+  public static func == (a: PowerSyncKotlin.ColumnType, b: PowerSyncKotlin.ColumnType) -> Swift.Bool
+  public typealias AllCases = [PowerSyncKotlin.ColumnType]
+  nonisolated public static var allCases: [PowerSyncKotlin.ColumnType] {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension PowerSyncKotlin.ColumnType {
+  public func toKotlinEnum() -> PowerSyncKotlin.__ColumnType
+}
+extension PowerSyncKotlin.__ColumnType {
+  public func toSwiftEnum() -> PowerSyncKotlin.ColumnType
+}
+@frozen public enum UpdateType : Swift.Hashable, Swift.CaseIterable, Swift._ObjectiveCBridgeable {
+  case put
+  case patch
+  case delete
+  public var name: Swift.String {
+    get
+  }
+  public var ordinal: Swift.Int32 {
+    get
+  }
+  public static var companion: PowerSyncKotlin.__UpdateType.Companion {
+    get
+  }
+  public func toJson() -> Swift.String
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.__UpdateType, result: inout PowerSyncKotlin.UpdateType?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__UpdateType, result: inout PowerSyncKotlin.UpdateType?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__UpdateType?) -> PowerSyncKotlin.UpdateType
+  public func _bridgeToObjectiveC() -> PowerSyncKotlin.__UpdateType
+  public typealias _ObjectiveCType = PowerSyncKotlin.__UpdateType
+  public typealias Companion = PowerSyncKotlin.__UpdateType.Companion
+  public static func == (a: PowerSyncKotlin.UpdateType, b: PowerSyncKotlin.UpdateType) -> Swift.Bool
+  public typealias AllCases = [PowerSyncKotlin.UpdateType]
+  nonisolated public static var allCases: [PowerSyncKotlin.UpdateType] {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension PowerSyncKotlin.UpdateType {
+  public func toKotlinEnum() -> PowerSyncKotlin.__UpdateType
+}
+extension PowerSyncKotlin.__UpdateType {
+  public func toSwiftEnum() -> PowerSyncKotlin.UpdateType
+}
+@frozen public enum AttachmentState : Swift.Hashable, Swift.CaseIterable, Swift._ObjectiveCBridgeable {
+  case queuedDownload
+  case queuedUpload
+  case queuedDelete
+  case synced
+  case archived
+  public var name: Swift.String {
+    get
+  }
+  public var ordinal: Swift.Int32 {
+    get
+  }
+  public static var companion: PowerSyncKotlin.__AttachmentState.Companion {
+    get
+  }
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.__AttachmentState, result: inout PowerSyncKotlin.AttachmentState?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__AttachmentState, result: inout PowerSyncKotlin.AttachmentState?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__AttachmentState?) -> PowerSyncKotlin.AttachmentState
+  public func _bridgeToObjectiveC() -> PowerSyncKotlin.__AttachmentState
+  public typealias _ObjectiveCType = PowerSyncKotlin.__AttachmentState
+  public typealias Companion = PowerSyncKotlin.__AttachmentState.Companion
+  public static func == (a: PowerSyncKotlin.AttachmentState, b: PowerSyncKotlin.AttachmentState) -> Swift.Bool
+  public typealias AllCases = [PowerSyncKotlin.AttachmentState]
+  nonisolated public static var allCases: [PowerSyncKotlin.AttachmentState] {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension PowerSyncKotlin.AttachmentState {
+  public func toKotlinEnum() -> PowerSyncKotlin.__AttachmentState
+}
+extension PowerSyncKotlin.__AttachmentState {
+  public func toSwiftEnum() -> PowerSyncKotlin.AttachmentState
+}
+@frozen public enum Kermit_coreSeverity : Swift.Hashable, Swift.CaseIterable, Swift._ObjectiveCBridgeable {
+  case verbose
+  case debug
+  case info
+  case warn
+  case error
+  case assert
+  public var name: Swift.String {
+    get
+  }
+  public var ordinal: Swift.Int32 {
+    get
+  }
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.__Kermit_coreSeverity, result: inout PowerSyncKotlin.Kermit_coreSeverity?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__Kermit_coreSeverity, result: inout PowerSyncKotlin.Kermit_coreSeverity?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__Kermit_coreSeverity?) -> PowerSyncKotlin.Kermit_coreSeverity
+  public func _bridgeToObjectiveC() -> PowerSyncKotlin.__Kermit_coreSeverity
+  public typealias _ObjectiveCType = PowerSyncKotlin.__Kermit_coreSeverity
+  public static func == (a: PowerSyncKotlin.Kermit_coreSeverity, b: PowerSyncKotlin.Kermit_coreSeverity) -> Swift.Bool
+  public typealias AllCases = [PowerSyncKotlin.Kermit_coreSeverity]
+  nonisolated public static var allCases: [PowerSyncKotlin.Kermit_coreSeverity] {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension PowerSyncKotlin.Kermit_coreSeverity {
+  public func toKotlinEnum() -> PowerSyncKotlin.__Kermit_coreSeverity
+}
+extension PowerSyncKotlin.__Kermit_coreSeverity {
+  public func toSwiftEnum() -> PowerSyncKotlin.Kermit_coreSeverity
+}
+@frozen public enum SwiftSyncRequestLogLevel : Swift.Hashable, Swift.CaseIterable, Swift._ObjectiveCBridgeable {
+  case all
+  case headers
+  case body
+  case info
+  case none
+  public var name: Swift.String {
+    get
+  }
+  public var ordinal: Swift.Int32 {
+    get
+  }
+  public static func _forceBridgeFromObjectiveC(_ source: PowerSyncKotlin.__SwiftSyncRequestLogLevel, result: inout PowerSyncKotlin.SwiftSyncRequestLogLevel?)
+  public static func _conditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__SwiftSyncRequestLogLevel, result: inout PowerSyncKotlin.SwiftSyncRequestLogLevel?) -> Swift.Bool
+  public static func _unconditionallyBridgeFromObjectiveC(_ source: PowerSyncKotlin.__SwiftSyncRequestLogLevel?) -> PowerSyncKotlin.SwiftSyncRequestLogLevel
+  public func _bridgeToObjectiveC() -> PowerSyncKotlin.__SwiftSyncRequestLogLevel
+  public typealias _ObjectiveCType = PowerSyncKotlin.__SwiftSyncRequestLogLevel
+  public static func == (a: PowerSyncKotlin.SwiftSyncRequestLogLevel, b: PowerSyncKotlin.SwiftSyncRequestLogLevel) -> Swift.Bool
+  public typealias AllCases = [PowerSyncKotlin.SwiftSyncRequestLogLevel]
+  nonisolated public static var allCases: [PowerSyncKotlin.SwiftSyncRequestLogLevel] {
+    get
+  }
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension PowerSyncKotlin.SwiftSyncRequestLogLevel {
+  public func toKotlinEnum() -> PowerSyncKotlin.__SwiftSyncRequestLogLevel
+}
+extension PowerSyncKotlin.__SwiftSyncRequestLogLevel {
+  public func toSwiftEnum() -> PowerSyncKotlin.SwiftSyncRequestLogLevel
+}
+extension PowerSyncKotlin.Skie.Core.BaseTable {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case rawTable(PowerSyncKotlin.RawTable)
+    case table(PowerSyncKotlin.Table)
+    public static func == (a: PowerSyncKotlin.Skie.Core.BaseTable.__Sealed, b: PowerSyncKotlin.Skie.Core.BaseTable.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.Core.BaseTable.__Sealed where __Sealed : PowerSyncKotlin.BaseTable
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.Core.BaseTable.__Sealed? where __Sealed : PowerSyncKotlin.BaseTable
+extension PowerSyncKotlin.Skie.Core.PendingStatementParameter {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case column(PowerSyncKotlin.PendingStatementParameterColumn)
+    case id(PowerSyncKotlin.PendingStatementParameterId)
+    public static func == (a: PowerSyncKotlin.Skie.Core.PendingStatementParameter.__Sealed, b: PowerSyncKotlin.Skie.Core.PendingStatementParameter.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.Core.PendingStatementParameter.__Sealed where __Sealed : PowerSyncKotlin.PendingStatementParameter
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.Core.PendingStatementParameter.__Sealed? where __Sealed : PowerSyncKotlin.PendingStatementParameter
+extension PowerSyncKotlin.Skie.Core.SyncClientConfiguration {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.Core.SyncClientConfiguration.__Sealed, b: PowerSyncKotlin.Skie.Core.SyncClientConfiguration.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.Core.SyncClientConfiguration.__Sealed where __Sealed : PowerSyncKotlin.SyncClientConfiguration
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.Core.SyncClientConfiguration.__Sealed? where __Sealed : PowerSyncKotlin.SyncClientConfiguration
+extension PowerSyncKotlin.Skie.Core.JsonParam {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case boolean(PowerSyncKotlin.JsonParam.Boolean)
+    case collection(PowerSyncKotlin.JsonParam.Collection)
+    case jsonElement(PowerSyncKotlin.JsonParam.JsonElement)
+    case map(PowerSyncKotlin.JsonParam.Map)
+    case null(PowerSyncKotlin.JsonParam.Null)
+    case number(PowerSyncKotlin.JsonParam.Number)
+    case string(PowerSyncKotlin.JsonParam.String)
+    public static func == (a: PowerSyncKotlin.Skie.Core.JsonParam.__Sealed, b: PowerSyncKotlin.Skie.Core.JsonParam.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.Core.JsonParam.__Sealed where __Sealed : PowerSyncKotlin.JsonParam
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.Core.JsonParam.__Sealed? where __Sealed : PowerSyncKotlin.JsonParam
+extension PowerSyncKotlin.Skie.KotlinxSerializationCore.SerialKind {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case polymorphicKind(PowerSyncKotlin.Kotlinx_serialization_corePolymorphicKind)
+    case primitiveKind(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind)
+    case cONTEXTUAL(PowerSyncKotlin.Kotlinx_serialization_coreSerialKind.CONTEXTUAL)
+    case eNUM(PowerSyncKotlin.Kotlinx_serialization_coreSerialKind.ENUM)
+    case structureKind(PowerSyncKotlin.Kotlinx_serialization_coreStructureKind)
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxSerializationCore.SerialKind.__Sealed, b: PowerSyncKotlin.Skie.KotlinxSerializationCore.SerialKind.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.SerialKind.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_serialization_coreSerialKind
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.SerialKind.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_serialization_coreSerialKind
+extension PowerSyncKotlin.Skie.KotlinxSerializationCore.SerializersModule {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxSerializationCore.SerializersModule.__Sealed, b: PowerSyncKotlin.Skie.KotlinxSerializationCore.SerializersModule.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.SerializersModule.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_serialization_coreSerializersModule
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.SerializersModule.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_serialization_coreSerializersModule
+extension PowerSyncKotlin.Skie.KotlinxSerializationCore.PolymorphicKind {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case oPEN(PowerSyncKotlin.Kotlinx_serialization_corePolymorphicKind.OPEN)
+    case sEALED(PowerSyncKotlin.Kotlinx_serialization_corePolymorphicKind.SEALED)
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxSerializationCore.PolymorphicKind.__Sealed, b: PowerSyncKotlin.Skie.KotlinxSerializationCore.PolymorphicKind.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.PolymorphicKind.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_serialization_corePolymorphicKind
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.PolymorphicKind.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_serialization_corePolymorphicKind
+extension PowerSyncKotlin.Skie.KotlinxSerializationCore.PrimitiveKind {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case bOOLEAN(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind.BOOLEAN)
+    case bYTE(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind.BYTE)
+    case cHAR(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind.CHAR)
+    case dOUBLE(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind.DOUBLE)
+    case fLOAT(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind.FLOAT)
+    case iNT(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind.INT)
+    case lONG(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind.LONG)
+    case sHORT(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind.SHORT)
+    case sTRING(PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind.STRING)
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxSerializationCore.PrimitiveKind.__Sealed, b: PowerSyncKotlin.Skie.KotlinxSerializationCore.PrimitiveKind.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.PrimitiveKind.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.PrimitiveKind.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_serialization_corePrimitiveKind
+extension PowerSyncKotlin.Skie.KotlinxSerializationCore.StructureKind {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case cLASS(PowerSyncKotlin.Kotlinx_serialization_coreStructureKind.CLASS)
+    case lIST(PowerSyncKotlin.Kotlinx_serialization_coreStructureKind.LIST)
+    case mAP(PowerSyncKotlin.Kotlinx_serialization_coreStructureKind.MAP)
+    case oBJECT(PowerSyncKotlin.Kotlinx_serialization_coreStructureKind.OBJECT)
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxSerializationCore.StructureKind.__Sealed, b: PowerSyncKotlin.Skie.KotlinxSerializationCore.StructureKind.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.StructureKind.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_serialization_coreStructureKind
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxSerializationCore.StructureKind.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_serialization_coreStructureKind
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause0 {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause0.__Sealed, b: PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause0.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause0.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause0
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause0.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause0
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause {
+  @frozen public enum __Sealed {
+    case selectClause0(any PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause0)
+    case selectClause1(any PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause1)
+    case selectClause2(any PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause2)
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectInstance {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectInstance.__Sealed, b: PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectInstance.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectInstance.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectInstance
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectInstance.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectInstance
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause1 {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause1.__Sealed, b: PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause1.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause1.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause1
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause1.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause1
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause2 {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause2.__Sealed, b: PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause2.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause2.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause2
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause2.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_coroutines_coreSelectClause2
+extension PowerSyncKotlin.Skie.KotlinxIoCore.FileSystem {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxIoCore.FileSystem.__Sealed, b: PowerSyncKotlin.Skie.KotlinxIoCore.FileSystem.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxIoCore.FileSystem.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_io_coreFileSystem
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxIoCore.FileSystem.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_io_coreFileSystem
+extension PowerSyncKotlin.Skie.KotlinxIoCore.Source {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case buffer(PowerSyncKotlin.Kotlinx_io_coreBuffer)
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxIoCore.Source.__Sealed, b: PowerSyncKotlin.Skie.KotlinxIoCore.Source.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxIoCore.Source.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_io_coreSource
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxIoCore.Source.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_io_coreSource
+extension PowerSyncKotlin.Skie.KotlinxIoCore.Sink {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case buffer(PowerSyncKotlin.Kotlinx_io_coreBuffer)
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxIoCore.Sink.__Sealed, b: PowerSyncKotlin.Skie.KotlinxIoCore.Sink.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxIoCore.Sink.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_io_coreSink
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxIoCore.Sink.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_io_coreSink
+extension PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonElement {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case jsonPrimitive(PowerSyncKotlin.Kotlinx_serialization_jsonJsonPrimitive)
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonElement.__Sealed, b: PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonElement.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonElement.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_serialization_jsonJsonElement
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonElement.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_serialization_jsonJsonElement
+extension PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonPrimitive {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case jsonNull(PowerSyncKotlin.Kotlinx_serialization_jsonJsonNull)
+    case `else`
+    public static func == (a: PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonPrimitive.__Sealed, b: PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonPrimitive.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonPrimitive.__Sealed where __Sealed : PowerSyncKotlin.Kotlinx_serialization_jsonJsonPrimitive
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.KotlinxSerializationJson.JsonPrimitive.__Sealed? where __Sealed : PowerSyncKotlin.Kotlinx_serialization_jsonJsonPrimitive
+extension PowerSyncKotlin.Skie.RuntimeKotlin.Skie_SuspendResult {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case canceled(PowerSyncKotlin.Skie_SuspendResult.Canceled)
+    case error(PowerSyncKotlin.Skie_SuspendResult.Error)
+    case success(PowerSyncKotlin.Skie_SuspendResult.Success)
+    public static func == (a: PowerSyncKotlin.Skie.RuntimeKotlin.Skie_SuspendResult.__Sealed, b: PowerSyncKotlin.Skie.RuntimeKotlin.Skie_SuspendResult.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.RuntimeKotlin.Skie_SuspendResult.__Sealed where __Sealed : PowerSyncKotlin.Skie_SuspendResult
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.RuntimeKotlin.Skie_SuspendResult.__Sealed? where __Sealed : PowerSyncKotlin.Skie_SuspendResult
+extension PowerSyncKotlin.Skie.com_powersync__PowerSyncKotlin.PowerSyncResult {
+  @frozen public enum __Sealed : Swift.Hashable {
+    case failure(PowerSyncKotlin.PowerSyncResult.Failure)
+    case success(PowerSyncKotlin.PowerSyncResult.Success)
+    public static func == (a: PowerSyncKotlin.Skie.com_powersync__PowerSyncKotlin.PowerSyncResult.__Sealed, b: PowerSyncKotlin.Skie.com_powersync__PowerSyncKotlin.PowerSyncResult.__Sealed) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+}
+public func onEnum<__Sealed>(of sealed: __Sealed) -> PowerSyncKotlin.Skie.com_powersync__PowerSyncKotlin.PowerSyncResult.__Sealed where __Sealed : PowerSyncKotlin.PowerSyncResult
+@_disfavoredOverload public func onEnum<__Sealed>(of sealed: __Sealed?) -> PowerSyncKotlin.Skie.com_powersync__PowerSyncKotlin.PowerSyncResult.__Sealed? where __Sealed : PowerSyncKotlin.PowerSyncResult
+public var DEFAULT_DB_FILENAME: Swift.String {
+  get
+}
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, dbFilename: Swift.String, scope: any PowerSyncKotlin.Kotlinx_coroutines_coreCoroutineScope, logger: PowerSyncKotlin.KermitLogger?, dbDirectory: Swift.String?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, dbFilename: Swift.String) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, scope: any PowerSyncKotlin.Kotlinx_coroutines_coreCoroutineScope) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, dbFilename: Swift.String, scope: any PowerSyncKotlin.Kotlinx_coroutines_coreCoroutineScope) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, logger: PowerSyncKotlin.KermitLogger?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, dbFilename: Swift.String, logger: PowerSyncKotlin.KermitLogger?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, scope: any PowerSyncKotlin.Kotlinx_coroutines_coreCoroutineScope, logger: PowerSyncKotlin.KermitLogger?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, dbFilename: Swift.String, scope: any PowerSyncKotlin.Kotlinx_coroutines_coreCoroutineScope, logger: PowerSyncKotlin.KermitLogger?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, dbDirectory: Swift.String?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, dbFilename: Swift.String, dbDirectory: Swift.String?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, scope: any PowerSyncKotlin.Kotlinx_coroutines_coreCoroutineScope, dbDirectory: Swift.String?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, dbFilename: Swift.String, scope: any PowerSyncKotlin.Kotlinx_coroutines_coreCoroutineScope, dbDirectory: Swift.String?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, logger: PowerSyncKotlin.KermitLogger?, dbDirectory: Swift.String?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, dbFilename: Swift.String, logger: PowerSyncKotlin.KermitLogger?, dbDirectory: Swift.String?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func PowerSyncDatabase(factory: PowerSyncKotlin.DatabaseDriverFactory, schema: PowerSyncKotlin.Schema, scope: any PowerSyncKotlin.Kotlinx_coroutines_coreCoroutineScope, logger: PowerSyncKotlin.KermitLogger?, dbDirectory: Swift.String?) -> any PowerSyncKotlin.PowerSyncDatabase
+public func resolvePowerSyncLoadableExtensionPath() throws -> Swift.String?
+public func createAttachmentsTable(name: Swift.String) -> PowerSyncKotlin.Table
+extension PowerSyncKotlin.SqlCursor {
+  public func getBooleanOptional(name: Swift.String) throws -> PowerSyncKotlin.KotlinBoolean?
+  public func getBytesOptional(name: Swift.String) throws -> PowerSyncKotlin.KotlinByteArray?
+  public func getDoubleOptional(name: Swift.String) throws -> PowerSyncKotlin.KotlinDouble?
+  public func getLongOptional(name: Swift.String) throws -> PowerSyncKotlin.KotlinLong?
+}
+public func generateLogger(logger: PowerSyncKotlin.KermitLogger?) -> PowerSyncKotlin.KermitLogger
+public func swiftBackendConnectorToPowerSyncConnector(connector: any PowerSyncKotlin.SwiftBackendConnector) -> PowerSyncKotlin.PowerSyncBackendConnector
+public func wrapContextHandler(handler: @escaping (any PowerSyncKotlin.ConnectionContext) -> PowerSyncKotlin.PowerSyncResult) -> any PowerSyncKotlin.ThrowableLockCallback
+public func wrapTransactionContextHandler(handler: @escaping (any PowerSyncKotlin.PowerSyncTransaction) -> PowerSyncKotlin.PowerSyncResult) -> any PowerSyncKotlin.ThrowableTransactionCallback
+public func createExtendedSyncClientConfiguration(loggingConfig: PowerSyncKotlin.SwiftRequestLoggerConfig?) -> PowerSyncKotlin.SyncClientConfiguration
+public func createSyncOptions(newClient: Swift.Bool, userAgent: Swift.String, loggingConfig: PowerSyncKotlin.SwiftRequestLoggerConfig?) -> PowerSyncKotlin.SyncOptions
+public func errorHandledCrudTransactions(db: any PowerSyncKotlin.PowerSyncDatabase) -> PowerSyncKotlin.SkieSwiftFlow<PowerSyncKotlin.PowerSyncResult>
+public func throwPowerSyncException(exception: PowerSyncKotlin.PowerSyncException) throws
+extension PowerSyncKotlin.ColumnType : Swift.Sendable {}
+extension PowerSyncKotlin.ColumnType : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.UpdateType : Swift.Sendable {}
+extension PowerSyncKotlin.UpdateType : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.AttachmentState : Swift.Sendable {}
+extension PowerSyncKotlin.AttachmentState : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.Kermit_coreSeverity : Swift.Sendable {}
+extension PowerSyncKotlin.Kermit_coreSeverity : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.SwiftSyncRequestLogLevel : Swift.Sendable {}
+extension PowerSyncKotlin.SwiftSyncRequestLogLevel : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.Skie.Core.SyncClientConfiguration.__Sealed : Swift.Sendable {}
+extension PowerSyncKotlin.Skie.Core.SyncClientConfiguration.__Sealed : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.Skie.KotlinxSerializationCore.SerializersModule.__Sealed : Swift.Sendable {}
+extension PowerSyncKotlin.Skie.KotlinxSerializationCore.SerializersModule.__Sealed : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause0.__Sealed : Swift.Sendable {}
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause0.__Sealed : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectInstance.__Sealed : Swift.Sendable {}
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectInstance.__Sealed : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause1.__Sealed : Swift.Sendable {}
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause1.__Sealed : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause2.__Sealed : Swift.Sendable {}
+extension PowerSyncKotlin.Skie.KotlinxCoroutinesCore.SelectClause2.__Sealed : Swift.BitwiseCopyable {}
+extension PowerSyncKotlin.Skie.KotlinxIoCore.FileSystem.__Sealed : Swift.Sendable {}
+extension PowerSyncKotlin.Skie.KotlinxIoCore.FileSystem.__Sealed : Swift.BitwiseCopyable {}

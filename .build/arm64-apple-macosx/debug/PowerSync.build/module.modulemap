@@ -1,0 +1,4 @@
+module PowerSync {
+    header "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSync.build/PowerSync-Swift.h"
+    requires objc
+}

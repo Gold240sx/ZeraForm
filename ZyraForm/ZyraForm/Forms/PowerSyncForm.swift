@@ -426,7 +426,7 @@ public class PowerSyncForm<Values: FormValues>: ObservableObject {
         recordId: String,
         tableName: String,
         userId: String,
-        database: PowerSyncDatabase,
+        database: PowerSync.PowerSyncDatabaseProtocol,
         fields: [String]? = nil
     ) async throws {
         let service = ZyraSync(tableName: tableName, userId: userId, database: database)
