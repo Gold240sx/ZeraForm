@@ -1,0 +1,402 @@
+//
+//  Untitled.swift
+//  ZyraForm
+//
+//  Created by Michael Martell on 11/4/25.
+//
+
+
+import Foundation
+import PowerSync
+
+let JoinPrefix = "Join-"
+struct AppConfig: Codable {
+    var dbPrefix: String = "ZyraTest-"
+}
+let userId: String = "testUser"
+
+
+
+let db = PowerSyncDatabase(
+    schema: PowerSync.Schema(tables: [schema.toPowerSyncTable()]),
+    dbFilename: "ZyraTest.sqlite"
+)
+
+
+/// Generic PowerSync service for CRUD operations on any table
+@MainActor
+public class GenericPowerSyncService: ObservableObject {
+    private let powerSync = db // Use the global PowerSync database instance
+    private let userId: String
+    private let encryptionManager = SecureEncryptionManager.shared
+    private let tableName: String // e.g., "devspace-items"
+
+    @Published public var records: [[String: Any]] = []
+    
+    private var watchTask: Task<Void, Never>?
+    
+    /// Initialize with table name and user ID
+    public init(tableName: String, userId: String) {
+        self.tableName = tableName
+        self.userId = userId
+    }
+    
+    deinit {
+        watchTask?.cancel()
+    }
+
+    // MARK: - Read Operations
+
+    /// Load all records for the current user
+    /// - Parameters:
+    ///   - fields: Array of field names to retrieve (use ["*"] for all fields)
+    ///   - whereClause: Optional WHERE clause (without "WHERE" keyword), e.g., "user_id = ? AND is_active = ?"
+    ///   - parameters: Parameters for the WHERE clause
+    ///   - orderBy: Optional ORDER BY clause, e.g., "created_at DESC"
+    ///   - encryptedFields: Array of field names that should be decrypted
+    ///   - integerFields: Array of field names that are integers (stored as encrypted text)
+    ///   - booleanFields: Array of field names that are booleans (stored as encrypted text)
+    public func loadRecords(
+        fields: [String] = ["*"],
+        whereClause: String? = nil,
+        parameters: [Any] = [],
+        orderBy: String = "created_at DESC",
+        encryptedFields: [String] = [],
+        integerFields: [String] = [],
+        booleanFields: [String] = []
+    ) async throws {
+        // Cancel any existing watch task to prevent multiple concurrent loads
+        watchTask?.cancel()
+        
+        // Build SELECT clause
+        let selectClause = fields.contains("*") ? "*" : fields.map { "\"\($0)\"" }.joined(separator: ", ")
+        var query = "SELECT \(selectClause) FROM \"\(tableName)\""
+        var queryParams: [Any] = []
+
+        // Add WHERE clause if provided
+        if let whereClause = whereClause, !whereClause.isEmpty {
+            query += " WHERE \(whereClause)"
+            queryParams.append(contentsOf: parameters)
+        } else {
+            // Default: filter by user_id
+            query += " WHERE user_id = ?"
+            queryParams.append(userId)
+        }
+
+        // Add ORDER BY
+        query += " ORDER BY \(orderBy)"
+
+        do {
+            var allResults: [[String: Any]] = []
+
+            // Build list of fields to read from cursor
+            // If using "*", you must provide field names via encryptedFields, integerFields, etc.
+            // OR explicitly specify fields array. For "*", we'll try to read common fields.
+            let fieldsToRead: [String]
+            if fields.contains("*") {
+                // When using "*", attempt to read common fields plus any mentioned in config arrays
+                var commonFields = ["id", "user_id", "owner_id", "created_at", "updated_at"]
+                commonFields.append(contentsOf: encryptedFields)
+                commonFields.append(contentsOf: integerFields)
+                commonFields.append(contentsOf: booleanFields)
+                fieldsToRead = Array(Set(commonFields)) // Remove duplicates
+            } else {
+                fieldsToRead = fields
+            }
+
+            for try await results in try powerSync.watch(
+                sql: query,
+                parameters: queryParams,
+                mapper: { cursor in
+                    var dict: [String: Any] = [:]
+
+                    // Read each field
+                    for fieldName in fieldsToRead {
+                        // Try different types in order of likelihood
+                        if encryptedFields.contains(fieldName) {
+                            // Encrypted field - read as string and decrypt
+                            if let encryptedValue = try? cursor.getStringOptional(name: fieldName) {
+                                if let decrypted = try? self.encryptionManager.decryptIfEnabled(encryptedValue, for: self.userId) {
+                                    // Check if it's an integer field
+                                    if integerFields.contains(fieldName), let intValue = Int(decrypted) {
+                                        dict[fieldName] = intValue
+                                    }
+                                    // Check if it's a boolean field
+                                    else if booleanFields.contains(fieldName) {
+                                        dict[fieldName] = decrypted == "true" || decrypted == "1"}
+                                    else {
+                                        dict[fieldName] = decrypted
+                                    }
+                                } else {
+                                    dict[fieldName] = encryptedValue
+                                }
+                            } else {
+                                dict[fieldName] = nil
+                            }
+                        } else if integerFields.contains(fieldName) {
+                            // Integer field (not encrypted)
+                            dict[fieldName] = try? cursor.getIntOptional(name: fieldName)
+                        } else if booleanFields.contains(fieldName) {
+                            // Boolean field (not encrypted) - try as int first
+                            if let intValue = try? cursor.getIntOptional(name: fieldName) {
+                                dict[fieldName] = intValue == 1
+                            } else if let strValue = try? cursor.getStringOptional(name: fieldName) {
+                                dict[fieldName] = strValue == "true" || strValue == "1"}
+                        } else {
+                            // Try string first (most common)
+                            if let strValue = try? cursor.getStringOptional(name: fieldName) {
+                                dict[fieldName] = strValue
+                            } else if let intValue = try? cursor.getIntOptional(name: fieldName) {
+                                dict[fieldName] = intValue
+                            } else if let doubleValue = try? cursor.getDoubleOptional(name: fieldName) {
+                                dict[fieldName] = doubleValue
+                            }
+                        }
+                    }
+
+                    return dict
+                }
+            ) {
+                allResults = results
+                break
+            }
+
+            records = allResults
+            PrintDebug("[GenericPowerSyncService] 🔍 Loaded \(allResults.count) records from \(tableName)", debug: true)
+
+        } catch {
+            PrintDebug("[GenericPowerSyncService] ❌ Failed to load records from \(tableName): \(error.localizedDescription)", debug: true)
+            throw error
+        }
+    }
+
+
+    // MARK: - Create Operations
+
+    /// Create a new record
+    /// - Parameters:
+    ///   - fields: Dictionary of field names to values
+    ///   - encryptedFields: Array of field names that should be encrypted
+    ///   - autoGenerateId: Whether to auto-generate a UUID for the id field
+    ///   - autoTimestamp: Whether to automatically add created_at and updated_at timestamps
+    public func createRecord(
+        fields: [String: Any],
+        encryptedFields: [String] = [],
+        autoGenerateId: Bool = true,
+        autoTimestamp: Bool = true
+    ) async throws -> String {
+        let id = autoGenerateId ? UUID().uuidString : (fields["id"] as? String ?? UUID().uuidString)
+        let now = ISO8601DateFormatter().string(from: Date())
+
+        var allFields = fields
+        if autoGenerateId && allFields["id"] == nil {
+            allFields["id"] = id
+        }
+        if autoTimestamp {
+            allFields["created_at"] = allFields["created_at"] ?? now
+            allFields["updated_at"] = allFields["updated_at"] ?? now
+        }
+
+        // Note: user_id is only added if the table has a user_id column
+        // Remove this if your table doesn't support user_id filtering
+        // if allFields["user_id"] == nil {
+        //     allFields["user_id"] = userId
+        // }
+
+        // Build INSERT query
+        let fieldNames = Array(allFields.keys)
+        let placeholders = fieldNames.map { _ in "?" }.joined(separator: ", ")
+        let columns = fieldNames.map { "\"\($0)\"" }.joined(separator: ", ")
+
+        var parameters: [Any] = []
+        for fieldName in fieldNames {
+            if let value = allFields[fieldName] {
+                // Encrypt if needed
+                if encryptedFields.contains(fieldName) {
+                    let stringValue: String
+                    if let str = value as? String {
+                        stringValue = str
+                    } else if let intValue = value as? Int {
+                        stringValue = String(intValue)
+                    } else if let boolValue = value as? Bool {
+                        stringValue = boolValue ? "true" : "false"} else {
+                        stringValue = String(describing: value)
+                    }
+                    let encrypted = try encryptionManager.encryptIfEnabled(stringValue, for: userId)
+                    parameters.append(encrypted)
+                } else {
+                    parameters.append(value)
+                }
+            } else {
+                parameters.append(NSNull())
+            }
+        }
+
+        let query = """
+            INSERT INTO "\(tableName)"
+            (\(columns))
+            VALUES (\(placeholders))
+            """
+
+        try await powerSync.execute(sql: query, parameters: parameters)
+
+        // Reload data (use "1 = 1" to load all records without user_id filter)
+        try await loadRecords(
+            fields: ["*"],
+            whereClause: "1 = 1",
+            orderBy: "created_at DESC"
+        )
+
+        PrintDebug("[GenericPowerSyncService] ✅ Created record in \(tableName): \(id)", debug: true)
+        return id
+    }
+
+    // MARK: - Update Operations
+
+    /// Update an existing record
+    /// - Parameters:
+    ///   - id: The ID of the record to update
+    ///   - fields: Dictionary of field names to values (only provided fields will be updated)
+    ///   - encryptedFields: Array of field names that should be encrypted
+    ///   - autoTimestamp: Whether to automatically update updated_at timestamp
+    public func updateRecord(
+        id: String,
+        fields: [String: Any],
+        encryptedFields: [String] = [],
+        autoTimestamp: Bool = true
+    ) async throws {
+        let now = ISO8601DateFormatter().string(from: Date())
+
+        var updateFields: [String] = []
+        var parameters: [Any] = []
+
+        // Build dynamic UPDATE query
+        for (fieldName, value) in fields {
+            if fieldName == "id" {
+                continue // Skip ID field
+            }
+
+            updateFields.append("\"\(fieldName)\" = ?")
+
+            // Encrypt if needed
+            if encryptedFields.contains(fieldName) {
+                let stringValue: String
+                if let str = value as? String {
+                    stringValue = str
+                } else if let intValue = value as? Int {
+                    stringValue = String(intValue)
+                } else if let boolValue = value as? Bool {
+                    stringValue = boolValue ? "true" : "false"} else {
+                    stringValue = String(describing: value)
+                }
+                let encrypted = try encryptionManager.encryptIfEnabled(stringValue, for: userId)
+                parameters.append(encrypted)
+            } else {
+                parameters.append(value)
+            }
+        }
+
+        // Always update updated_at if autoTimestamp is enabled
+        if autoTimestamp {
+            updateFields.append("\"updated_at\" = ?")
+            parameters.append(now)
+        }
+
+        // Add ID parameter for WHERE clause
+        parameters.append(id)
+
+        // Build query
+        let query = "UPDATE \"\(tableName)\" SET \(updateFields.joined(separator: ", ")) WHERE id = ?"
+
+        try await powerSync.execute(sql: query, parameters: parameters)
+
+        // Reload data (use "1 = 1" to load all records without user_id filter)
+        try await loadRecords(
+            fields: ["*"],
+            whereClause: "1 = 1",
+            orderBy: "created_at DESC"
+        )
+
+        PrintDebug("[GenericPowerSyncService] ✅ Updated record in \(tableName): \(id)", debug: true)
+    }
+
+    // MARK: - Delete Operations
+
+    /// Delete a record by ID
+    /// - Parameter id: The ID of the record to delete
+    /// - Parameter caseInsensitive: Whether to use case-insensitive ID matching
+    public func deleteRecord(id: String, caseInsensitive: Bool = true) async throws {
+        PrintDebug("[GenericPowerSyncService] 🗑️ Deleting record from \(tableName) with ID: \(id)", debug: true)
+
+        // Optional: Check if record exists
+        let checkQuery = caseInsensitive
+            ? "SELECT COUNT(*) as count FROM \"\(tableName)\" WHERE LOWER(id) = LOWER(?)": "SELECT COUNT(*) as count FROM \"\(tableName)\" WHERE id = ?"
+
+        do {
+            for try await results in try powerSync.watch(
+                sql: checkQuery,
+                parameters: [id],
+                mapper: { cursor in
+                    return try cursor.getInt(name: "count")
+                }
+            ) {
+                if let count = results.first {
+                    PrintDebug("[GenericPowerSyncService] 🔍 Found \(count) record(s) matching ID", debug: true)
+                }
+                break
+            }
+        } catch {
+            PrintDebug("[GenericPowerSyncService] ⚠️ Error checking record existence: \(error.localizedDescription)", debug: true)
+        }
+
+        // Execute DELETE
+        let deleteQuery = caseInsensitive
+            ? "DELETE FROM \"\(tableName)\" WHERE LOWER(id) = LOWER(?)": "DELETE FROM \"\(tableName)\" WHERE id = ?"
+
+        try await powerSync.execute(sql: deleteQuery, parameters: [id])
+
+        PrintDebug("[GenericPowerSyncService] ✅ DELETE SQL executed", debug: true)
+
+        // PowerSync will automatically sync the deletion to Supabase
+        PrintDebug("[GenericPowerSyncService] ✅ Record deletion completed - PowerSync will handle sync", debug: true)
+
+        // Refresh data after deletion (use "1 = 1" to load all records without user_id filter)
+        try await loadRecords(
+            fields: ["*"],
+            whereClause: "1 = 1",
+            orderBy: "created_at DESC"
+        )
+        PrintDebug("[GenericPowerSyncService] ✅ Records reloaded after deletion", debug: true)
+    }
+
+    // MARK: - Batch Operations
+
+    /// Create multiple records at once
+    public func createRecords(
+        records: [[String: Any]],
+        encryptedFields: [String] = [],
+        autoGenerateId: Bool = true,
+        autoTimestamp: Bool = true
+    ) async throws -> [String] {
+        var createdIds: [String] = []
+
+        for record in records {
+            let id = try await createRecord(
+                fields: record,
+                encryptedFields: encryptedFields,
+                autoGenerateId: autoGenerateId,
+                autoTimestamp: autoTimestamp
+            )
+            createdIds.append(id)
+        }
+
+        return createdIds
+    }
+
+    /// Delete multiple records by IDs
+    public func deleteRecords(ids: [String], caseInsensitive: Bool = true) async throws {
+        for id in ids {
+            try await deleteRecord(id: id, caseInsensitive: caseInsensitive)
+        }
+    }
+}
