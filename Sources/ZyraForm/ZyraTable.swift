@@ -1,24 +1,18 @@
 //
-//  ExtendedTable.swift
+//  ZyraTable.swift
 //  ZyraForm
 //
-//  Created by Michael Martell on 11/4/25.
+//  Schema definitions for ZyraForm tables
 //
 
 
 import Foundation
 import PowerSync
 
-// MARK: - AppConfig Extension
-
-extension AppConfig {
-    static let shared = AppConfig()
-}
-
 // MARK: - TableFieldConfig
 
 /// Configuration for table fields used by PowerSync services
-struct TableFieldConfig {
+public struct TableFieldConfig {
     let allFields: [String]
     let encryptedFields: [String]
     let integerFields: [String]
@@ -27,7 +21,7 @@ struct TableFieldConfig {
 }
 
 /// Metadata for a PowerSync column
-struct ColumnMetadata {
+public struct ColumnMetadata {
     let name: String
     let powerSyncColumn: PowerSync.Column
     let isEncrypted: Bool
@@ -98,7 +92,7 @@ extension ColumnMetadata.SwiftColumnType {
     }
     
     /// Convert to Swift type string
-    func toSwiftType(isNullable: Bool) -> String {
+    public func toSwiftType(isNullable: Bool) -> String {
         let type: String
         switch self {
         case .string:
@@ -129,40 +123,40 @@ extension ColumnMetadata.SwiftColumnType {
 
 /// Nested schema for objects and arrays (supports recursion)
 /// Uses indirect enum to break circular reference with ColumnBuilder
-indirect enum NestedSchema: Equatable {
+public indirect enum NestedSchema: Equatable {
     case object(fields: [String: ColumnBuilder])
     case array(elementType: ColumnBuilder)
     
-    init(fields: [String: ColumnBuilder]) {
+    public init(fields: [String: ColumnBuilder]) {
         self = .object(fields: fields)
     }
     
-    init(elementType: ColumnBuilder) {
+    public init(elementType: ColumnBuilder) {
         self = .array(elementType: elementType)
     }
     
-    var isObject: Bool {
+    public var isObject: Bool {
         if case .object = self {
             return true
         }
         return false
     }
     
-    var isArray: Bool {
+    public var isArray: Bool {
         if case .array = self {
             return true
         }
         return false
     }
     
-    var fields: [String: ColumnBuilder] {
+    public var fields: [String: ColumnBuilder] {
         if case .object(let fields) = self {
             return fields
         }
         return [:]
     }
     
-    var elementType: ColumnBuilder? {
+    public var elementType: ColumnBuilder? {
         if case .array(let elementType) = self {
             return elementType
         }
@@ -171,7 +165,7 @@ indirect enum NestedSchema: Equatable {
     
     // Custom Equatable implementation
     // Note: Compares schema structure, ignoring function closures in ColumnBuilder
-    static func == (lhs: NestedSchema, rhs: NestedSchema) -> Bool {
+    public static func == (lhs: NestedSchema, rhs: NestedSchema) -> Bool {
         switch (lhs, rhs) {
         case (.object(let lhsFields), .object(let rhsFields)):
             // Compare field names and basic properties, ignoring closures
@@ -196,7 +190,7 @@ indirect enum NestedSchema: Equatable {
 // MARK: - Column Builder
 
 /// Builder for creating columns with metadata
-struct ColumnBuilder {
+public struct ColumnBuilder {
     let name: String
     let powerSyncColumn: PowerSync.Column
     var isEncrypted: Bool = false
@@ -645,11 +639,11 @@ struct ColumnBuilder {
 // MARK: - Enum Support
 
 /// Database enum definition
-struct DatabaseEnum: Hashable {
+public struct DatabaseEnum: Hashable {
     let name: String
     let values: [String]
     
-    init(name: String, values: [String]) {
+    public init(name: String, values: [String]) {
         self.name = name
         self.values = values
     }
@@ -666,19 +660,19 @@ struct DatabaseEnum: Hashable {
 // MARK: - Foreign Key Types
 
 /// Default timestamp options
-enum DefaultTimestamp {
+public enum DefaultTimestamp {
     case now
 }
 
 /// Foreign key relationship definition
-struct ForeignKey {
+public struct ForeignKey {
     let referencedTable: String
     let referencedColumn: String
     let onDelete: ForeignKeyAction
     let onUpdate: ForeignKeyAction
 }
 
-enum ForeignKeyAction {
+public enum ForeignKeyAction {
     case cascade
     case restrict
     case setNull
@@ -709,57 +703,57 @@ enum ForeignKeyAction {
 // MARK: - PowerSync Column Extensions
 
 /// ZyraForm column builder shortcut
-struct zf {
-    static func text(_ name: String) -> ColumnBuilder {
+public struct zf {
+    public static func text(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.text(name)
     }
     
-    static func integer(_ name: String) -> ColumnBuilder {
+    public static func integer(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.integer(name)
     }
     
-    static func real(_ name: String) -> ColumnBuilder {
+    public static func real(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.real(name)
     }
 }
 
 extension PowerSync.Column {
-    static func text(_ name: String) -> ColumnBuilder {
+    public static func text(_ name: String) -> ColumnBuilder {
         return ColumnBuilder(name: name, powerSyncColumn: .text(name))
     }
     
-    static func integer(_ name: String) -> ColumnBuilder {
+    public static func integer(_ name: String) -> ColumnBuilder {
         return ColumnBuilder(name: name, powerSyncColumn: .integer(name))
             .int()
     }
     
-    static func real(_ name: String) -> ColumnBuilder {
+    public static func real(_ name: String) -> ColumnBuilder {
         return ColumnBuilder(name: name, powerSyncColumn: .real(name))
             .double()
     }
 }
 
-// MARK: - Extended Table
+// MARK: - Zyra Table
 
-/// Extended table that includes metadata
-struct ExtendedTable: Hashable {
-    let name: String
-    let powerSyncTable: PowerSync.Table
-    let columns: [ColumnMetadata]
-    let primaryKey: String
-    let defaultOrderBy: String
+/// Zyra table that includes metadata
+public struct ZyraTable: Hashable {
+    public let name: String
+    public let powerSyncTable: PowerSync.Table
+    public let columns: [ColumnMetadata]
+    public let primaryKey: String
+    public let defaultOrderBy: String
     
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
     
-    static func == (lhs: ExtendedTable, rhs: ExtendedTable) -> Bool {
+    public static func == (lhs: ZyraTable, rhs: ZyraTable) -> Bool {
         return lhs.name == rhs.name
     }
     
     /// Initialize with fluent API
     /// Automatically adds: id (primary key), created_at, updated_at columns
-    init(
+    public init(
         name: String,
         primaryKey: String = "id",
         defaultOrderBy: String = "created_at DESC",
@@ -815,23 +809,22 @@ struct ExtendedTable: Hashable {
     }
     
     /// Get all enums used by this table
-    func getEnums() -> Set<DatabaseEnum> {
+    public func getEnums() -> Set<DatabaseEnum> {
         return Set(columns.compactMap { $0.enumType })
     }
     
     /// Get all tables referenced by foreign keys in this table
-    func getReferencedTables() -> Set<String> {
+    public func getReferencedTables() -> Set<String> {
         return Set(columns.compactMap { $0.foreignKey?.referencedTable })
     }
     
     /// Convert to PowerSync Table (for Schema)
-    func toPowerSyncTable() -> PowerSync.Table {
+    public func toPowerSyncTable() -> PowerSync.Table {
         return powerSyncTable
     }
     
     /// Generate TableFieldConfig automatically
-    /// Note: This requires TableFieldConfig type to be defined elsewhere
-    func toTableFieldConfig() -> TableFieldConfig {
+    public func toTableFieldConfig() -> TableFieldConfig {
         let allFields = columns.map { $0.name }
         
         let encryptedFields = columns
@@ -1019,8 +1012,8 @@ struct ExtendedTable: Hashable {
     
     /// Generate Swift model struct code
     func generateSwiftModel(modelName: String? = nil) -> String {
-        // Note: This requires AppConfig.shared.dbPrefix - you may need to adjust this
-        let structName = modelName ?? toPascalCase(name.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: ""))
+        // Note: dbPrefix should be provided by the app configuration
+        let structName = modelName ?? toPascalCase(name)
         
         var code = "// MARK: - \(structName)\n\n"
         code += "struct \(structName): Codable, Identifiable, Hashable {\n"
@@ -1055,7 +1048,7 @@ struct ExtendedTable: Hashable {
     
     /// Generate standalone Swift model file
     func generateSwiftModelFile(modelName: String? = nil) -> String {
-        let structName = modelName ?? toPascalCase(name.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: ""))
+        let structName = modelName ?? toPascalCase(name)
         
         var code = "import Foundation\n\n"
         code += generateSwiftModel(modelName: modelName)
@@ -1066,9 +1059,9 @@ struct ExtendedTable: Hashable {
     // MARK: - Drizzle Schema Generation
     
     /// Generate Drizzle ORM schema code (TypeScript)
-    func generateDrizzleSchema(tableVariableName: String? = nil, includeImports: Bool = false) -> String {
-        let varName = tableVariableName ?? toCamelCase(name.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: ""))
-        let tableName = name.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: "")
+    func generateDrizzleSchema(tableVariableName: String? = nil, includeImports: Bool = false, dbPrefix: String = "") -> String {
+        let varName = tableVariableName ?? toCamelCase(name.replacingOccurrences(of: dbPrefix, with: ""))
+        let tableName = name.replacingOccurrences(of: dbPrefix, with: "")
         
         var code = ""
         
@@ -1077,10 +1070,15 @@ struct ExtendedTable: Hashable {
             code += "import { sql } from \"drizzle-orm\";\n"
             code += "import { createTable, pgTableCreator, text, integer, boolean, timestamp, uuid, pgEnum } from \"drizzle-orm/pg-core\";\n"
             code += "import { foreignKey } from \"drizzle-orm/pg-core\";\n"
-            code += "import { AppConfig } from \"AppConfig\";\n\n"
-            code += "const createTable = pgTableCreator(\n"
-            code += "  (name) => `${AppConfig.DBprefix}${name}`,\n"
-            code += ");\n\n"
+            if !dbPrefix.isEmpty {
+                code += "import { AppConfig } from \"AppConfig\";\n\n"
+                code += "const createTable = pgTableCreator(\n"
+                code += "  (name) => `${AppConfig.DBprefix}${name}`,\n"
+                code += ");\n\n"
+            } else {
+                code += "\n"
+                code += "const createTable = pgTableCreator(() => \"\");\n\n"
+            }
         }
         
         code += "// \(tableName) table\n"
@@ -1092,7 +1090,7 @@ struct ExtendedTable: Hashable {
         var drizzleColumns: [String] = []
         
         for column in columns {
-            let drizzleColumn = generateDrizzleColumn(column)
+            let drizzleColumn = generateDrizzleColumn(column, dbPrefix: dbPrefix)
             drizzleColumns.append("    \(drizzleColumn)")
         }
         
@@ -1100,7 +1098,7 @@ struct ExtendedTable: Hashable {
         code += "\n  }),\n"
         
         // Add foreign key constraints
-        let fkConstraints = generateDrizzleForeignKeys()
+        let fkConstraints = generateDrizzleForeignKeys(dbPrefix: dbPrefix)
         if !fkConstraints.isEmpty {
             code += "  (t) => [\n"
             code += fkConstraints.map { "    \($0)" }.joined(separator: ",\n")
@@ -1118,13 +1116,13 @@ struct ExtendedTable: Hashable {
     }
     
     /// Generate Drizzle column definition
-    private func generateDrizzleColumn(_ column: ColumnMetadata) -> String {
+    private func generateDrizzleColumn(_ column: ColumnMetadata, dbPrefix: String = "") -> String {
         let columnName = column.name
         var def = "\(columnName): "
         
         // Determine Drizzle column type
         if let enumType = column.enumType {
-            let enumVarName = toCamelCase(enumType.name.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: ""))
+            let enumVarName = toCamelCase(enumType.name.replacingOccurrences(of: dbPrefix, with: ""))
             def += "\(enumVarName)"
         } else {
             switch column.swiftType {
@@ -1185,11 +1183,11 @@ struct ExtendedTable: Hashable {
     }
     
     /// Generate Drizzle foreign key constraints
-    private func generateDrizzleForeignKeys() -> [String] {
+    private func generateDrizzleForeignKeys(dbPrefix: String = "") -> [String] {
         return columns.compactMap { column in
             guard let fk = column.foreignKey else { return nil }
             
-            let referencedTableVar = toCamelCase(fk.referencedTable.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: ""))
+            let referencedTableVar = toCamelCase(fk.referencedTable.replacingOccurrences(of: dbPrefix, with: ""))
             
             return "foreignKey({ columns: [t.\(column.name)], foreignKeys: [\(referencedTableVar)({ columns: [\(referencedTableVar).\(fk.referencedColumn)] }) ] })"
         }
@@ -1220,8 +1218,8 @@ struct ExtendedTable: Hashable {
     // MARK: - Zod Schema Generation
     
     /// Generate Zod schema code (TypeScript)
-    func generateZodSchema() -> String {
-        let schemaName = toCamelCase(name.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: ""))
+    func generateZodSchema(dbPrefix: String = "") -> String {
+        let schemaName = toCamelCase(name.replacingOccurrences(of: dbPrefix, with: ""))
         
         var code = "import { z } from \"zod\";\n\n"
         code += "export const \(schemaName)Schema = z.object({\n"
@@ -1235,7 +1233,7 @@ struct ExtendedTable: Hashable {
         
         code += zodFields.joined(separator: ",\n")
         code += "\n});\n\n"
-        code += "export type \(toPascalCase(name.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: ""))) = z.infer<typeof \(schemaName)Schema>;\n"
+        code += "export type \(toPascalCase(name.replacingOccurrences(of: dbPrefix, with: ""))) = z.infer<typeof \(schemaName)Schema>;\n"
         
         return code
     }
@@ -1309,14 +1307,14 @@ struct ExtendedTable: Hashable {
     }
 }
 
-// MARK: - Extended Schema
+// MARK: - Zyra Schema
 
 /// Complete schema definition with tables and enums
-struct ExtendedSchema {
-    let tables: [ExtendedTable]
-    let enums: [DatabaseEnum]
+public struct ZyraSchema {
+    public let tables: [ZyraTable]
+    public let enums: [DatabaseEnum]
     
-    init(tables: [ExtendedTable], enums: [DatabaseEnum] = []) {
+    public init(tables: [ZyraTable], enums: [DatabaseEnum] = []) {
         self.tables = tables
         
         // Collect all enums from tables
@@ -1359,9 +1357,9 @@ struct ExtendedSchema {
     }
     
     /// Topologically sort tables based on foreign key dependencies
-    private func topologicalSortTables() -> [ExtendedTable] {
+    private func topologicalSortTables() -> [ZyraTable] {
         var dependencies: [String: Set<String>] = [:]
-        var tableMap: [String: ExtendedTable] = [:]
+        var tableMap: [String: ZyraTable] = [:]
         
         for table in tables {
             tableMap[table.name] = table
@@ -1393,7 +1391,7 @@ struct ExtendedSchema {
             }
         }
         
-        var result: [ExtendedTable] = []
+        var result: [ZyraTable] = []
         
         while !queue.isEmpty {
             let current = queue.removeFirst()
@@ -1430,21 +1428,25 @@ struct ExtendedSchema {
     }
     
     /// Generate Drizzle schema code for all tables and enums
-    func generateDrizzleSchema() -> String {
+    func generateDrizzleSchema(dbPrefix: String = "") -> String {
         var code = "import { sql } from \"drizzle-orm\";\n"
         code += "import { createTable, pgTableCreator, text, integer, boolean, timestamp, uuid, pgEnum } from \"drizzle-orm/pg-core\";\n"
         code += "import { foreignKey } from \"drizzle-orm/pg-core\";\n"
-        code += "import { AppConfig } from \"AppConfig\";\n\n"
-        
-        code += "const createTable = pgTableCreator(\n"
-        code += "  (name) => `${AppConfig.DBprefix}${name}`,\n"
-        code += ");\n\n"
+        if !dbPrefix.isEmpty {
+            code += "import { AppConfig } from \"AppConfig\";\n\n"
+            code += "const createTable = pgTableCreator(\n"
+            code += "  (name) => `${AppConfig.DBprefix}${name}`,\n"
+            code += ");\n\n"
+        } else {
+            code += "\n"
+            code += "const createTable = pgTableCreator(() => \"\");\n\n"
+        }
         
         // Generate enums first
         if !enums.isEmpty {
             code += "// Enums\n"
             for dbEnum in enums {
-                let enumName = toCamelCase(dbEnum.name.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: ""))
+                let enumName = toCamelCase(dbEnum.name.replacingOccurrences(of: dbPrefix, with: ""))
                 let values = dbEnum.values.map { "\"\($0)\"" }.joined(separator: ", ")
                 code += "export const \(enumName) = pgEnum(\"\(dbEnum.name)\", [\(values)]);\n"
             }
@@ -1455,7 +1457,7 @@ struct ExtendedSchema {
         code += "// Tables\n"
         let orderedTables = topologicalSortTables()
         for table in orderedTables {
-            code += table.generateDrizzleSchema(includeImports: false)
+            code += table.generateDrizzleSchema(includeImports: false, dbPrefix: dbPrefix)
             code += "\n"
         }
         
@@ -1463,7 +1465,7 @@ struct ExtendedSchema {
         code += "\n// Schema export\n"
         code += "export const schema = {\n"
         for table in orderedTables {
-            let varName = toCamelCase(table.name.replacingOccurrences(of: "\(AppConfig.shared.dbPrefix)", with: ""))
+            let varName = toCamelCase(table.name.replacingOccurrences(of: dbPrefix, with: ""))
             code += "  \(varName),\n"
         }
         code += "};\n"

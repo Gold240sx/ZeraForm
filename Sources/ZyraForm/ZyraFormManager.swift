@@ -95,8 +95,8 @@ public class ZyraFormManager {
     }
     
     /// Get a service for a specific table
-    public func service(for tableName: String) -> GenericPowerSyncService {
-        return GenericPowerSyncService(
+    public func service(for tableName: String) -> ZyraSync {
+        return ZyraSync(
             tableName: tableName,
             userId: config.userId,
             database: database
@@ -105,7 +105,7 @@ public class ZyraFormManager {
     
     /// Get a form for a specific table
     public func form<Values: FormValues>(
-        for table: ExtendedTable,
+        for table: ZyraTable,
         initialValues: Values? = nil,
         mode: FormValidationMode = .onChange
     ) -> ZyraForm<Values> {

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Foundation
+import ZyraForm
 
 // MARK: - Employee Form Values
 
@@ -62,7 +63,7 @@ struct EmployeeFormValues: FormValues {
 
 struct EmployeeFormView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var service: GenericPowerSyncService
+    @ObservedObject var service: ZyraSync
     
     let employeeId: String?
     let onSave: (() -> Void)?
@@ -75,7 +76,7 @@ struct EmployeeFormView: View {
         return schema.toTableFieldConfig()
     }()
     
-    init(service: GenericPowerSyncService, employeeId: String? = nil, onSave: (() -> Void)? = nil) {
+    init(service: ZyraSync, employeeId: String? = nil, onSave: (() -> Void)? = nil) {
         self.service = service
         self.employeeId = employeeId
         self.onSave = onSave
@@ -317,9 +318,13 @@ struct EmployeeFormView: View {
 
 #Preview {
     EmployeeFormView(
-        service: GenericPowerSyncService(
-            tableName: "\(AppConfig.shared.dbPrefix)employees",
-            userId: userId
+        service: ZyraSync(
+            tableName: "\(AppConfig.dbPrefix)employees",
+            userId: AppConfig.userId,
+            database: ZyraFormManager.shared?.database ?? PowerSyncDatabase(
+                schema: PowerSync.Schema(tables: []),
+                dbFilename: "preview.sqlite"
+            )
         )
     )
 }

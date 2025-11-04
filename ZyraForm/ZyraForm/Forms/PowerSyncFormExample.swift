@@ -6,24 +6,25 @@
 //
 
 import SwiftUI
+import ZyraForm
 
 // MARK: - Example: Simple Employee Form using PowerSyncForm
 
 struct SimpleEmployeeFormView: View {
-    @StateObject private var form: PowerSyncForm<EmployeeFormValues>
+    @StateObject private var form: ZyraForm<EmployeeFormValues>
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject var service: GenericPowerSyncService
+    @ObservedObject var service: ZyraSync
     
     let employeeId: String?
     let onSave: (() -> Void)?
     
-    init(service: GenericPowerSyncService, employeeId: String? = nil, onSave: (() -> Void)? = nil) {
+    init(service: ZyraSync, employeeId: String? = nil, onSave: (() -> Void)? = nil) {
         self.service = service
         self.employeeId = employeeId
         self.onSave = onSave
         
         // Initialize form with schema
-        _form = StateObject(wrappedValue: PowerSyncForm(
+        _form = StateObject(wrappedValue: ZyraForm(
             schema: schema,
             mode: .onChange  // Validate on every change
         ))

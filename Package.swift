@@ -15,7 +15,7 @@ let package = Package(
             targets: ["ZyraForm"])
     ],
     dependencies: [
-        .package(url: "https://github.com/journeyapps/powersync-swift", from: "0.4.0"),
+        .package(url: "https://github.com/journeyapps/powersync-swift", "0.4.0"..<"1.0.0"),
         .package(url: "https://github.com/supabase/supabase-swift", from: "2.0.0")
     ],
     targets: [

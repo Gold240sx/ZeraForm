@@ -6,30 +6,31 @@
 //
 
 import SwiftUI
+import ZyraForm
 
 // MARK: - Table Registry
 
 struct TableRegistry {
     static let shared = TableRegistry()
     
-    var tables: [ExtendedTable] {
+    var tables: [ZyraTable] {
         return [schema] // Start with just employees, can add more tables here
     }
     
-    func table(named name: String) -> ExtendedTable? {
+    func table(named name: String) -> ZyraTable? {
         return tables.first { $0.name == name }
     }
     
-    func displayName(for table: ExtendedTable) -> String {
+    func displayName(for table: ZyraTable) -> String {
         // Remove prefix and convert to readable name
-        let nameWithoutPrefix = table.name.replacingOccurrences(of: AppConfig.shared.dbPrefix, with: "")
+        let nameWithoutPrefix = table.name.replacingOccurrences(of: AppConfig.dbPrefix, with: "")
         return nameWithoutPrefix.capitalized
     }
 }
 
 struct EmployeesListView: View {
-    @State private var selectedTable: ExtendedTable
-    @State private var service: GenericPowerSyncService
+    @State private var selectedTable: ZyraTable
+    @State private var service: ZyraSync
     
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -46,9 +47,13 @@ struct EmployeesListView: View {
     
     init() {
         let initialTable = TableRegistry.shared.tables.first ?? schema
-        let initialService = GenericPowerSyncService(
+        guard let manager = ZyraFormManager.shared else {
+            fatalError("ZyraFormManager must be initialized before using EmployeesListView")
+        }
+        let initialService = ZyraSync(
             tableName: initialTable.name,
-            userId: userId
+            userId: manager.config.userId,
+            database: manager.database
         )
         _selectedTable = State(initialValue: initialTable)
         _service = State(initialValue: initialService)
@@ -88,9 +93,11 @@ struct EmployeesListView: View {
         }
         .onChange(of: selectedTable) { oldTable, newTable in
             // Recreate service when table changes
-            service = GenericPowerSyncService(
+            guard let manager = ZyraFormManager.shared else { return }
+            service = ZyraSync(
                 tableName: newTable.name,
-                userId: userId
+                userId: manager.config.userId,
+                database: manager.database
             )
             // Reset state and reload
             hasLoadedOnce = false

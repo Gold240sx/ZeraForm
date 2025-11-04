@@ -1,44 +1,35 @@
 //
-//  Untitled.swift
+//  ZyraSync.swift
 //  ZyraForm
 //
-//  Created by Michael Martell on 11/4/25.
+//  CRUD service for PowerSync database operations
 //
 
 
 import Foundation
 import PowerSync
+import Combine
+import SwiftUI
 
-let JoinPrefix = "Join-"
-struct AppConfig: Codable {
-    var dbPrefix: String = "ZyraTest-"
-}
-let userId: String = "testUser"
-
-
-
-let db = PowerSyncDatabase(
-    schema: PowerSync.Schema(tables: [schema.toPowerSyncTable()]),
-    dbFilename: "ZyraTest.sqlite"
-)
-
-
-/// Generic PowerSync service for CRUD operations on any table
+/// ZyraSync service for CRUD operations on any table
 @MainActor
-public class GenericPowerSyncService: ObservableObject {
-    private let powerSync = db // Use the global PowerSync database instance
+public class ZyraSync: ObservableObject {
+    private let powerSync: PowerSyncDatabase
     private let userId: String
-    private let encryptionManager = SecureEncryptionManager.shared
-    private let tableName: String // e.g., "devspace-items"
+    private let encryptionManager: SecureEncryptionManager
+    private let tableName: String
 
     @Published public var records: [[String: Any]] = []
     
     private var watchTask: Task<Void, Never>?
     
-    /// Initialize with table name and user ID
-    public init(tableName: String, userId: String) {
+    /// Initialize with table name, user ID, database, and optional encryption manager
+    public init(tableName: String, userId: String, database: PowerSyncDatabase, encryptionManager: SecureEncryptionManager? = nil) {
         self.tableName = tableName
         self.userId = userId
+        self.powerSync = database
+        // Note: SecureEncryptionManager needs to be moved to package or made available
+        self.encryptionManager = encryptionManager ?? SecureEncryptionManager.shared
     }
     
     deinit {
@@ -162,10 +153,10 @@ public class GenericPowerSyncService: ObservableObject {
             }
 
             records = allResults
-            PrintDebug("[GenericPowerSyncService] 🔍 Loaded \(allResults.count) records from \(tableName)", debug: true)
+            ZyraFormLogger.debug("🔍 Loaded \(allResults.count) records from \(tableName)")
 
         } catch {
-            PrintDebug("[GenericPowerSyncService] ❌ Failed to load records from \(tableName): \(error.localizedDescription)", debug: true)
+            ZyraFormLogger.error("❌ Failed to load records from \(tableName): \(error.localizedDescription)")
             throw error
         }
     }
@@ -247,7 +238,7 @@ public class GenericPowerSyncService: ObservableObject {
             orderBy: "created_at DESC"
         )
 
-        PrintDebug("[GenericPowerSyncService] ✅ Created record in \(tableName): \(id)", debug: true)
+        ZyraFormLogger.info("✅ Created record in \(tableName): \(id)")
         return id
     }
 
@@ -317,7 +308,7 @@ public class GenericPowerSyncService: ObservableObject {
             orderBy: "created_at DESC"
         )
 
-        PrintDebug("[GenericPowerSyncService] ✅ Updated record in \(tableName): \(id)", debug: true)
+        ZyraFormLogger.info("✅ Updated record in \(tableName): \(id)")
     }
 
     // MARK: - Delete Operations
@@ -326,7 +317,7 @@ public class GenericPowerSyncService: ObservableObject {
     /// - Parameter id: The ID of the record to delete
     /// - Parameter caseInsensitive: Whether to use case-insensitive ID matching
     public func deleteRecord(id: String, caseInsensitive: Bool = true) async throws {
-        PrintDebug("[GenericPowerSyncService] 🗑️ Deleting record from \(tableName) with ID: \(id)", debug: true)
+        ZyraFormLogger.debug("🗑️ Deleting record from \(tableName) with ID: \(id)")
 
         // Optional: Check if record exists
         let checkQuery = caseInsensitive
@@ -341,12 +332,12 @@ public class GenericPowerSyncService: ObservableObject {
                 }
             ) {
                 if let count = results.first {
-                    PrintDebug("[GenericPowerSyncService] 🔍 Found \(count) record(s) matching ID", debug: true)
+                    ZyraFormLogger.debug("🔍 Found \(count) record(s) matching ID")
                 }
                 break
             }
         } catch {
-            PrintDebug("[GenericPowerSyncService] ⚠️ Error checking record existence: \(error.localizedDescription)", debug: true)
+            ZyraFormLogger.warning("⚠️ Error checking record existence: \(error.localizedDescription)")
         }
 
         // Execute DELETE
@@ -355,10 +346,8 @@ public class GenericPowerSyncService: ObservableObject {
 
         try await powerSync.execute(sql: deleteQuery, parameters: [id])
 
-        PrintDebug("[GenericPowerSyncService] ✅ DELETE SQL executed", debug: true)
-
-        // PowerSync will automatically sync the deletion to Supabase
-        PrintDebug("[GenericPowerSyncService] ✅ Record deletion completed - PowerSync will handle sync", debug: true)
+        ZyraFormLogger.debug("✅ DELETE SQL executed")
+        ZyraFormLogger.info("✅ Record deletion completed - PowerSync will handle sync")
 
         // Refresh data after deletion (use "1 = 1" to load all records without user_id filter)
         try await loadRecords(
@@ -366,7 +355,7 @@ public class GenericPowerSyncService: ObservableObject {
             whereClause: "1 = 1",
             orderBy: "created_at DESC"
         )
-        PrintDebug("[GenericPowerSyncService] ✅ Records reloaded after deletion", debug: true)
+        ZyraFormLogger.debug("✅ Records reloaded after deletion")
     }
 
     // MARK: - Batch Operations

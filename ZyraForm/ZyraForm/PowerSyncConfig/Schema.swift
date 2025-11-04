@@ -6,14 +6,15 @@
 //
 
 import PowerSync
+import ZyraForm
 
-let schema = ExtendedTable(
-  name: "\(AppConfig.shared.dbPrefix)employees",
+let schema = ZyraTable(
+  name: "\(AppConfig.dbPrefix)employees",
   primaryKey: "id",
   columns: [
-      zf.text("email").email().notNull(),
-      zf.text("name").minLength(2).maxLength(50).notNull(),
-      zf.text("age").int().positive().intMin(18).intMax(120).nullable(),
-      zf.text("website").url().nullable()
+    zf.text("email").email().encrypted().notNull(),
+    zf.text("name").minLength(2).maxLength(50).encrypted().notNull(),
+    zf.text("age").int().positive().intMin(18).encrypted().intMax(120).nullable(),
+    zf.text("website").url().encrypted().nullable()
   ]
 )

@@ -8,69 +8,9 @@
 import Foundation
 import SwiftUI
 import Combine
+import ZyraForm
 
-// MARK: - Form Values Protocol
-
-public protocol FormValues: Codable {
-    init()
-    func toDictionary() -> [String: Any]
-    mutating func update(from dictionary: [String: Any])
-}
-
-// MARK: - Form Validation Mode
-
-public enum FormValidationMode {
-    case onChange    // Validate on every change
-    case onBlur      // Validate when field loses focus
-    case onSubmit    // Validate only on submit
-    case onTouched   // Validate once field is touched
-}
-
-// MARK: - Form Errors
-
-public struct FormErrors: Codable {
-    public private(set) var errors: [String: String] = [:]
-    
-    public init() {}
-    
-    public mutating func set(_ message: String, for field: String) {
-        errors[field] = message
-    }
-    
-    public mutating func remove(_ field: String) {
-        errors.removeValue(forKey: field)
-    }
-    
-    public mutating func clear() {
-        errors.removeAll()
-    }
-    
-    public func hasError(_ field: String) -> Bool {
-        return errors[field] != nil
-    }
-    
-    public func getError(_ field: String) -> String? {
-        return errors[field]
-    }
-}
-
-// MARK: - Field Visibility Rules
-
-public struct FieldVisibilityRules {
-    public private(set) var rules: [String: () -> Bool] = [:]
-    
-    public init() {}
-    
-    public mutating func addRule(for field: String, condition: @escaping () -> Bool) {
-        rules[field] = condition
-    }
-    
-    public func shouldShow(_ field: String) -> Bool {
-        return rules[field]?() ?? true
-    }
-}
-
-// MARK: - PowerSync Form
+// MARK: - PowerSync Form (deprecated - use ZyraForm instead)
 
 @MainActor
 public class PowerSyncForm<Values: FormValues>: ObservableObject {
@@ -85,7 +25,7 @@ public class PowerSyncForm<Values: FormValues>: ObservableObject {
     
     // MARK: - Private Properties
     
-    private let schema: ExtendedTable
+    private let schema: ZyraTable
     private var validationMode: FormValidationMode
     private var visibilityRules: FieldVisibilityRules
     private var initialValues: Values
@@ -95,7 +35,7 @@ public class PowerSyncForm<Values: FormValues>: ObservableObject {
     // MARK: - Initialization
     
     public init(
-        schema: ExtendedTable,
+        schema: ZyraTable,
         initialValues: Values? = nil,
         mode: FormValidationMode = .onChange,
         visibilityRules: FieldVisibilityRules = FieldVisibilityRules()
@@ -288,19 +228,22 @@ public class PowerSyncForm<Values: FormValues>: ObservableObject {
         return isValid
     }
     
-    public func validateField(_ field: String) {
-        guard let column = schema.columns.first(where: { $0.name == field }) else { return }
+    @discardableResult
+    public func validateField(_ field: String) -> Bool {
+        guard let column = schema.columns.first(where: { $0.name == field }) else { return true }
         
         let value = getValue(for: field)
         let error = validateColumn(column, value: value)
         
         if let error = error {
             errors.set(error, for: field)
+            isValid = errors.errors.isEmpty
+            return false
         } else {
             errors.remove(field)
+            isValid = errors.errors.isEmpty
+            return true
         }
-        
-        isValid = errors.errors.isEmpty
     }
     
     private func validateColumn(_ column: ColumnMetadata, value: Any?) -> String? {
@@ -456,7 +399,7 @@ public class PowerSyncForm<Values: FormValues>: ObservableObject {
     
     public func loadFromPowerSync(
         recordId: String,
-        service: GenericPowerSyncService,
+        service: ZyraSync,
         fields: [String]? = nil
     ) async throws {
         let config = schema.toTableFieldConfig()
@@ -483,9 +426,10 @@ public class PowerSyncForm<Values: FormValues>: ObservableObject {
         recordId: String,
         tableName: String,
         userId: String,
+        database: PowerSyncDatabase,
         fields: [String]? = nil
     ) async throws {
-        let service = GenericPowerSyncService(tableName: tableName, userId: userId)
+        let service = ZyraSync(tableName: tableName, userId: userId, database: database)
         try await loadFromPowerSync(recordId: recordId, service: service, fields: fields)
     }
     

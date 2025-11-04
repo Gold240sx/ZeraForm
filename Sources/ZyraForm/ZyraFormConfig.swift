@@ -29,7 +29,7 @@ public struct ZyraFormConfig {
     public let userId: String
     
     /// Database schema (tables)
-    public let schema: ExtendedSchema
+    public let schema: ZyraSchema
     
     /// Database filename (optional, defaults to "ZyraForm.sqlite")
     public let dbFilename: String
@@ -41,7 +41,7 @@ public struct ZyraFormConfig {
         powerSyncPassword: String,
         dbPrefix: String = "",
         userId: String,
-        schema: ExtendedSchema,
+        schema: ZyraSchema,
         dbFilename: String = "ZyraForm.sqlite"
     ) {
         self.supabaseURL = supabaseURL

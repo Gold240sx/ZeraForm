@@ -7,6 +7,7 @@
 
 import SwiftUI
 import HighlightSwift
+import ZyraForm
 
 #if os(macOS)
 import AppKit
@@ -62,10 +63,10 @@ struct SchemaViewer: View {
     @State private var selectedFormat: SchemaFormat = .zyra
     @State private var showingPostgresContent = false
     
-    let schema: ExtendedTable
-    let service: GenericPowerSyncService?
+    let schema: ZyraTable
+    let service: ZyraSync?
     
-    init(schema: ExtendedTable, service: GenericPowerSyncService? = nil) {
+    init(schema: ZyraTable, service: ZyraSync? = nil) {
         self.schema = schema
         self.service = service
     }
@@ -142,7 +143,7 @@ struct SchemaViewer: View {
     }
     
     private func generateZyraSchema() -> String {
-        var code = "let schema = ExtendedTable(\n"
+        var code = "let schema = ZyraTable(\n"
         code += "  name: \"\(schema.name)\",\n"
         code += "  primaryKey: \"\(schema.primaryKey)\",\n"
         code += "  columns: [\n"
@@ -229,8 +230,8 @@ struct PostgresContentView: View {
     @State private var generatedContent: String = ""
     @State private var isLoading = true
     
-    let schema: ExtendedTable
-    let service: GenericPowerSyncService?
+    let schema: ZyraTable
+    let service: ZyraSync?
     
     var body: some View {
         NavigationStack {

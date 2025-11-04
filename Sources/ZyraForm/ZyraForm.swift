@@ -28,7 +28,7 @@ public enum FormValidationMode {
 
 // MARK: - Form Errors
 
-public struct FormErrors: Codable {
+public struct FormErrors: Codable, Error {
     public private(set) var errors: [String: String] = [:]
     
     public init() {}
@@ -85,7 +85,7 @@ public class ZyraForm<Values: FormValues>: ObservableObject {
     
     // MARK: - Private Properties
     
-    private let schema: ExtendedTable
+    private let schema: ZyraTable
     private var validationMode: FormValidationMode
     private var visibilityRules: FieldVisibilityRules
     private var initialValues: Values
@@ -95,7 +95,7 @@ public class ZyraForm<Values: FormValues>: ObservableObject {
     // MARK: - Initialization
     
     public init(
-        schema: ExtendedTable,
+        schema: ZyraTable,
         initialValues: Values? = nil,
         mode: FormValidationMode = .onChange,
         visibilityRules: FieldVisibilityRules = FieldVisibilityRules()
@@ -456,7 +456,7 @@ public class ZyraForm<Values: FormValues>: ObservableObject {
     
     public func loadFromPowerSync(
         recordId: String,
-        service: GenericPowerSyncService,
+        service: ZyraSync,
         fields: [String]? = nil
     ) async throws {
         let config = schema.toTableFieldConfig()
@@ -483,9 +483,10 @@ public class ZyraForm<Values: FormValues>: ObservableObject {
         recordId: String,
         tableName: String,
         userId: String,
+        database: PowerSyncDatabase,
         fields: [String]? = nil
     ) async throws {
-        let service = GenericPowerSyncService(tableName: tableName, userId: userId)
+        let service = ZyraSync(tableName: tableName, userId: userId, database: database)
         try await loadFromPowerSync(recordId: recordId, service: service, fields: fields)
     }
     

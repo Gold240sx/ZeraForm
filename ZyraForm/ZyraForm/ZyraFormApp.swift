@@ -6,17 +6,25 @@
 //
 
 import SwiftUI
+import ZyraForm
 
 @main
 struct ZyraFormApp: App {
     init() {
-        // Connect PowerSync to Supabase when app launches
+        // Initialize ZyraForm with configuration from environment variables
         Task {
             do {
-                try await db.connect(connector: SupabaseConnector.shared)
-                print("[PowerSync] ✅ Connected to Supabase")
+                // Create schema from the app's schema definition
+                let zyraSchema = ZyraSchema(tables: [schema])
+                
+                // Create configuration from environment variables
+                let config = AppConfig.createZyraFormConfig(schema: zyraSchema)
+                
+                // Initialize ZyraFormManager (this will connect to PowerSync/Supabase)
+                try await ZyraFormManager.initialize(with: config)
+                print("[ZyraForm] ✅ Successfully initialized and connected")
             } catch {
-                print("[PowerSync] ❌ Failed to connect to Supabase: \(error)")
+                print("[ZyraForm] ❌ Failed to initialize: \(error)")
             }
         }
     }
