@@ -7,6 +7,7 @@
 
 import Foundation
 import ZyraForm
+import ZyraFormSupabase // Added for SupabaseConnector
 
 /// App configuration that pulls values from environment variables
 struct AppConfig {
@@ -55,10 +56,15 @@ struct AppConfig {
     
     /// Create ZyraFormConfig from environment variables
     static func createZyraFormConfig(schema: ZyraSchema) -> ZyraFormConfig {
-        return ZyraFormConfig(
+        let connector = SupabaseConnector(
             supabaseURL: supabaseURL,
             supabaseKey: supabaseKey,
             powerSyncEndpoint: powerSyncEndpoint,
+            powerSyncPassword: powerSyncPassword
+        )
+        
+        return ZyraFormConfig(
+            connector: connector,
             powerSyncPassword: powerSyncPassword,
             dbPrefix: dbPrefix,
             userId: userId,

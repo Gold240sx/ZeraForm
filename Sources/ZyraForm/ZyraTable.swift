@@ -13,11 +13,11 @@ import PowerSync
 
 /// Configuration for table fields used by PowerSync services
 public struct TableFieldConfig {
-    let allFields: [String]
-    let encryptedFields: [String]
-    let integerFields: [String]
-    let booleanFields: [String]
-    let defaultOrderBy: String
+    public let allFields: [String]
+    public let encryptedFields: [String]
+    public let integerFields: [String]
+    public let booleanFields: [String]
+    public let defaultOrderBy: String
 }
 
 /// Metadata for a PowerSync column
@@ -254,44 +254,44 @@ public struct ColumnBuilder {
     
     // MARK: - Type Methods
     
-    func encrypted() -> ColumnBuilder {
+    public func encrypted() -> ColumnBuilder {
         var builder = self
         builder.isEncrypted = true
         return builder
     }
     
-    func int() -> ColumnBuilder {
+    public func int() -> ColumnBuilder {
         var builder = self
         builder.swiftType = .integer
         return builder
     }
     
-    func bool() -> ColumnBuilder {
+    public func bool() -> ColumnBuilder {
         var builder = self
         builder.swiftType = .boolean
         return builder
     }
     
-    func double() -> ColumnBuilder {
+    public func double() -> ColumnBuilder {
         var builder = self
         builder.swiftType = .double
         return builder
     }
     
-    func uuid() -> ColumnBuilder {
+    public func uuid() -> ColumnBuilder {
         var builder = self
         builder.swiftType = .uuid
         builder.isUuid = true
         return builder
     }
     
-    func nullable() -> ColumnBuilder {
+    public func nullable() -> ColumnBuilder {
         var builder = self
         builder.isNullable = true
         return builder
     }
     
-    func notNull() -> ColumnBuilder {
+    public func notNull() -> ColumnBuilder {
         var builder = self
         builder.isNullable = false
         return builder
@@ -360,201 +360,201 @@ public struct ColumnBuilder {
     
     // MARK: - Validation Methods
     
-    func email() -> ColumnBuilder {
+    public func email() -> ColumnBuilder {
         var builder = self
         builder.isEmail = true
         return builder
     }
     
-    func url() -> ColumnBuilder {
+    public func url() -> ColumnBuilder {
         var builder = self
         builder.isUrl = true
         return builder
     }
     
-    func httpUrl() -> ColumnBuilder {
+    public func httpUrl() -> ColumnBuilder {
         var builder = self
         builder.isHttpUrl = true
         return builder
     }
     
-    func cuid() -> ColumnBuilder {
+    public func cuid() -> ColumnBuilder {
         var builder = self
         builder.isCuid = true
         return builder
     }
     
-    func cuid2() -> ColumnBuilder {
+    public func cuid2() -> ColumnBuilder {
         var builder = self
         builder.isCuid2 = true
         return builder
     }
     
-    func nanoid() -> ColumnBuilder {
+    public func nanoid() -> ColumnBuilder {
         var builder = self
         builder.isNanoid = true
         return builder
     }
     
-    func emoji() -> ColumnBuilder {
+    public func emoji() -> ColumnBuilder {
         var builder = self
         builder.isEmoji = true
         return builder
     }
     
-    func hex() -> ColumnBuilder {
+    public func hex() -> ColumnBuilder {
         var builder = self
         builder.isHex = true
         return builder
     }
     
-    func jwt() -> ColumnBuilder {
+    public func jwt() -> ColumnBuilder {
         var builder = self
         builder.isJwt = true
         return builder
     }
     
-    func date() -> ColumnBuilder {
+    public func date() -> ColumnBuilder {
         var builder = self
         builder.swiftType = .date
         builder.isDate = true
         return builder
     }
     
-    func time() -> ColumnBuilder {
+    public func time() -> ColumnBuilder {
         var builder = self
         builder.isTime = true
         return builder
     }
     
-    func isoDateTime() -> ColumnBuilder {
+    public func isoDateTime() -> ColumnBuilder {
         var builder = self
         builder.isIsoDateTime = true
         return builder
     }
     
-    func isoDate() -> ColumnBuilder {
+    public func isoDate() -> ColumnBuilder {
         var builder = self
         builder.isIsoDate = true
         return builder
     }
     
-    func isoTime() -> ColumnBuilder {
+    public func isoTime() -> ColumnBuilder {
         var builder = self
         builder.isIsoTime = true
         return builder
     }
     
-    func regex(_ pattern: String, error: String? = nil) -> ColumnBuilder {
+    public func regex(_ pattern: String, error: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.regexPattern = pattern
         builder.regexError = error
         return builder
     }
     
-    func minLength(_ value: Int) -> ColumnBuilder {
+    public func minLength(_ value: Int) -> ColumnBuilder {
         var builder = self
         builder.minLength = value
         return builder
     }
     
-    func maxLength(_ value: Int) -> ColumnBuilder {
+    public func maxLength(_ value: Int) -> ColumnBuilder {
         var builder = self
         builder.maxLength = value
         return builder
     }
     
-    func length(_ value: Int) -> ColumnBuilder {
+    public func length(_ value: Int) -> ColumnBuilder {
         var builder = self
         builder.exactLength = value
         return builder
     }
     
-    func startsWith(_ prefix: String) -> ColumnBuilder {
+    public func startsWith(_ prefix: String) -> ColumnBuilder {
         var builder = self
         builder.startsWith = prefix
         return builder
     }
     
-    func endsWith(_ suffix: String) -> ColumnBuilder {
+    public func endsWith(_ suffix: String) -> ColumnBuilder {
         var builder = self
         builder.endsWith = suffix
         return builder
     }
     
-    func includes(_ substring: String) -> ColumnBuilder {
+    public func includes(_ substring: String) -> ColumnBuilder {
         var builder = self
         builder.includes = substring
         return builder
     }
     
-    func uppercase() -> ColumnBuilder {
+    public func uppercase() -> ColumnBuilder {
         var builder = self
         builder.isUppercase = true
         return builder
     }
     
-    func lowercase() -> ColumnBuilder {
+    public func lowercase() -> ColumnBuilder {
         var builder = self
         builder.isLowercase = true
         return builder
     }
     
-    func ipv4() -> ColumnBuilder {
+    public func ipv4() -> ColumnBuilder {
         var builder = self
         builder.isIpv4 = true
         return builder
     }
     
-    func ipv6() -> ColumnBuilder {
+    public func ipv6() -> ColumnBuilder {
         var builder = self
         builder.isIpv6 = true
         return builder
     }
     
-    func positive() -> ColumnBuilder {
+    public func positive() -> ColumnBuilder {
         var builder = self
         builder.isPositive = true
         return builder
     }
     
-    func negative() -> ColumnBuilder {
+    public func negative() -> ColumnBuilder {
         var builder = self
         builder.isNegative = true
         return builder
     }
     
-    func even() -> ColumnBuilder {
+    public func even() -> ColumnBuilder {
         var builder = self
         builder.isEven = true
         return builder
     }
     
-    func odd() -> ColumnBuilder {
+    public func odd() -> ColumnBuilder {
         var builder = self
         builder.isOdd = true
         return builder
     }
     
-    func minimum(_ value: Double) -> ColumnBuilder {
+    public func minimum(_ value: Double) -> ColumnBuilder {
         var builder = self
         builder.minimum = value
         return builder
     }
     
-    func maximum(_ value: Double) -> ColumnBuilder {
+    public func maximum(_ value: Double) -> ColumnBuilder {
         var builder = self
         builder.maximum = value
         return builder
     }
     
-    func intMin(_ value: Int) -> ColumnBuilder {
+    public func intMin(_ value: Int) -> ColumnBuilder {
         var builder = self
         builder.intMin = value
         return builder
     }
     
-    func intMax(_ value: Int) -> ColumnBuilder {
+    public func intMax(_ value: Int) -> ColumnBuilder {
         var builder = self
         builder.intMax = value
         return builder
