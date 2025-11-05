@@ -879,7 +879,7 @@ public enum ForeignKeyAction {
     /// NO ACTION: Similar to RESTRICT but checked at end of statement
     case noAction
     
-    var sqlString: String {
+    public var sqlString: String {
         switch self {
         case .cascade: return "CASCADE"
         case .restrict: return "RESTRICT"
@@ -889,7 +889,7 @@ public enum ForeignKeyAction {
         }
     }
     
-    var drizzleString: String {
+    public var drizzleString: String {
         switch self {
         case .cascade: return "cascade"
         case .restrict: return "restrict"
