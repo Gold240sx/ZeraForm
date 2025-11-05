@@ -22,55 +22,55 @@ public struct TableFieldConfig {
 
 /// Metadata for a PowerSync column
 public struct ColumnMetadata {
-    let name: String
-    let powerSyncColumn: PowerSync.Column
-    let isEncrypted: Bool
-    let swiftType: SwiftColumnType
-    let isNullable: Bool
-    let foreignKey: ForeignKey?
-    let defaultValue: String?
-    let enumType: DatabaseEnum?
-    let nestedSchema: NestedSchema?
+    public let name: String
+    public let powerSyncColumn: PowerSync.Column
+    public let isEncrypted: Bool
+    public let swiftType: SwiftColumnType
+    public let isNullable: Bool
+    public let foreignKey: ForeignKey?
+    public let defaultValue: String?
+    public let enumType: DatabaseEnum?
+    public let nestedSchema: NestedSchema?
     
     // Validation properties (like Zod)
-    let isPositive: Bool?
-    let isNegative: Bool?
-    let isEven: Bool?
-    let isOdd: Bool?
-    let minimum: Double?
-    let maximum: Double?
-    let intMin: Int?
-    let intMax: Int?
-    let isEmail: Bool?
-    let isUrl: Bool?
-    let isHttpUrl: Bool?
-    let isUuid: Bool?
-    let isCuid: Bool?
-    let isCuid2: Bool?
-    let isNanoid: Bool?
-    let isEmoji: Bool?
-    let isHex: Bool?
-    let isJwt: Bool?
-    let isDate: Bool?
-    let isTime: Bool?
-    let isIsoDateTime: Bool?
-    let isIsoDate: Bool?
-    let isIsoTime: Bool?
-    let regexPattern: String?
-    let regexError: String?
-    let minLength: Int?
-    let maxLength: Int?
-    let exactLength: Int?
-    let startsWith: String?
-    let endsWith: String?
-    let includes: String?
-    let isUppercase: Bool?
-    let isLowercase: Bool?
-    let isIpv4: Bool?
-    let isIpv6: Bool?
-    let customValidation: (String, (Any) -> Bool)?
+    public let isPositive: Bool?
+    public let isNegative: Bool?
+    public let isEven: Bool?
+    public let isOdd: Bool?
+    public let minimum: Double?
+    public let maximum: Double?
+    public let intMin: Int?
+    public let intMax: Int?
+    public let isEmail: Bool?
+    public let isUrl: Bool?
+    public let isHttpUrl: Bool?
+    public let isUuid: Bool?
+    public let isCuid: Bool?
+    public let isCuid2: Bool?
+    public let isNanoid: Bool?
+    public let isEmoji: Bool?
+    public let isHex: Bool?
+    public let isJwt: Bool?
+    public let isDate: Bool?
+    public let isTime: Bool?
+    public let isIsoDateTime: Bool?
+    public let isIsoDate: Bool?
+    public let isIsoTime: Bool?
+    public let regexPattern: String?
+    public let regexError: String?
+    public let minLength: Int?
+    public let maxLength: Int?
+    public let exactLength: Int?
+    public let startsWith: String?
+    public let endsWith: String?
+    public let includes: String?
+    public let isUppercase: Bool?
+    public let isLowercase: Bool?
+    public let isIpv4: Bool?
+    public let isIpv6: Bool?
+    public let customValidation: (String, (Any) -> Bool)?
     
-    indirect enum SwiftColumnType: Equatable {
+    public indirect enum SwiftColumnType: Equatable {
         case string
         case integer
         case boolean
@@ -199,57 +199,57 @@ public indirect enum NestedSchema: Equatable {
 
 /// Builder for creating columns with metadata
 public struct ColumnBuilder {
-    let name: String
-    let powerSyncColumn: PowerSync.Column
-    var isEncrypted: Bool = false
-    var swiftType: ColumnMetadata.SwiftColumnType = .string
-    var isNullable: Bool = false
-    var foreignKey: ForeignKey? = nil
-    var defaultValue: String? = nil
-    var enumType: DatabaseEnum? = nil
+    public let name: String
+    public let powerSyncColumn: PowerSync.Column
+    public var isEncrypted: Bool = false
+    public var swiftType: ColumnMetadata.SwiftColumnType = .string
+    public var isNullable: Bool = false
+    public var foreignKey: ForeignKey? = nil
+    public var defaultValue: String? = nil
+    public var enumType: DatabaseEnum? = nil
     
     // Validation properties
-    var isPositive: Bool? = nil
-    var isNegative: Bool? = nil
-    var isEven: Bool? = nil
-    var isOdd: Bool? = nil
-    var minimum: Double? = nil
-    var maximum: Double? = nil
-    var intMin: Int? = nil
-    var intMax: Int? = nil
-    var isEmail: Bool? = nil
-    var isUrl: Bool? = nil
-    var isHttpUrl: Bool? = nil
-    var isUuid: Bool? = nil
-    var isCuid: Bool? = nil
-    var isCuid2: Bool? = nil
-    var isNanoid: Bool? = nil
-    var isEmoji: Bool? = nil
-    var isHex: Bool? = nil
-    var isJwt: Bool? = nil
-    var isDate: Bool? = nil
-    var isTime: Bool? = nil
-    var isIsoDateTime: Bool? = nil
-    var isIsoDate: Bool? = nil
-    var isIsoTime: Bool? = nil
-    var regexPattern: String? = nil
-    var regexError: String? = nil
-    var minLength: Int? = nil
-    var maxLength: Int? = nil
-    var exactLength: Int? = nil
-    var startsWith: String? = nil
-    var endsWith: String? = nil
-    var includes: String? = nil
-    var isUppercase: Bool? = nil
-    var isLowercase: Bool? = nil
-    var isIpv4: Bool? = nil
-    var isIpv6: Bool? = nil
-    var customValidation: (String, (Any) -> Bool)? = nil
+    public var isPositive: Bool? = nil
+    public var isNegative: Bool? = nil
+    public var isEven: Bool? = nil
+    public var isOdd: Bool? = nil
+    public var minimum: Double? = nil
+    public var maximum: Double? = nil
+    public var intMin: Int? = nil
+    public var intMax: Int? = nil
+    public var isEmail: Bool? = nil
+    public var isUrl: Bool? = nil
+    public var isHttpUrl: Bool? = nil
+    public var isUuid: Bool? = nil
+    public var isCuid: Bool? = nil
+    public var isCuid2: Bool? = nil
+    public var isNanoid: Bool? = nil
+    public var isEmoji: Bool? = nil
+    public var isHex: Bool? = nil
+    public var isJwt: Bool? = nil
+    public var isDate: Bool? = nil
+    public var isTime: Bool? = nil
+    public var isIsoDateTime: Bool? = nil
+    public var isIsoDate: Bool? = nil
+    public var isIsoTime: Bool? = nil
+    public var regexPattern: String? = nil
+    public var regexError: String? = nil
+    public var minLength: Int? = nil
+    public var maxLength: Int? = nil
+    public var exactLength: Int? = nil
+    public var startsWith: String? = nil
+    public var endsWith: String? = nil
+    public var includes: String? = nil
+    public var isUppercase: Bool? = nil
+    public var isLowercase: Bool? = nil
+    public var isIpv4: Bool? = nil
+    public var isIpv6: Bool? = nil
+    public var customValidation: (String, (Any) -> Bool)? = nil
     
     // Use indirect reference to break circular dependency
     private var _nestedSchema: NestedSchema?
     
-    var nestedSchema: NestedSchema? {
+    public var nestedSchema: NestedSchema? {
         get { _nestedSchema }
         set { _nestedSchema = newValue }
     }
@@ -257,7 +257,7 @@ public struct ColumnBuilder {
     // Many-to-many relationship marker
     var _manyToManyRelationship: ManyToManyRelationship? = nil
     
-    init(name: String, powerSyncColumn: PowerSync.Column) {
+    public init(name: String, powerSyncColumn: PowerSync.Column) {
         self.name = name
         self.powerSyncColumn = powerSyncColumn
         self._nestedSchema = nil
@@ -715,8 +715,8 @@ public struct ColumnBuilder {
 
 /// Database enum definition
 public struct DatabaseEnum: Hashable {
-    let name: String
-    let values: [String]
+    public let name: String
+    public let values: [String]
     
     public init(name: String, values: [String]) {
         self.name = name
@@ -741,10 +741,10 @@ public enum DefaultTimestamp {
 
 /// Foreign key relationship definition
 public struct ForeignKey {
-    let referencedTable: String
-    let referencedColumn: String
-    let onDelete: ForeignKeyAction
-    let onUpdate: ForeignKeyAction
+    public let referencedTable: String
+    public let referencedColumn: String
+    public let onDelete: ForeignKeyAction
+    public let onUpdate: ForeignKeyAction
 }
 
 /// Many-to-many relationship definition
@@ -1166,6 +1166,86 @@ public struct RLSPolicyBuilder {
             name: "\(tableName)_editor_\(operation.rawValue.lowercased())",
             operation: operation,
             usingExpression: editorExpression()
+        )
+    }
+    
+    // MARK: - Additional Convenience Methods
+    
+    /// Policy for read access (alias for authenticated SELECT)
+    public func canRead(allowSuperUser: Bool = true) -> RLSPolicy {
+        let expression: String
+        if allowSuperUser {
+            expression = combineExpressions([
+                authenticatedExpression(),
+                superUserExpression()
+            ])
+        } else {
+            expression = authenticatedExpression()
+        }
+        
+        return RLSPolicy(
+            name: "\(tableName)_can_read",
+            operation: .select,
+            usingExpression: expression
+        )
+    }
+    
+    /// Policy for users to write their own rows
+    public func canWriteOwn(operation: RLSOperation = .insert, allowSuperUser: Bool = true) -> RLSPolicy {
+        let expression: String
+        if allowSuperUser {
+            expression = combineExpressions([
+                userExpression(),
+                superUserExpression()
+            ])
+        } else {
+            expression = userExpression()
+        }
+        
+        return RLSPolicy(
+            name: "\(tableName)_can_write_own",
+            operation: operation,
+            usingExpression: "true",
+            withCheckExpression: expression
+        )
+    }
+    
+    /// Policy for users to update their own rows
+    public func canUpdateOwn(allowSuperUser: Bool = true) -> RLSPolicy {
+        let expression: String
+        if allowSuperUser {
+            expression = combineExpressions([
+                userExpression(),
+                superUserExpression()
+            ])
+        } else {
+            expression = userExpression()
+        }
+        
+        return RLSPolicy(
+            name: "\(tableName)_can_update_own",
+            operation: .update,
+            usingExpression: expression,
+            withCheckExpression: expression
+        )
+    }
+    
+    /// Policy for users to delete if they own the row OR are superuser
+    public func canDeleteIfSuperuser(allowSuperUser: Bool = true) -> RLSPolicy {
+        let expression: String
+        if allowSuperUser {
+            expression = combineExpressions([
+                userExpression(),
+                superUserExpression()
+            ])
+        } else {
+            expression = userExpression()
+        }
+        
+        return RLSPolicy(
+            name: "\(tableName)_can_delete_if_superuser",
+            operation: .delete,
+            usingExpression: expression
         )
     }
     
