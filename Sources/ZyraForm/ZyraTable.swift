@@ -1546,8 +1546,13 @@ public struct ZyraTable: Hashable {
         // Add primary key
         columnDefinitions.append("\(primaryKey) TEXT PRIMARY KEY")
         
-        // Add each column with its definition
+        // Add each column with its definition (skip primary key since already added)
         for column in columns {
+            // Skip primary key column since it's already added above
+            if column.name.lowercased() == primaryKey.lowercased() {
+                continue
+            }
+            
             var colDef = column.name
             
             // Add type
@@ -1631,8 +1636,13 @@ public struct ZyraTable: Hashable {
         // Add primary key
         columnDefinitions.append("\(primaryKey) TEXT PRIMARY KEY")
         
-        // Add each column with its definition
+        // Add each column with its definition (skip primary key since already added)
         for column in columns {
+            // Skip primary key column since it's already added above
+            if column.name.lowercased() == primaryKey.lowercased() {
+                continue
+            }
+            
             var colDef = column.name
             
             // Add type
