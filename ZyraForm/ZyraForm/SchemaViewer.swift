@@ -58,6 +58,208 @@ enum SchemaFormat: String, CaseIterable {
     }
 }
 
+// MARK: - Schema Format Selector (Modal)
+
+struct SchemaFormatSelector: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var selectedFormat: SchemaFormat
+    
+    let schema: ZyraTable
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                Text("Select Code Format")
+                    .font(.headline)
+                
+                Picker("Format", selection: $selectedFormat) {
+                    ForEach(SchemaFormat.allCases, id: \.self) { format in
+                        Text(format.rawValue).tag(format)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding()
+                
+                Text("The generated code will appear in the detail panel.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+            .frame(minWidth: 400, minHeight: 200)
+            .padding()
+            .navigationTitle("Schema Format")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Schema Code View (Detail Panel)
+
+struct SchemaCodeView: View {
+    @State private var showingPostgresContent = false
+    
+    let schema: ZyraTable
+    let service: ZyraSync?
+    @Binding var selectedFormat: SchemaFormat
+    let onClose: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Format selector toolbar
+            HStack {
+                Picker("Format", selection: $selectedFormat) {
+                    ForEach(SchemaFormat.allCases, id: \.self) { format in
+                        Text(format.rawValue).tag(format)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(maxWidth: 400)
+                
+                Spacer()
+                
+                if selectedFormat == .postgres {
+                    Button(action: {
+                        showingPostgresContent = true
+                    }) {
+                        Label("Generate DB Content", systemImage: "database")
+                    }
+                }
+                
+                Button(action: copyToClipboard) {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
+                
+                Button(action: onClose) {
+                    Label("Close", systemImage: "xmark.circle")
+                }
+            }
+            .padding()
+            
+            Divider()
+            
+            // Code display with syntax highlighting
+            ScrollView {
+                CodeText(schemaCode)
+                    .highlightLanguage(selectedFormat.highlightLanguage)
+                    .codeTextStyle(.card(cornerRadius: 8, verticalPadding: 12))
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .id(selectedFormat) // Force refresh when format changes
+            }
+        }
+        .background(Color(hex: "13120F"))
+        .navigationTitle("Schema Viewer")
+        .sheet(isPresented: $showingPostgresContent) {
+            PostgresContentView(schema: schema, service: service)
+        }
+    }
+    
+    private var schemaCode: String {
+        switch selectedFormat {
+        case .zyra:
+            return generateZyraSchema()
+        case .swiftData:
+            return schema.generateSwiftModelFile()
+        case .zod:
+            return schema.generateZodSchema()
+        case .drizzle:
+            return schema.generateDrizzleSchema(includeImports: true)
+        case .postgres:
+            return schema.generateCreateTableSQLOnly()
+        }
+    }
+    
+    private func generateZyraSchema() -> String {
+        var code = "let schema = ZyraTable(\n"
+        code += "  name: \"\(schema.name)\",\n"
+        code += "  primaryKey: \"\(schema.primaryKey)\",\n"
+        code += "  columns: [\n"
+        
+        var columnDefs: [String] = []
+        for column in schema.columns {
+            if column.name == schema.primaryKey || column.name == "created_at" || column.name == "updated_at" {
+                continue // Skip auto-generated columns
+            }
+            
+            var def = "      zf."
+            
+            switch column.swiftType {
+            case .string, .uuid:
+                def += "text(\"\(column.name)\")"
+            case .integer:
+                def += "integer(\"\(column.name)\")"
+            case .double:
+                def += "real(\"\(column.name)\")"
+            default:
+                def += "text(\"\(column.name)\")"
+            }
+            
+            // Add validations
+            if column.isEmail == true {
+                def += ".email()"
+            }
+            
+            if column.isUrl == true {
+                def += ".url()"
+            }
+            
+            if let minLength = column.minLength {
+                def += ".minLength(\(minLength))"
+            }
+            
+            if let maxLength = column.maxLength {
+                def += ".maxLength(\(maxLength))"
+            }
+            
+            if let intMin = column.intMin {
+                def += ".intMin(\(intMin))"
+            }
+            
+            if let intMax = column.intMax {
+                def += ".intMax(\(intMax))"
+            }
+            
+            if column.isPositive == true {
+                def += ".positive()"
+            }
+            
+            if !column.isNullable {
+                def += ".notNull()"
+            } else {
+                def += ".nullable()"
+            }
+            
+            columnDefs.append(def)
+        }
+        
+        code += columnDefs.joined(separator: ",\n")
+        code += "\n  ]\n"
+        code += ")\n"
+        
+        return code
+    }
+    
+    private func copyToClipboard() {
+        #if os(macOS)
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(schemaCode, forType: .string)
+        #else
+        UIPasteboard.general.string = schemaCode
+        #endif
+    }
+}
+
+// MARK: - Schema Viewer (Legacy - kept for compatibility)
+
 struct SchemaViewer: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedFormat: SchemaFormat = .zyra

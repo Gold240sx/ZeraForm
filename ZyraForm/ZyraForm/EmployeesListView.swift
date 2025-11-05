@@ -39,6 +39,7 @@ struct EmployeesListView: View {
     @State private var selectedEmployeeId: String?
     @State private var showingEditSheet = false
     @State private var showingSchemaViewer = false
+    @State private var selectedSchemaFormat: SchemaFormat = .zyra
     
     // Cache the config to avoid accessing schema during view updates
     private var config: TableFieldConfig {
@@ -91,7 +92,10 @@ struct EmployeesListView: View {
             }
         }
         .sheet(isPresented: $showingSchemaViewer) {
-            SchemaViewer(schema: selectedTable, service: service)
+            SchemaFormatSelector(
+                selectedFormat: $selectedSchemaFormat,
+                schema: selectedTable
+            )
         }
         .onChange(of: selectedTable) { oldTable, newTable in
             // Recreate service when table changes
@@ -206,7 +210,16 @@ struct EmployeesListView: View {
     
     @ViewBuilder
     private var detailView: some View {
-        if let selectedId = selectedEmployeeId,
+        if showingSchemaViewer {
+            SchemaCodeView(
+                schema: selectedTable,
+                service: service,
+                selectedFormat: $selectedSchemaFormat,
+                onClose: {
+                    showingSchemaViewer = false
+                }
+            )
+        } else if let selectedId = selectedEmployeeId,
            let record = service.records.first(where: { ($0["id"] as? String) == selectedId }) {
             EmployeeDetailView(
                 employee: record,
