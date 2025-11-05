@@ -69,6 +69,7 @@ struct EmployeesListView: View {
         }
         .sheet(isPresented: $showingAddSheet) {
             EmployeeFormView(
+                table: selectedTable,
                 service: service,
                 onSave: {
                     Task { await loadRecords() }
@@ -79,8 +80,9 @@ struct EmployeesListView: View {
         .sheet(isPresented: $showingEditSheet) {
             if let employeeId = selectedEmployeeId {
                 EmployeeFormView(
+                    table: selectedTable,
                     service: service,
-                    employeeId: employeeId,
+                    recordId: employeeId,
                     onSave: {
                         Task { await loadRecords() }
                         showingEditSheet = false

@@ -9,159 +9,38 @@ import SwiftUI
 import Foundation
 import ZyraForm
 
-// MARK: - Employee Form Values
-
-struct EmployeeFormValues: FormValues {
-    var email: String = ""
-    var name: String = ""
-    var age: String = ""
-    var website: String = ""
-    
-    init() {}
-    
-    init(from record: [String: Any]) {
-        self.email = record["email"] as? String ?? ""
-        self.name = record["name"] as? String ?? ""
-        if let ageValue = record["age"] as? Int {
-            self.age = String(ageValue)
-        } else if let ageStr = record["age"] as? String {
-            self.age = ageStr
-        }
-        self.website = record["website"] as? String ?? ""
-    }
-    
-    func toDictionary() -> [String: Any] {
-        var dict: [String: Any] = [
-            "email": email,
-            "name": name
-        ]
-        
-        if !age.isEmpty, let ageInt = Int(age) {
-            dict["age"] = ageInt
-        }
-        
-        if !website.isEmpty {
-            dict["website"] = website
-        }
-        
-        return dict
-    }
-    
-    mutating func update(from dictionary: [String: Any]) {
-        self.email = dictionary["email"] as? String ?? ""
-        self.name = dictionary["name"] as? String ?? ""
-        if let ageValue = dictionary["age"] as? Int {
-            self.age = String(ageValue)
-        } else if let ageStr = dictionary["age"] as? String {
-            self.age = ageStr
-        }
-        self.website = dictionary["website"] as? String ?? ""
-    }
-}
-
-// MARK: - Employee Form View
+// MARK: - Generic Form View
 
 struct EmployeeFormView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var service: ZyraSync
+    let table: ZyraTable
     
-    let employeeId: String?
+    let recordId: String?
     let onSave: (() -> Void)?
     
-    @State private var formValues = EmployeeFormValues()
+    @State private var formValues: [String: String] = [:]
     @State private var isLoading = false
     @State private var errorMessage: String?
     
-    private let config: TableFieldConfig = {
-        return schema.toTableFieldConfig()
-    }()
+    private let config: TableFieldConfig
+    private let displayName: String
     
-    init(service: ZyraSync, employeeId: String? = nil, onSave: (() -> Void)? = nil) {
+    init(table: ZyraTable, service: ZyraSync, recordId: String? = nil, onSave: (() -> Void)? = nil) {
+        self.table = table
         self.service = service
-        self.employeeId = employeeId
+        self.recordId = recordId
         self.onSave = onSave
+        self.config = table.toTableFieldConfig()
+        self.displayName = TableRegistry.shared.displayName(for: table)
     }
     
     var body: some View {
         NavigationStack {
             Form {
-                Section("Employee Information") {
-                    // Email field
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Email")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        TextField("email@example.com", text: $formValues.email)
-                            .textContentType(.emailAddress)
-                            .autocorrectionDisabled()
-                        
-                        if !formValues.email.isEmpty && !isValidEmail(formValues.email) {
-                            Text("Please enter a valid email address")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                    }
-                    
-                    // Name field
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Name")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        TextField("Full Name", text: $formValues.name)
-                        
-                        if !formValues.name.isEmpty && formValues.name.count < 2 {
-                            Text("Name must be at least 2 characters")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                        
-                        if formValues.name.count > 50 {
-                            Text("Name must be 50 characters or less")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                    }
-                    
-                    // Age field
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Age (Optional)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        TextField("Age", text: $formValues.age)
-                        
-                        if !formValues.age.isEmpty {
-                            if let ageInt = Int(formValues.age) {
-                                if ageInt < 18 {
-                                    Text("Age must be at least 18")
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                } else if ageInt > 120 {
-                                    Text("Age must be 120 or less")
-                                        .font(.caption)
-                                        .foregroundColor(.red)
-                                }
-                            } else {
-                                Text("Please enter a valid age")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                            }
-                        }
-                    }
-                    
-                    // Website field
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Website (Optional)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        TextField("https://example.com", text: $formValues.website)
-                            .textContentType(.URL)
-                            .autocorrectionDisabled()
-                        
-                        if !formValues.website.isEmpty && !isValidURL(formValues.website) {
-                            Text("Please enter a valid URL")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
+                Section("\(displayName) Information") {
+                    ForEach(getEditableColumns(), id: \.name) { column in
+                        fieldView(for: column)
                     }
                 }
                 
@@ -173,7 +52,7 @@ struct EmployeeFormView: View {
                     }
                 }
             }
-            .navigationTitle(employeeId == nil ? "New Employee" : "Edit Employee")
+            .navigationTitle(recordId == nil ? "New \(displayName)" : "Edit \(displayName)")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -184,44 +63,193 @@ struct EmployeeFormView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         Task {
-                            await saveEmployee()
+                            await saveRecord()
                         }
                     }
                     .disabled(!isFormValid || isLoading)
                 }
             }
             .task {
-                if let employeeId = employeeId {
-                    await loadEmployee(id: employeeId)
+                if let recordId = recordId {
+                    await loadRecord(id: recordId)
+                } else {
+                    // Initialize form values for new record
+                    initializeFormValues()
                 }
             }
         }
     }
     
-    private var isFormValid: Bool {
-        guard !formValues.email.isEmpty,
-              !formValues.name.isEmpty,
-              isValidEmail(formValues.email),
-              formValues.name.count >= 2,
-              formValues.name.count <= 50 else {
-            return false
+    private func getEditableColumns() -> [ColumnMetadata] {
+        // Skip system columns (id, user_id, created_at, updated_at)
+        return table.columns.filter { column in
+            let name = column.name
+            return name != "id" && 
+                   name != table.primaryKey && 
+                   name != "user_id" && 
+                   name != "created_at" && 
+                   name != "updated_at"
+        }
+    }
+    
+    @ViewBuilder
+    private func fieldView(for column: ColumnMetadata) -> some View {
+        let binding = Binding(
+            get: { formValues[column.name] ?? "" },
+            set: { formValues[column.name] = $0 }
+        )
+        
+        VStack(alignment: .leading, spacing: 4) {
+            Text(column.name.capitalized + (column.isNullable ? " (Optional)" : ""))
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            TextField(placeholder(for: column), text: binding)
+                .textContentType(textContentType(for: column))
+                .autocorrectionDisabled(shouldDisableAutocorrection(for: column))
+            
+            if let error = validationError(for: column, value: binding.wrappedValue) {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
+        }
+    }
+    
+    private func placeholder(for column: ColumnMetadata) -> String {
+        if column.isEmail == true {
+            return "email@example.com"
+        } else if column.isUrl == true {
+            return "https://example.com"
+        } else if column.swiftType == .integer {
+            return "0"
+        } else {
+            return column.name
+        }
+    }
+    
+    private func textContentType(for column: ColumnMetadata) -> UITextContentType? {
+        if column.isEmail == true {
+            return .emailAddress
+        } else if column.isUrl == true {
+            return .URL
+        }
+        return nil
+    }
+    
+    private func shouldDisableAutocorrection(for column: ColumnMetadata) -> Bool {
+        return column.isEmail == true || column.isUrl == true
+    }
+    
+    private func validationError(for column: ColumnMetadata, value: String) -> String? {
+        // Skip validation for empty optional fields
+        if column.isNullable && value.isEmpty {
+            return nil
         }
         
-        if !formValues.age.isEmpty {
-            guard let ageInt = Int(formValues.age),
-                  ageInt >= 18,
-                  ageInt <= 120 else {
-                return false
+        // Required field validation
+        if !column.isNullable && value.isEmpty {
+            return "\(column.name.capitalized) is required"
+        }
+        
+        // Email validation
+        if column.isEmail == true && !value.isEmpty && !isValidEmail(value) {
+            return "Please enter a valid email address"
+        }
+        
+        // URL validation
+        if column.isUrl == true && !value.isEmpty && !isValidURL(value) {
+            return "Please enter a valid URL"
+        }
+        
+        // Integer validation
+        if column.swiftType == .integer && !value.isEmpty {
+            if let intValue = Int(value) {
+                if let min = column.intMin, intValue < min {
+                    return "Must be at least \(min)"
+                }
+                if let max = column.intMax, intValue > max {
+                    return "Must be \(max) or less"
+                }
+                if column.isPositive == true && intValue <= 0 {
+                    return "Must be positive"
+                }
+            } else {
+                return "Please enter a valid number"
             }
         }
         
-        if !formValues.website.isEmpty {
-            guard isValidURL(formValues.website) else {
+        // Length validation
+        if let minLength = column.minLength, value.count < minLength {
+            return "Must be at least \(minLength) characters"
+        }
+        if let maxLength = column.maxLength, value.count > maxLength {
+            return "Must be \(maxLength) characters or less"
+        }
+        
+        return nil
+    }
+    
+    private var isFormValid: Bool {
+        for column in getEditableColumns() {
+            let value = formValues[column.name] ?? ""
+            
+            // Check required fields
+            if !column.isNullable && value.isEmpty {
+                return false
+            }
+            
+            // Skip validation if empty and nullable
+            if column.isNullable && value.isEmpty {
+                continue
+            }
+            
+            // Email validation
+            if column.isEmail == true && !isValidEmail(value) {
+                return false
+            }
+            
+            // URL validation
+            if column.isUrl == true && !isValidURL(value) {
+                return false
+            }
+            
+            // Integer validation
+            if column.swiftType == .integer, let intValue = Int(value) {
+                if let min = column.intMin, intValue < min {
+                    return false
+                }
+                if let max = column.intMax, intValue > max {
+                    return false
+                }
+                if column.isPositive == true && intValue <= 0 {
+                    return false
+                }
+            } else if column.swiftType == .integer && !value.isEmpty {
+                return false // Invalid integer
+            }
+            
+            // Length validation
+            if let minLength = column.minLength, value.count < minLength {
+                return false
+            }
+            if let maxLength = column.maxLength, value.count > maxLength {
                 return false
             }
         }
         
         return true
+    }
+    
+    private func initializeFormValues() {
+        formValues = [:]
+        for column in getEditableColumns() {
+            if let defaultValue = column.defaultValue {
+                formValues[column.name] = defaultValue
+            } else {
+                formValues[column.name] = ""
+            }
+        }
     }
     
     private func isValidEmail(_ email: String) -> Bool {
@@ -239,7 +267,7 @@ struct EmployeeFormView: View {
         return true
     }
     
-    private func loadEmployee(id: String) async {
+    private func loadRecord(id: String) async {
         isLoading = true
         errorMessage = nil
         
@@ -254,14 +282,28 @@ struct EmployeeFormView: View {
                 booleanFields: config.booleanFields
             )
             
-            if let employee = service.records.first {
+            if let record = service.records.first {
                 await MainActor.run {
-                    formValues = EmployeeFormValues(from: employee)
+                    // Convert record to form values
+                    formValues = [:]
+                    for column in getEditableColumns() {
+                        if let value = record[column.name] {
+                            if let intValue = value as? Int {
+                                formValues[column.name] = String(intValue)
+                            } else if let boolValue = value as? Bool {
+                                formValues[column.name] = boolValue ? "true" : "false"
+                            } else {
+                                formValues[column.name] = String(describing: value)
+                            }
+                        } else {
+                            formValues[column.name] = ""
+                        }
+                    }
                     isLoading = false
                 }
             } else {
                 await MainActor.run {
-                    errorMessage = "Employee not found"
+                    errorMessage = "Record not found"
                     isLoading = false
                 }
             }
@@ -270,29 +312,46 @@ struct EmployeeFormView: View {
                 errorMessage = error.localizedDescription
                 isLoading = false
             }
-            PrintDebug("Failed to load employee: \(error)", debug: true)
+            PrintDebug("Failed to load record: \(error)", debug: true)
         }
     }
     
-    private func saveEmployee() async {
+    private func saveRecord() async {
         guard isFormValid else { return }
         
         isLoading = true
         errorMessage = nil
         
         do {
-            let fields = formValues.toDictionary()
+            var fields: [String: Any] = [:]
             
-            if let employeeId = employeeId {
-                // Update existing employee
+            // Convert form values to dictionary
+            for column in getEditableColumns() {
+                let value = formValues[column.name] ?? ""
+                
+                if value.isEmpty && column.isNullable {
+                    continue // Skip empty nullable fields
+                }
+                
+                if column.swiftType == .integer, let intValue = Int(value) {
+                    fields[column.name] = intValue
+                } else if column.swiftType == .boolean {
+                    fields[column.name] = value.lowercased() == "true" || value == "1"
+                } else if !value.isEmpty {
+                    fields[column.name] = value
+                }
+            }
+            
+            if let recordId = recordId {
+                // Update existing record
                 try await service.updateRecord(
-                    id: employeeId,
+                    id: recordId,
                     fields: fields,
                     encryptedFields: config.encryptedFields,
                     autoTimestamp: true
                 )
             } else {
-                // Create new employee
+                // Create new record
                 _ = try await service.createRecord(
                     fields: fields,
                     encryptedFields: config.encryptedFields,
@@ -311,13 +370,14 @@ struct EmployeeFormView: View {
                 errorMessage = error.localizedDescription
                 isLoading = false
             }
-            PrintDebug("Failed to save employee: \(error)", debug: true)
+            PrintDebug("Failed to save record: \(error)", debug: true)
         }
     }
 }
 
 #Preview {
     EmployeeFormView(
+        table: schema,
         service: ZyraSync(
             tableName: "\(AppConfig.dbPrefix)employees",
             userId: AppConfig.userId,
