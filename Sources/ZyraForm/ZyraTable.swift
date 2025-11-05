@@ -92,7 +92,7 @@ extension ColumnMetadata.SwiftColumnType {
     }
     
     /// Convert to Swift type string
-    public func toSwiftType(isNullable: Bool) -> String {
+    public func toSwiftType(isNullable: Bool, enumType: DatabaseEnum? = nil) -> String {
         let type: String
         switch self {
         case .string:
@@ -107,8 +107,16 @@ extension ColumnMetadata.SwiftColumnType {
             type = "String"
         case .date:
             type = "String"
-        case .enum:
-            type = "String"
+        case .enum(let dbEnum):
+            // Use the enum name as the Swift type
+            // Prefer the passed enumType parameter, otherwise use the associated enum
+            let enumToUse = enumType ?? dbEnum
+            let enumName = enumToUse.name
+                .replacingOccurrences(of: "_", with: " ")
+                .split(separator: " ")
+                .map { $0.capitalized }
+                .joined()
+            type = enumName
         case .object:
             type = "String"
         case .array:
@@ -965,20 +973,96 @@ public enum RLSPolicyType: String {
 public struct RLSPolicyBuilder {
     private let tableName: String
     private let userIdColumn: String
+    private let usersTableName: String
+    private let isSuperUserColumn: String
     
-    public init(tableName: String, userIdColumn: String = "user_id") {
+    public init(
+        tableName: String,
+        userIdColumn: String = "user_id",
+        usersTableName: String = "users",
+        isSuperUserColumn: String = "is_superuser"
+    ) {
         self.tableName = tableName
         self.userIdColumn = userIdColumn
+        self.usersTableName = usersTableName
+        self.isSuperUserColumn = isSuperUserColumn
     }
     
-    /// Users can only access their own rows
+    // MARK: - Permission Helpers
+    
+    /// Generate SQL expression for checking if user owns the row
+    private func userExpression() -> String {
+        return "\(userIdColumn) = auth.uid()::text"
+    }
+    
+    /// Generate SQL expression for checking if user is authenticated
+    private func authenticatedExpression() -> String {
+        return "auth.uid() IS NOT NULL"
+    }
+    
+    /// Generate SQL expression for checking if user is anonymous (not authenticated)
+    private func anonymousExpression() -> String {
+        return "auth.uid() IS NULL"
+    }
+    
+    /// Generate SQL expression for checking if user is superuser
+    private func superUserExpression() -> String {
+        return """
+        EXISTS (
+            SELECT 1 FROM public.\(usersTableName)
+            WHERE id = auth.uid()::text
+            AND \(isSuperUserColumn) = true
+        )
+        """
+    }
+    
+    /// Generate SQL expression for checking if user is admin
+    private func adminExpression() -> String {
+        return """
+        EXISTS (
+            SELECT 1 FROM public.\(usersTableName)
+            WHERE id = auth.uid()::text
+            AND role = 'admin'
+        )
+        """
+    }
+    
+    /// Generate SQL expression for checking if user is editor
+    private func editorExpression() -> String {
+        return """
+        EXISTS (
+            SELECT 1 FROM public.\(usersTableName)
+            WHERE id = auth.uid()::text
+            AND role IN ('admin', 'editor')
+        )
+        """
+    }
+    
+    /// Combine multiple expressions with OR
+    private func combineExpressions(_ expressions: [String]) -> String {
+        return expressions.joined(separator: " OR ")
+    }
+    
+    // MARK: - Common Policy Patterns
+    
+    /// Users can only access their own rows (or superusers can access all)
     /// Requires: auth.uid() or current_setting('app.user_id') to match user_id column
-    public func canAccessOwn() -> RLSPolicy {
-        RLSPolicy(
+    public func canAccessOwn(allowSuperUser: Bool = true) -> RLSPolicy {
+        let expression: String
+        if allowSuperUser {
+            expression = combineExpressions([
+                userExpression(),
+                superUserExpression()
+            ])
+        } else {
+            expression = userExpression()
+        }
+        
+        return RLSPolicy(
             name: "\(tableName)_own_access",
             operation: .all,
-            usingExpression: "\(userIdColumn) = auth.uid()::text",
-            withCheckExpression: "\(userIdColumn) = auth.uid()::text"
+            usingExpression: expression,
+            withCheckExpression: expression
         )
     }
     
@@ -992,7 +1076,7 @@ public struct RLSPolicyBuilder {
     }
     
     /// Users can read all but only modify their own
-    public func canReadAllModifyOwn() -> RLSPolicy {
+    public func canReadAllModifyOwn(allowSuperUser: Bool = true) -> RLSPolicy {
         RLSPolicy(
             name: "\(tableName)_read_all_modify_own",
             operation: .select,
@@ -1001,8 +1085,18 @@ public struct RLSPolicyBuilder {
     }
     
     /// Users can read all but only modify their own (separate policies)
-    public func canReadAllModifyOwnSeparate() -> [RLSPolicy] {
-        [
+    public func canReadAllModifyOwnSeparate(allowSuperUser: Bool = true) -> [RLSPolicy] {
+        let modifyExpression: String
+        if allowSuperUser {
+            modifyExpression = combineExpressions([
+                userExpression(),
+                superUserExpression()
+            ])
+        } else {
+            modifyExpression = userExpression()
+        }
+        
+        return [
             RLSPolicy(
                 name: "\(tableName)_read_all",
                 operation: .select,
@@ -1011,21 +1105,94 @@ public struct RLSPolicyBuilder {
             RLSPolicy(
                 name: "\(tableName)_modify_own",
                 operation: .update,
-                usingExpression: "\(userIdColumn) = auth.uid()::text",
-                withCheckExpression: "\(userIdColumn) = auth.uid()::text"
+                usingExpression: modifyExpression,
+                withCheckExpression: modifyExpression
             ),
             RLSPolicy(
                 name: "\(tableName)_delete_own",
                 operation: .delete,
-                usingExpression: "\(userIdColumn) = auth.uid()::text"
+                usingExpression: modifyExpression
             ),
             RLSPolicy(
                 name: "\(tableName)_insert_own",
                 operation: .insert,
                 usingExpression: "true",
-                withCheckExpression: "\(userIdColumn) = auth.uid()::text"
+                withCheckExpression: allowSuperUser ? modifyExpression : userExpression()
             )
         ]
+    }
+    
+    // MARK: - Permission-Based Policies
+    
+    /// Policy for authenticated users only
+    public func authenticated(operation: RLSOperation = .all) -> RLSPolicy {
+        RLSPolicy(
+            name: "\(tableName)_authenticated_\(operation.rawValue.lowercased())",
+            operation: operation,
+            usingExpression: authenticatedExpression()
+        )
+    }
+    
+    /// Policy for anonymous users only
+    public func anonymous(operation: RLSOperation = .all) -> RLSPolicy {
+        RLSPolicy(
+            name: "\(tableName)_anonymous_\(operation.rawValue.lowercased())",
+            operation: operation,
+            usingExpression: anonymousExpression()
+        )
+    }
+    
+    /// Policy for superusers only
+    public func superUser(operation: RLSOperation = .all) -> RLSPolicy {
+        RLSPolicy(
+            name: "\(tableName)_superuser_\(operation.rawValue.lowercased())",
+            operation: operation,
+            usingExpression: superUserExpression()
+        )
+    }
+    
+    /// Policy for admin users only
+    public func admin(operation: RLSOperation = .all) -> RLSPolicy {
+        RLSPolicy(
+            name: "\(tableName)_admin_\(operation.rawValue.lowercased())",
+            operation: operation,
+            usingExpression: adminExpression()
+        )
+    }
+    
+    /// Policy for editor users (admin or editor)
+    public func editor(operation: RLSOperation = .all) -> RLSPolicy {
+        RLSPolicy(
+            name: "\(tableName)_editor_\(operation.rawValue.lowercased())",
+            operation: operation,
+            usingExpression: editorExpression()
+        )
+    }
+    
+    /// Policy for users who own the row OR have specific permission
+    public func userOrPermission(
+        name: String,
+        operation: RLSOperation = .all,
+        permission: String,
+        permissionColumn: String = "role"
+    ) -> RLSPolicy {
+        let expression = combineExpressions([
+            userExpression(),
+            """
+            EXISTS (
+                SELECT 1 FROM public.\(usersTableName)
+                WHERE id = auth.uid()::text
+                AND \(permissionColumn) = '\(permission)'
+            )
+            """
+        ])
+        
+        return RLSPolicy(
+            name: name,
+            operation: operation,
+            usingExpression: expression,
+            withCheckExpression: operation == .insert || operation == .update || operation == .all ? expression : nil
+        )
     }
     
     /// Custom policy with SQL expression
@@ -1047,15 +1214,25 @@ public struct RLSPolicyBuilder {
     public func usingAuthUid(
         operation: RLSOperation = .all,
         column: String? = nil,
-        function: String = "auth.uid()::text"
+        function: String = "auth.uid()::text",
+        allowSuperUser: Bool = true
     ) -> RLSPolicy {
-        let column = column ?? userIdColumn
+        let col = column ?? userIdColumn
+        var expression = "\(col) = \(function)"
+        
+        if allowSuperUser {
+            expression = combineExpressions([
+                expression,
+                superUserExpression()
+            ])
+        }
+        
         return RLSPolicy(
             name: "\(tableName)_auth_uid_\(operation.rawValue.lowercased())",
             operation: operation,
-            usingExpression: "\(column) = \(function)",
+            usingExpression: expression,
             withCheckExpression: operation == .insert || operation == .update || operation == .all 
-                ? "\(column) = \(function)" 
+                ? expression 
                 : nil
         )
     }
@@ -1417,8 +1594,17 @@ public struct ZyraTable: Hashable {
     }
     
     /// Get RLS policy builder for this table
-    public func rls(userIdColumn: String = "user_id") -> RLSPolicyBuilder {
-        return RLSPolicyBuilder(tableName: name, userIdColumn: userIdColumn)
+    public func rls(
+        userIdColumn: String = "user_id",
+        usersTableName: String = "users",
+        isSuperUserColumn: String = "is_superuser"
+    ) -> RLSPolicyBuilder {
+        return RLSPolicyBuilder(
+            tableName: name,
+            userIdColumn: userIdColumn,
+            usersTableName: usersTableName,
+            isSuperUserColumn: isSuperUserColumn
+        )
     }
     
     // MARK: - Swift Model Generation
@@ -1437,7 +1623,7 @@ public struct ZyraTable: Hashable {
         
         for column in columns {
             let swiftName = toCamelCase(column.name)
-            let swiftType = column.swiftType.toSwiftType(isNullable: column.isNullable)
+            let swiftType = column.swiftType.toSwiftType(isNullable: column.isNullable, enumType: column.enumType)
             
             properties.append("    let \(swiftName): \(swiftType)")
             
@@ -1447,6 +1633,39 @@ public struct ZyraTable: Hashable {
             } else {
                 codingKeys.append("        case \(swiftName)")
             }
+        }
+        
+        // Add enum definitions if any columns use enums
+        var enumDefinitions: [String] = []
+        var addedEnums = Set<String>()
+        
+        for column in columns {
+            if let enumType = column.enumType, !addedEnums.contains(enumType.name) {
+                addedEnums.insert(enumType.name)
+                let enumName = enumType.name
+                    .replacingOccurrences(of: "_", with: " ")
+                    .split(separator: " ")
+                    .map { $0.capitalized }
+                    .joined()
+                
+                var enumCode = "\n    enum \(enumName): String, Codable {\n"
+                var enumCases: [String] = []
+                for value in enumType.values {
+                    let caseName = value
+                        .replacingOccurrences(of: "-", with: "_")
+                        .replacingOccurrences(of: " ", with: "_")
+                        .replacingOccurrences(of: ".", with: "_")
+                    enumCases.append("        case \(caseName) = \"\(value)\"")
+                }
+                enumCode += enumCases.joined(separator: "\n")
+                enumCode += "\n    }"
+                enumDefinitions.append(enumCode)
+            }
+        }
+        
+        if !enumDefinitions.isEmpty {
+            code += enumDefinitions.joined(separator: "\n")
+            code += "\n\n"
         }
         
         code += properties.joined(separator: "\n")
@@ -1834,6 +2053,9 @@ public struct ZyraTable: Hashable {
             code += "\n\n  @@map(\"\(tableName)\")"
         }
         
+        // Note: RLS policies are database-level features and should not be included in Prisma schema
+        // RLS is managed via SQL migrations, not Prisma schema
+        
         code += "\n}"
         
         return code
@@ -2110,9 +2332,10 @@ public struct ZyraSchema {
             code += "\n"
         }
         
-        // Generate tables in dependency order
+        // Generate tables in dependency order (including join tables)
         code += "// Tables\n"
-        let orderedTables = topologicalSortTables()
+        let allTables = tables + joinTables
+        let orderedTables = topologicalSortTables(allTables: allTables)
         for table in orderedTables {
             code += table.generateDrizzleSchema(includeImports: false, dbPrefix: dbPrefix)
             code += "\n"
@@ -2152,7 +2375,62 @@ public struct ZyraSchema {
     
     /// Generate Swift model code for all tables in schema
     public func generateAllSwiftModels() -> String {
-        return allTables.map { $0.generateSwiftModel() }.joined(separator: "\n\n")
+        var code = ""
+        
+        // Generate enum definitions first
+        if !enums.isEmpty {
+            code += "// MARK: - Enums\n\n"
+            for dbEnum in enums {
+                let enumName = dbEnum.name
+                    .replacingOccurrences(of: "_", with: " ")
+                    .split(separator: " ")
+                    .map { $0.capitalized }
+                    .joined()
+                
+                code += "enum \(enumName): String, Codable {\n"
+                for value in dbEnum.values {
+                    let caseName = value
+                        .replacingOccurrences(of: "-", with: "_")
+                        .replacingOccurrences(of: " ", with: "_")
+                        .replacingOccurrences(of: ".", with: "_")
+                    code += "    case \(caseName) = \"\(value)\"\n"
+                }
+                code += "}\n\n"
+            }
+        }
+        
+        // Generate table models
+        code += "// MARK: - Models\n\n"
+        code += allTables.map { $0.generateSwiftModel() }.joined(separator: "\n\n")
+        
+        return code
+    }
+    
+    /// Generate Zod schema code for all tables and enums
+    public func generateZodSchema(dbPrefix: String = "") -> String {
+        var code = "import { z } from \"zod\";\n\n"
+        
+        // Generate enum schemas first
+        if !enums.isEmpty {
+            code += "// Enums\n"
+            for dbEnum in enums {
+                let enumName = toPascalCase(dbEnum.name.replacingOccurrences(of: dbPrefix, with: ""))
+                let values = dbEnum.values.map { "\"\($0)\"" }.joined(separator: ", ")
+                code += "export const \(enumName)Schema = z.enum([\(values)]);\n"
+                code += "export type \(enumName) = z.infer<typeof \(enumName)Schema>;\n\n"
+            }
+        }
+        
+        // Generate table schemas
+        code += "// Tables\n"
+        let allTables = tables + joinTables
+        let orderedTables = topologicalSortTables(allTables: allTables)
+        for table in orderedTables {
+            code += table.generateZodSchema(dbPrefix: dbPrefix)
+            code += "\n"
+        }
+        
+        return code
     }
     
     /// Generate complete Prisma schema file
