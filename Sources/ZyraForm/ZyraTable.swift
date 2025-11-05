@@ -733,6 +733,166 @@ extension PowerSync.Column {
     }
 }
 
+// MARK: - RLS Policy
+
+/// Row Level Security policy for PostgreSQL tables
+public struct RLSPolicy: Equatable {
+    /// Policy name
+    public let name: String
+    /// Policy operation (SELECT, INSERT, UPDATE, DELETE, or ALL)
+    public let operation: RLSOperation
+    /// Policy type (permissive or restrictive)
+    public let policyType: RLSPolicyType
+    /// SQL expression for the policy check
+    public let usingExpression: String
+    /// Optional SQL expression for WITH CHECK (for INSERT/UPDATE)
+    public let withCheckExpression: String?
+    
+    public init(
+        name: String,
+        operation: RLSOperation = .all,
+        policyType: RLSPolicyType = .permissive,
+        usingExpression: String,
+        withCheckExpression: String? = nil
+    ) {
+        self.name = name
+        self.operation = operation
+        self.policyType = policyType
+        self.usingExpression = usingExpression
+        self.withCheckExpression = withCheckExpression
+    }
+}
+
+/// RLS operation types
+public enum RLSOperation: String, CaseIterable {
+    case select = "SELECT"
+    case insert = "INSERT"
+    case update = "UPDATE"
+    case delete = "DELETE"
+    case all = "ALL"
+}
+
+/// RLS policy type
+public enum RLSPolicyType: String {
+    case permissive = "PERMISSIVE"
+    case restrictive = "RESTRICTIVE"
+}
+
+/// RLS policy builder for common patterns
+public struct RLSPolicyBuilder {
+    private let tableName: String
+    private let userIdColumn: String
+    
+    public init(tableName: String, userIdColumn: String = "user_id") {
+        self.tableName = tableName
+        self.userIdColumn = userIdColumn
+    }
+    
+    /// Users can only access their own rows
+    /// Requires: auth.uid() or current_setting('app.user_id') to match user_id column
+    public func canAccessOwn() -> RLSPolicy {
+        RLSPolicy(
+            name: "\(tableName)_own_access",
+            operation: .all,
+            usingExpression: "\(userIdColumn) = auth.uid()::text",
+            withCheckExpression: "\(userIdColumn) = auth.uid()::text"
+        )
+    }
+    
+    /// Users can access all rows (no restriction)
+    public func canAccessAll() -> RLSPolicy {
+        RLSPolicy(
+            name: "\(tableName)_all_access",
+            operation: .all,
+            usingExpression: "true"
+        )
+    }
+    
+    /// Users can read all but only modify their own
+    public func canReadAllModifyOwn() -> RLSPolicy {
+        RLSPolicy(
+            name: "\(tableName)_read_all_modify_own",
+            operation: .select,
+            usingExpression: "true"
+        )
+    }
+    
+    /// Users can read all but only modify their own (separate policies)
+    public func canReadAllModifyOwnSeparate() -> [RLSPolicy] {
+        [
+            RLSPolicy(
+                name: "\(tableName)_read_all",
+                operation: .select,
+                usingExpression: "true"
+            ),
+            RLSPolicy(
+                name: "\(tableName)_modify_own",
+                operation: .update,
+                usingExpression: "\(userIdColumn) = auth.uid()::text",
+                withCheckExpression: "\(userIdColumn) = auth.uid()::text"
+            ),
+            RLSPolicy(
+                name: "\(tableName)_delete_own",
+                operation: .delete,
+                usingExpression: "\(userIdColumn) = auth.uid()::text"
+            ),
+            RLSPolicy(
+                name: "\(tableName)_insert_own",
+                operation: .insert,
+                usingExpression: "true",
+                withCheckExpression: "\(userIdColumn) = auth.uid()::text"
+            )
+        ]
+    }
+    
+    /// Custom policy with SQL expression
+    public func custom(
+        name: String,
+        operation: RLSOperation = .all,
+        usingExpression: String,
+        withCheckExpression: String? = nil
+    ) -> RLSPolicy {
+        RLSPolicy(
+            name: name,
+            operation: operation,
+            usingExpression: usingExpression,
+            withCheckExpression: withCheckExpression
+        )
+    }
+    
+    /// Policy using Supabase auth.uid()
+    public func usingAuthUid(
+        operation: RLSOperation = .all,
+        column: String? = nil,
+        function: String = "auth.uid()::text"
+    ) -> RLSPolicy {
+        let column = column ?? userIdColumn
+        return RLSPolicy(
+            name: "\(tableName)_auth_uid_\(operation.rawValue.lowercased())",
+            operation: operation,
+            usingExpression: "\(column) = \(function)",
+            withCheckExpression: operation == .insert || operation == .update || operation == .all 
+                ? "\(column) = \(function)" 
+                : nil
+        )
+    }
+    
+    /// Policy using custom function
+    public func usingFunction(
+        name: String,
+        operation: RLSOperation = .all,
+        functionCall: String,
+        withCheckFunction: String? = nil
+    ) -> RLSPolicy {
+        RLSPolicy(
+            name: name,
+            operation: operation,
+            usingExpression: functionCall,
+            withCheckExpression: withCheckFunction
+        )
+    }
+}
+
 // MARK: - Zyra Table
 
 /// Zyra table that includes metadata
@@ -742,6 +902,7 @@ public struct ZyraTable: Hashable {
     public let columns: [ColumnMetadata]
     public let primaryKey: String
     public let defaultOrderBy: String
+    public let rlsPolicies: [RLSPolicy]
     
     public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
@@ -757,11 +918,13 @@ public struct ZyraTable: Hashable {
         name: String,
         primaryKey: String = "id",
         defaultOrderBy: String = "created_at DESC",
-        columns: [ColumnBuilder]
+        columns: [ColumnBuilder],
+        rlsPolicies: [RLSPolicy] = []
     ) {
         self.name = name
         self.primaryKey = primaryKey
         self.defaultOrderBy = defaultOrderBy
+        self.rlsPolicies = rlsPolicies
         
         // Build metadata for all columns
         var allColumns = columns.map { $0.build() }
@@ -1006,6 +1169,64 @@ public struct ZyraTable: Hashable {
             \(allConstraints.joined(separator: ",\n    "))
         );
         """
+    }
+    
+    // MARK: - RLS Generation
+    
+    /// Generate RLS SQL (enable RLS and create policies)
+    public func generateRLSSQL() -> String {
+        guard !rlsPolicies.isEmpty else {
+            return ""
+        }
+        
+        var sql: [String] = []
+        
+        // Enable RLS on the table
+        sql.append("-- Enable Row Level Security")
+        sql.append("ALTER TABLE \"\(name)\" ENABLE ROW LEVEL SECURITY;")
+        sql.append("")
+        
+        // Create policies
+        sql.append("-- RLS Policies")
+        for policy in rlsPolicies {
+            sql.append(generatePolicySQL(policy))
+            sql.append("")
+        }
+        
+        return sql.joined(separator: "\n")
+    }
+    
+    /// Generate SQL for a single policy
+    private func generatePolicySQL(_ policy: RLSPolicy) -> String {
+        var sql = "CREATE POLICY \"\(policy.name)\""
+        
+        // Add policy type
+        sql += " \(policy.policyType.rawValue)"
+        
+        // Add operation
+        sql += " ON \"\(name)\" FOR \(policy.operation.rawValue)"
+        
+        // Add USING expression
+        sql += " USING (\(policy.usingExpression))"
+        
+        // Add WITH CHECK expression if present
+        if let withCheck = policy.withCheckExpression {
+            sql += " WITH CHECK (\(withCheck))"
+        }
+        
+        sql += ";"
+        
+        return sql
+    }
+    
+    /// Check if RLS is enabled for this table
+    public var hasRLS: Bool {
+        return !rlsPolicies.isEmpty
+    }
+    
+    /// Get RLS policy builder for this table
+    public func rls(userIdColumn: String = "user_id") -> RLSPolicyBuilder {
+        return RLSPolicyBuilder(tableName: name, userIdColumn: userIdColumn)
     }
     
     // MARK: - Swift Model Generation
@@ -1503,6 +1724,12 @@ public struct ZyraSchema {
             // Add trigger if updated_at exists
             if let triggerSQL = table.generateUpdatedAtTriggerOnly() {
                 sql.append(triggerSQL)
+                sql.append("")
+            }
+            
+            // Add RLS if policies exist
+            if table.hasRLS {
+                sql.append(table.generateRLSSQL())
                 sql.append("")
             }
         }
