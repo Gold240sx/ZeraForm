@@ -1702,13 +1702,13 @@ public struct ZyraTable: Hashable {
             // Users can update their own record (except id)
             // Users cannot insert or delete (handled by auth.signup/auth.users)
             sql.append("-- Users table policies (read-only except self-update)")
-            sql.append("CREATE POLICY \"\(name)_select_own\" AS PERMISSIVE")
-            sql.append("ON \"\(name)\" FOR SELECT")
+            sql.append("CREATE POLICY \"\(name)_select_own\"")
+            sql.append("ON \"\(name)\" AS PERMISSIVE FOR SELECT")
             sql.append("USING (id = auth.uid()::text);")
             sql.append("")
             
-            sql.append("CREATE POLICY \"\(name)_update_own\" AS PERMISSIVE")
-            sql.append("ON \"\(name)\" FOR UPDATE")
+            sql.append("CREATE POLICY \"\(name)_update_own\"")
+            sql.append("ON \"\(name)\" AS PERMISSIVE FOR UPDATE")
             sql.append("USING (id = auth.uid()::text)")
             sql.append("WITH CHECK (id = auth.uid()::text);")
             sql.append("")
@@ -1731,11 +1731,11 @@ public struct ZyraTable: Hashable {
     private func generatePolicySQL(_ policy: RLSPolicy) -> String {
         var sql = "CREATE POLICY \"\(policy.name)\""
         
-        // Add policy type (PERMISSIVE comes before ON)
-        sql += " AS \(policy.policyType.rawValue)"
-        
         // Add table name
         sql += " ON \"\(name)\""
+        
+        // Add policy type (PERMISSIVE/RESTRICTIVE)
+        sql += " AS \(policy.policyType.rawValue)"
         
         // Add operation
         sql += " FOR \(policy.operation.rawValue)"
