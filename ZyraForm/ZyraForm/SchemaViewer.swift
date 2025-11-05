@@ -241,10 +241,86 @@ struct SchemaCodeView: View {
         }
         
         code += columnDefs.joined(separator: ",\n")
-        code += "\n  ]\n"
+        code += "\n  ],\n"
+        
+        // Generate RLS policies
+        if schema.rlsPolicies.isEmpty {
+            code += "  rlsPolicies: [\n  ]\n"
+        } else {
+            code += "  rlsPolicies: [\n"
+            var policyDefs: [String] = []
+            
+            for policy in schema.rlsPolicies {
+                let policyCode = generateRLSPolicyCode(policy: policy, tableName: schema.name)
+                policyDefs.append(policyCode)
+            }
+            
+            code += policyDefs.joined(separator: "\n")
+            code += "\n  ]\n"
+        }
+        
         code += ")\n"
         
         return code
+    }
+    
+    private func generateRLSPolicyCode(policy: RLSPolicy, tableName: String) -> String {
+        // Try to detect common patterns and generate appropriate builder calls
+        let usingExpr = policy.usingExpression.trimmingCharacters(in: .whitespacesAndNewlines)
+        let withCheckExpr = policy.withCheckExpression?.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Check for common patterns
+        if usingExpr == "true" && policy.operation == .all {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").canAccessAll(),"
+        }
+        
+        // Check for user_id = auth.uid() pattern (canAccessOwn)
+        let userPattern = #"user_id::uuid\s*=\s*\(auth\.uid\(\)\)::uuid"#
+        if usingExpr.range(of: userPattern, options: .regularExpression) != nil,
+           withCheckExpr?.range(of: userPattern, options: .regularExpression) != nil,
+           policy.operation == .all {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").canAccessOwn(),"
+        }
+        
+        // Check for authenticated pattern
+        if usingExpr == "auth.uid() IS NOT NULL" {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").authenticated(operation: .\(policy.operation.rawValue.lowercased())),"
+        }
+        
+        // Check for anonymous pattern
+        if usingExpr == "auth.uid() IS NULL" {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").anonymous(operation: .\(policy.operation.rawValue.lowercased())),"
+        }
+        
+        // Check for admin role pattern
+        let adminPattern = #"role\s*=\s*'admin'"#
+        if usingExpr.range(of: adminPattern, options: [.regularExpression, .caseInsensitive]) != nil {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").admin(operation: .\(policy.operation.rawValue.lowercased())),"
+        }
+        
+        // Default: use custom policy
+        var customCode = "    RLSPolicyBuilder(tableName: \"\(tableName)\").custom(\n"
+        customCode += "      name: \"\(policy.name)\",\n"
+        customCode += "      operation: .\(policy.operation.rawValue.lowercased())"
+        
+        // Format the using expression (handle multi-line)
+        let formattedUsing = formatSQLExpression(usingExpr)
+        customCode += ",\n      usingExpression: \"\"\"\n\(formattedUsing)\n      \"\"\""
+        
+        if let withCheck = withCheckExpr {
+            let formattedCheck = formatSQLExpression(withCheck)
+            customCode += ",\n      withCheckExpression: \"\"\"\n\(formattedCheck)\n      \"\"\""
+        }
+        
+        customCode += "\n    ),"
+        
+        return customCode
+    }
+    
+    private func formatSQLExpression(_ expr: String) -> String {
+        // Indent each line of the SQL expression
+        let lines = expr.split(separator: "\n", omittingEmptySubsequences: false)
+        return lines.map { "        \($0)" }.joined(separator: "\n")
     }
     
     private func copyToClipboard() {
@@ -408,10 +484,86 @@ struct SchemaViewer: View {
         }
         
         code += columnDefs.joined(separator: ",\n")
-        code += "\n  ]\n"
+        code += "\n  ],\n"
+        
+        // Generate RLS policies
+        if schema.rlsPolicies.isEmpty {
+            code += "  rlsPolicies: [\n  ]\n"
+        } else {
+            code += "  rlsPolicies: [\n"
+            var policyDefs: [String] = []
+            
+            for policy in schema.rlsPolicies {
+                let policyCode = generateRLSPolicyCode(policy: policy, tableName: schema.name)
+                policyDefs.append(policyCode)
+            }
+            
+            code += policyDefs.joined(separator: "\n")
+            code += "\n  ]\n"
+        }
+        
         code += ")\n"
         
         return code
+    }
+    
+    private func generateRLSPolicyCode(policy: RLSPolicy, tableName: String) -> String {
+        // Try to detect common patterns and generate appropriate builder calls
+        let usingExpr = policy.usingExpression.trimmingCharacters(in: .whitespacesAndNewlines)
+        let withCheckExpr = policy.withCheckExpression?.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Check for common patterns
+        if usingExpr == "true" && policy.operation == .all {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").canAccessAll(),"
+        }
+        
+        // Check for user_id = auth.uid() pattern (canAccessOwn)
+        let userPattern = #"user_id::uuid\s*=\s*\(auth\.uid\(\)\)::uuid"#
+        if usingExpr.range(of: userPattern, options: .regularExpression) != nil,
+           withCheckExpr?.range(of: userPattern, options: .regularExpression) != nil,
+           policy.operation == .all {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").canAccessOwn(),"
+        }
+        
+        // Check for authenticated pattern
+        if usingExpr == "auth.uid() IS NOT NULL" {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").authenticated(operation: .\(policy.operation.rawValue.lowercased())),"
+        }
+        
+        // Check for anonymous pattern
+        if usingExpr == "auth.uid() IS NULL" {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").anonymous(operation: .\(policy.operation.rawValue.lowercased())),"
+        }
+        
+        // Check for admin role pattern
+        let adminPattern = #"role\s*=\s*'admin'"#
+        if usingExpr.range(of: adminPattern, options: [.regularExpression, .caseInsensitive]) != nil {
+            return "    RLSPolicyBuilder(tableName: \"\(tableName)\").admin(operation: .\(policy.operation.rawValue.lowercased())),"
+        }
+        
+        // Default: use custom policy
+        var customCode = "    RLSPolicyBuilder(tableName: \"\(tableName)\").custom(\n"
+        customCode += "      name: \"\(policy.name)\",\n"
+        customCode += "      operation: .\(policy.operation.rawValue.lowercased())"
+        
+        // Format the using expression (handle multi-line)
+        let formattedUsing = formatSQLExpression(usingExpr)
+        customCode += ",\n      usingExpression: \"\"\"\n\(formattedUsing)\n      \"\"\""
+        
+        if let withCheck = withCheckExpr {
+            let formattedCheck = formatSQLExpression(withCheck)
+            customCode += ",\n      withCheckExpression: \"\"\"\n\(formattedCheck)\n      \"\"\""
+        }
+        
+        customCode += "\n    ),"
+        
+        return customCode
+    }
+    
+    private func formatSQLExpression(_ expr: String) -> String {
+        // Indent each line of the SQL expression
+        let lines = expr.split(separator: "\n", omittingEmptySubsequences: false)
+        return lines.map { "        \($0)" }.joined(separator: "\n")
     }
     
     private func copyToClipboard() {

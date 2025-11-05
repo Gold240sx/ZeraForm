@@ -39,14 +39,14 @@ Add ZyraForm to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "1.3.0")
+    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "1.4.0")
 ]
 ```
 
 Or add it via Xcode:
 1. File → Add Package Dependencies
 2. Enter the repository URL
-3. Select version `1.3.0` or later
+3. Select version `1.4.0` or later
 
 ## Quick Start
 
@@ -497,6 +497,27 @@ struct Employee: Codable, Identifiable, Hashable {
 }
 ```
 
+### Zera Schema (Swift Code Generation)
+
+Generate Swift code that recreates your schema definition:
+
+```swift
+let zeraSchema = schema.generateZyraSchema()  // Available in UI
+```
+
+When exporting schemas in the Zyra format, you get Swift code that includes:
+- Complete table definitions with all columns and validations
+- RLS policies (automatically detected and converted back to builder calls)
+- Database enums
+- Foreign key relationships
+
+This is useful for:
+- Sharing schemas between projects
+- Version control of schema definitions
+- Regenerating schemas from exported code
+
+The generator intelligently detects common RLS patterns and converts them back to appropriate builder methods (`.canAccessOwn()`, `.admin()`, `.custom()`, etc.).
+
 ### SQL Migrations
 
 ```swift
@@ -787,7 +808,9 @@ Swift Schema (ZyraTable/ZyraSchema)
 ├─→ Drizzle Schema
 ├─→ Zod Schema
 ├─→ Swift Models
-└─→ SQL Migrations
+├─→ Zera Schema (Swift code)
+├─→ SQL Migrations
+└─→ PowerSync Bucket Definitions
 ```
 
 ### PowerSync Integration
@@ -825,12 +848,17 @@ This automatically:
 
 ## Version
 
-Current version: **1.3.0**
+Current version: **1.4.0**
+
+### What's New in 1.4.0
+
+- **RLS Code Generation**: RLS policies are now preserved when generating Zera schema code (Swift code export)
+- **Intelligent Pattern Detection**: Automatically detects and converts common RLS patterns back to builder methods
 
 ### What's New in 1.3.0
 
 - **RBAC Support**: Replaced superuser permissions with Supabase Role-Based Access Control
-- **PowerSync Bucket Definitions**: Generate bucket definitions for data synchronization
+- **PowerSync Bucket Definitions**: Generate bucket definitions for data synchronization (with proper table name quoting)
 - **UUID Casting**: Proper UUID casting for `auth.uid()` comparisons (`user_id::uuid = (auth.uid())::uuid`)
 - **SQL Generation Improvements**: Fixed CREATE TABLE syntax, foreign key constraints, and RLS policy formatting
 - **Enhanced RLS**: Added `hasRole()` methods and `allowRoles` parameters for flexible role-based policies

@@ -489,6 +489,37 @@ The generated SQL will include:
 1. `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`
 2. `CREATE POLICY` statements for each policy
 
+## RLS in Code Generation
+
+When generating Zera schema code (Swift code that recreates your schema), RLS policies are preserved and intelligently converted back to builder calls:
+
+```swift
+// Your original schema
+let table = ZyraTable(
+    name: "posts",
+    rlsPolicies: [
+        table.rls().canAccessOwn(),
+        table.rls().admin(operation: .delete)
+    ]
+)
+
+// Generated Zera code includes:
+rlsPolicies: [
+    RLSPolicyBuilder(tableName: "posts").canAccessOwn(),
+    RLSPolicyBuilder(tableName: "posts").admin(operation: .delete),
+]
+```
+
+The generator detects common patterns:
+- `.canAccessOwn()` - Matches `user_id::uuid = (auth.uid())::uuid` patterns
+- `.canAccessAll()` - Matches `true` expressions
+- `.authenticated()` - Matches `auth.uid() IS NOT NULL`
+- `.anonymous()` - Matches `auth.uid() IS NULL`
+- `.admin()` - Matches admin role checks
+- `.custom()` - For complex SQL expressions
+
+This ensures your RLS policies are preserved when exporting and sharing schemas.
+
 ## API Reference
 
 ### RLSPolicyBuilder Methods
