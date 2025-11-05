@@ -2383,71 +2383,140 @@ public struct ZyraSchema {
     }
     
     /// Generate PowerSync bucket definitions (YAML format)
-    public func generatePowerSyncBucketDefinitions(dbPrefix: String = "") -> String {
+    /// Automatically separates tables into global and user-specific buckets based on user_id column
+    public func generatePowerSyncBucketDefinitions(dbPrefix: String = "", userIdColumn: String = "user_id") -> String {
         var yaml = "bucket_definitions:\n"
-        yaml += "  global:\n"
-        yaml += "    data:\n"
-        yaml += "      # Sync all rows\n"
-        yaml += "      #   - SELECT * FROM \"power_sync_counters\"\n"
-        yaml += "      \n"
         
-        // Sort tables: regular tables first, then join tables
-        let sortedTables = allTables.sorted { table1, table2 in
-            let isJoin1 = isJoinTable(table1)
-            let isJoin2 = isJoinTable(table2)
-            
-            // Join tables come after regular tables
-            if isJoin1 != isJoin2 {
-                return !isJoin1 // Regular tables first
+        // Separate tables into global and user-specific
+        var globalTables: [ZyraTable] = []
+        var userTables: [ZyraTable] = []
+        
+        // Check if users table exists (should be global for reading, but user-specific for other operations)
+        let usersTableName = dbPrefix.isEmpty ? "users" : "\(dbPrefix)users"
+        
+        for table in allTables {
+            // Users table is special - skip it from bucket definitions (handled by Supabase Auth)
+            if table.name.lowercased() == usersTableName.lowercased() || table.name.lowercased().hasSuffix("users") {
+                continue
             }
             
-            // Within same type, sort alphabetically
-            return table1.name < table2.name
+            // Check if table has user_id column
+            let hasUserId = table.columns.contains { $0.name.lowercased() == userIdColumn.lowercased() }
+            
+            if hasUserId {
+                userTables.append(table)
+            } else {
+                globalTables.append(table)
+            }
         }
         
-        var hasRegularTables = false
-        var hasJoinTables = false
-        
-        for table in sortedTables {
-            let isJoin = isJoinTable(table)
+        // Generate global bucket
+        if !globalTables.isEmpty {
+            yaml += "  global:\n"
+            yaml += "    data:\n"
+            yaml += "      # Sync all rows\n"
+            yaml += "      #   - SELECT * FROM \"power_sync_counters\"\n"
+            yaml += "      \n"
             
-            // Add section comment for join tables
-            if isJoin && !hasJoinTables && hasRegularTables {
-                yaml += "      \n"
-                yaml += "      # Join Tables\n"
-                hasJoinTables = true
+            // Sort global tables: regular first, then join tables
+            let sortedGlobalTables = globalTables.sorted { table1, table2 in
+                let isJoin1 = isJoinTable(table1)
+                let isJoin2 = isJoinTable(table2)
+                
+                if isJoin1 != isJoin2 {
+                    return !isJoin1
+                }
+                
+                return table1.name < table2.name
             }
             
-            // Format table name for PowerSync
-            var tableName = table.name
+            var hasRegularTables = false
+            var hasJoinTables = false
             
-            // Join tables get "JOIN-" prefix in PowerSync bucket definitions
-            // Remove dbPrefix temporarily to add JOIN- prefix, then add it back
-            if isJoin {
-                if !dbPrefix.isEmpty && tableName.hasPrefix(dbPrefix) {
-                    let nameWithoutPrefix = String(tableName.dropFirst(dbPrefix.count))
-                    tableName = "\(dbPrefix)JOIN-\(nameWithoutPrefix)"
-                } else {
-                    tableName = "JOIN-\(tableName)"
+            for table in sortedGlobalTables {
+                let isJoin = isJoinTable(table)
+                
+                // Add section comment for join tables
+                if isJoin && !hasJoinTables && hasRegularTables {
+                    yaml += "      \n"
+                    yaml += "      # Join Tables\n"
+                    hasJoinTables = true
+                }
+                
+                var tableName = formatTableNameForPowerSync(table: table, dbPrefix: dbPrefix)
+                yaml += "      - SELECT * FROM \"\(tableName)\"\n"
+                
+                if !isJoin && !hasRegularTables {
+                    hasRegularTables = true
                 }
             }
+        }
+        
+        // Generate user-specific bucket
+        if !userTables.isEmpty {
+            yaml += "\n"
+            yaml += "  by_user:\n"
+            yaml += "    # Only sync rows belonging to the user\n"
+            yaml += "    parameters: SELECT request.user_id() as user_id\n"
+            yaml += "    data:\n"
             
-            yaml += "      - SELECT * FROM \"\(tableName)\"\n"
+            // Sort user tables: regular first, then join tables
+            let sortedUserTables = userTables.sorted { table1, table2 in
+                let isJoin1 = isJoinTable(table1)
+                let isJoin2 = isJoinTable(table2)
+                
+                if isJoin1 != isJoin2 {
+                    return !isJoin1
+                }
+                
+                return table1.name < table2.name
+            }
             
-            if !isJoin && !hasRegularTables {
-                hasRegularTables = true
+            var hasRegularTables = false
+            var hasJoinTables = false
+            
+            for table in sortedUserTables {
+                let isJoin = isJoinTable(table)
+                
+                // Add section comment for join tables
+                if isJoin && !hasJoinTables && hasRegularTables {
+                    yaml += "      \n"
+                    yaml += "      # Join Tables\n"
+                    hasJoinTables = true
+                }
+                
+                var tableName = formatTableNameForPowerSync(table: table, dbPrefix: dbPrefix)
+                
+                // Find the user_id column name (case-sensitive)
+                let userIdCol = table.columns.first { $0.name.lowercased() == userIdColumn.lowercased() }?.name ?? userIdColumn
+                
+                // Generate WHERE clause
+                yaml += "      - SELECT * FROM \"\(tableName)\" WHERE \"\(tableName)\".\"\(userIdCol)\" = bucket.user_id\n"
+                
+                if !isJoin && !hasRegularTables {
+                    hasRegularTables = true
+                }
             }
         }
         
-        // Add comment about user-specific buckets
-        yaml += "      \n"
-        yaml += "   # User-specific buckets (optional)\n"
-        yaml += "   # by_user:\n"
-        yaml += "   #   parameters: SELECT request.user_id() as user_id\n"
-        yaml += "   #   data:\n"
-        yaml += "   #   - SELECT * FROM mytable WHERE mytable.user_id = bucket.user_id\n"
-        
         return yaml
+    }
+    
+    /// Format table name for PowerSync bucket definitions
+    private func formatTableNameForPowerSync(table: ZyraTable, dbPrefix: String) -> String {
+        var tableName = table.name
+        
+        // Join tables get "JOIN-" prefix in PowerSync bucket definitions
+        if isJoinTable(table) {
+            if !dbPrefix.isEmpty && tableName.hasPrefix(dbPrefix) {
+                let nameWithoutPrefix = String(tableName.dropFirst(dbPrefix.count))
+                tableName = "\(dbPrefix)JOIN-\(nameWithoutPrefix)"
+            } else {
+                tableName = "JOIN-\(tableName)"
+            }
+        }
+        
+        return tableName
     }
     
     /// Generate complete migration SQL with proper ordering
