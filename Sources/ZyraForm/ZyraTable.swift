@@ -2476,7 +2476,7 @@ public struct ZyraSchema {
                 }
                 
                 var tableName = formatTableNameForPowerSync(table: table, dbPrefix: dbPrefix)
-                yaml += "      - SELECT * FROM \"\(tableName)\"\n"
+                yaml += "      - SELECT * FROM \(tableName)\n"
                 
                 if !isJoin && !hasRegularTables {
                     hasRegularTables = true
@@ -2522,8 +2522,8 @@ public struct ZyraSchema {
                 // Find the user_id column name (case-sensitive)
                 let userIdCol = table.columns.first { $0.name.lowercased() == userIdColumn.lowercased() }?.name ?? userIdColumn
                 
-                // Generate WHERE clause
-                yaml += "      - SELECT * FROM \"\(tableName)\" WHERE \"\(tableName)\".\"\(userIdCol)\" = bucket.user_id\n"
+                // Generate WHERE clause (PowerSync prefers unquoted table names)
+                yaml += "      - SELECT * FROM \(tableName) WHERE \(tableName).\(userIdCol) = bucket.user_id\n"
                 
                 if !isJoin && !hasRegularTables {
                     hasRegularTables = true
