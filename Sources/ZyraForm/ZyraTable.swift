@@ -1313,7 +1313,7 @@ public struct RLSPolicyBuilder {
             """
             EXISTS (
                 SELECT 1 FROM public.\(usersTableName)
-                WHERE id = auth.uid()::text
+                WHERE id = (auth.uid())::uuid
                 AND \(permissionColumn) = '\(permission)'
             )
             """
@@ -1346,7 +1346,7 @@ public struct RLSPolicyBuilder {
     public func usingAuthUid(
         operation: RLSOperation = .all,
         column: String? = nil,
-        function: String = "auth.uid()::text",
+        function: String = "(auth.uid())::uuid",
         allowSuperUser: Bool = true
     ) -> RLSPolicy {
         let col = column ?? userIdColumn
@@ -1708,13 +1708,13 @@ public struct ZyraTable: Hashable {
             sql.append("-- Users table policies (read-only except self-update)")
             sql.append("CREATE POLICY \"\(name)_select_own\"")
             sql.append("ON \"\(name)\" AS PERMISSIVE FOR SELECT")
-            sql.append("USING (id = auth.uid()::text);")
+            sql.append("USING (id = (auth.uid())::uuid);")
             sql.append("")
             
             sql.append("CREATE POLICY \"\(name)_update_own\"")
             sql.append("ON \"\(name)\" AS PERMISSIVE FOR UPDATE")
-            sql.append("USING (id = auth.uid()::text)")
-            sql.append("WITH CHECK (id = auth.uid()::text);")
+            sql.append("USING (id = (auth.uid())::uuid)")
+            sql.append("WITH CHECK (id = (auth.uid())::uuid);")
             sql.append("")
             
             // Note: INSERT and DELETE are handled by Supabase Auth
