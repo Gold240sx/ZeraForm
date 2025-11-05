@@ -1680,6 +1680,7 @@ public struct ZyraTable: Hashable {
     // MARK: - RLS Generation
     
     /// Generate RLS SQL (enable RLS and create policies)
+    /// Special handling for users table: users can only view/update their own record, not insert/delete
     public func generateRLSSQL() -> String {
         guard !rlsPolicies.isEmpty else {
             return ""
@@ -1692,11 +1693,35 @@ public struct ZyraTable: Hashable {
         sql.append("ALTER TABLE \"\(name)\" ENABLE ROW LEVEL SECURITY;")
         sql.append("")
         
-        // Create policies
-        sql.append("-- RLS Policies")
-        for policy in rlsPolicies {
-            sql.append(generatePolicySQL(policy))
+        // Check if this is a users table (ends with "users" or is exactly "users")
+        let isUsersTable = name.lowercased().hasSuffix("users") || name.lowercased() == "users"
+        
+        if isUsersTable {
+            // Users table: special policies
+            // Users can only view their own record
+            // Users can update their own record (except id)
+            // Users cannot insert or delete (handled by auth.signup/auth.users)
+            sql.append("-- Users table policies (read-only except self-update)")
+            sql.append("CREATE POLICY \"\(name)_select_own\" AS PERMISSIVE")
+            sql.append("ON \"\(name)\" FOR SELECT")
+            sql.append("USING (id = auth.uid()::text);")
             sql.append("")
+            
+            sql.append("CREATE POLICY \"\(name)_update_own\" AS PERMISSIVE")
+            sql.append("ON \"\(name)\" FOR UPDATE")
+            sql.append("USING (id = auth.uid()::text)")
+            sql.append("WITH CHECK (id = auth.uid()::text);")
+            sql.append("")
+            
+            // Note: INSERT and DELETE are handled by Supabase Auth
+            // Users cannot directly insert/delete records in the users table
+        } else {
+            // Regular table: create policies as defined
+            sql.append("-- RLS Policies")
+            for policy in rlsPolicies {
+                sql.append(generatePolicySQL(policy))
+                sql.append("")
+            }
         }
         
         return sql.joined(separator: "\n")
@@ -1706,11 +1731,14 @@ public struct ZyraTable: Hashable {
     private func generatePolicySQL(_ policy: RLSPolicy) -> String {
         var sql = "CREATE POLICY \"\(policy.name)\""
         
-        // Add policy type
-        sql += " \(policy.policyType.rawValue)"
+        // Add policy type (PERMISSIVE comes before ON)
+        sql += " AS \(policy.policyType.rawValue)"
+        
+        // Add table name
+        sql += " ON \"\(name)\""
         
         // Add operation
-        sql += " ON \"\(name)\" FOR \(policy.operation.rawValue)"
+        sql += " FOR \(policy.operation.rawValue)"
         
         // Add USING expression
         sql += " USING (\(policy.usingExpression))"
