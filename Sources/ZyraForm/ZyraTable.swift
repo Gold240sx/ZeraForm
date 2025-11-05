@@ -246,6 +246,9 @@ public struct ColumnBuilder {
         set { _nestedSchema = newValue }
     }
     
+    // Many-to-many relationship marker
+    var _manyToManyRelationship: ManyToManyRelationship? = nil
+    
     init(name: String, powerSyncColumn: PowerSync.Column) {
         self.name = name
         self.powerSyncColumn = powerSyncColumn
@@ -299,25 +302,25 @@ public struct ColumnBuilder {
     
     // MARK: - Default Values
     
-    func `default`(_ value: String) -> ColumnBuilder {
+    public func `default`(_ value: String) -> ColumnBuilder {
         var builder = self
         builder.defaultValue = value
         return builder
     }
     
-    func `default`(_ value: Int) -> ColumnBuilder {
+    public func `default`(_ value: Int) -> ColumnBuilder {
         var builder = self
         builder.defaultValue = String(value)
         return builder
     }
     
-    func `default`(_ value: Bool) -> ColumnBuilder {
+    public func `default`(_ value: Bool) -> ColumnBuilder {
         var builder = self
         builder.defaultValue = value ? "true" : "false"
         return builder
     }
     
-    func `default`(_ value: DefaultTimestamp) -> ColumnBuilder {
+    public func `default`(_ value: DefaultTimestamp) -> ColumnBuilder {
         var builder = self
         switch value {
         case .now:
@@ -327,7 +330,7 @@ public struct ColumnBuilder {
         return builder
     }
     
-    func defaultSQL(_ sqlExpression: String) -> ColumnBuilder {
+    public func defaultSQL(_ sqlExpression: String) -> ColumnBuilder {
         var builder = self
         builder.defaultValue = sqlExpression
         return builder
@@ -335,7 +338,7 @@ public struct ColumnBuilder {
     
     // MARK: - Enum and Foreign Key
     
-    func `enum`(_ enumType: DatabaseEnum) -> ColumnBuilder {
+    public func `enum`(_ enumType: DatabaseEnum) -> ColumnBuilder {
         var builder = self
         builder.enumType = enumType
         builder.swiftType = .enum(enumType)
@@ -349,7 +352,7 @@ public struct ColumnBuilder {
     ///   - referenceUpdated: Action when referenced row is updated (defaults to .cascade)
     ///   - referenceRemoved: Action when referenced row is deleted (defaults to .setNull)
     /// - Returns: ColumnBuilder with foreign key relationship
-    func references(
+    public func references(
         _ table: String,
         column: String = "id",
         referenceUpdated: ForeignKeyAction = .cascade,
@@ -373,13 +376,53 @@ public struct ColumnBuilder {
     ///   - onUpdate: Action when referenced row is updated (defaults to .cascade)
     /// - Returns: ColumnBuilder with foreign key relationship
     @available(*, deprecated, renamed: "references(_:column:referenceUpdated:referenceRemoved:)")
-    func references(
+    public func references(
         _ table: String,
         column: String = "id",
         onDelete: ForeignKeyAction = .setNull,
         onUpdate: ForeignKeyAction = .cascade
     ) -> ColumnBuilder {
         return self.references(table, column: column, referenceUpdated: onUpdate, referenceRemoved: onDelete)
+    }
+    
+    /// Create a many-to-many relationship
+    /// This automatically creates a join/pivot table
+    /// - Parameters:
+    ///   - table: The other table in the many-to-many relationship
+    ///   - joinTableName: Optional custom name for the join table (auto-generated if nil)
+    ///   - otherTableColumn: Column name in join table for the other table (auto-generated if nil)
+    ///   - referenceRemoved: Action when referenced row is deleted (defaults to .cascade)
+    ///   - referenceUpdated: Action when referenced row is updated (defaults to .cascade)
+    ///   - otherReferenceRemoved: Action when other table row is deleted (defaults to .cascade)
+    ///   - otherReferenceUpdated: Action when other table row is updated (defaults to .cascade)
+    ///   - additionalColumns: Additional columns for the join table (e.g., timestamps, metadata)
+    /// - Returns: ColumnBuilder marked for many-to-many relationship
+    /// - Note: The actual join table is created when building the schema, not at column definition time
+    public func belongsToMany(
+        _ table: String,
+        joinTableName: String? = nil,
+        otherTableColumn: String? = nil,
+        referenceRemoved: ForeignKeyAction = .cascade,
+        referenceUpdated: ForeignKeyAction = .cascade,
+        otherReferenceRemoved: ForeignKeyAction = .cascade,
+        otherReferenceUpdated: ForeignKeyAction = .cascade,
+        additionalColumns: [ColumnBuilder] = []
+    ) -> ColumnBuilder {
+        var builder = self
+        // Store many-to-many relationship info
+        // Note: This will be processed by ZyraSchema to create the join table
+        builder._manyToManyRelationship = ManyToManyRelationship(
+            table1: "", // Will be set by ZyraSchema when processing
+            table2: table,
+            joinTableName: joinTableName,
+            table2Column: otherTableColumn,
+            table1ReferenceRemoved: referenceRemoved,
+            table1ReferenceUpdated: referenceUpdated,
+            table2ReferenceRemoved: otherReferenceRemoved,
+            table2ReferenceUpdated: otherReferenceUpdated,
+            additionalColumns: additionalColumns
+        )
+        return builder
     }
     
     // MARK: - Validation Methods
@@ -592,14 +635,14 @@ public struct ColumnBuilder {
     
     // MARK: - Nested Schema Methods
     
-    func object(_ schema: [String: ColumnBuilder]) -> ColumnBuilder {
+    public func object(_ schema: [String: ColumnBuilder]) -> ColumnBuilder {
         var builder = self
         builder.nestedSchema = NestedSchema(fields: schema)
         builder.swiftType = .object(NestedSchema(fields: schema))
         return builder
     }
     
-    func array(_ elementType: ColumnBuilder) -> ColumnBuilder {
+    public func array(_ elementType: ColumnBuilder) -> ColumnBuilder {
         var builder = self
         let nested = NestedSchema(elementType: elementType)
         builder.nestedSchema = nested
@@ -609,7 +652,7 @@ public struct ColumnBuilder {
     
     // MARK: - Build
     
-    func build() -> ColumnMetadata {
+    public func build() -> ColumnMetadata {
         return ColumnMetadata(
             name: name,
             powerSyncColumn: powerSyncColumn,
@@ -673,7 +716,7 @@ public struct DatabaseEnum: Hashable {
     }
     
     /// Generate CREATE TYPE SQL for PostgreSQL
-    func generateCreateEnumSQL() -> String {
+    public func generateCreateEnumSQL() -> String {
         let valuesSQL = values.map { "'\($0)'" }.joined(separator: ", ")
         return """
         CREATE TYPE "\(name)" AS ENUM (\(valuesSQL));
@@ -694,6 +737,111 @@ public struct ForeignKey {
     let referencedColumn: String
     let onDelete: ForeignKeyAction
     let onUpdate: ForeignKeyAction
+}
+
+/// Many-to-many relationship definition
+/// Automatically creates a join/pivot table
+public struct ManyToManyRelationship {
+    /// First table name
+    public let table1: String
+    /// Second table name
+    public let table2: String
+    /// Join table name (auto-generated if nil)
+    public let joinTableName: String?
+    /// Column name in join table for table1 (defaults to table1 name + "_id")
+    public let table1Column: String
+    /// Column name in join table for table2 (defaults to table2 name + "_id")
+    public let table2Column: String
+    /// Foreign key action for table1
+    public let table1ReferenceRemoved: ForeignKeyAction
+    public let table1ReferenceUpdated: ForeignKeyAction
+    /// Foreign key action for table2
+    public let table2ReferenceRemoved: ForeignKeyAction
+    public let table2ReferenceUpdated: ForeignKeyAction
+    /// Additional columns for the join table
+    public let additionalColumns: [ColumnBuilder]
+    
+    public init(
+        table1: String,
+        table2: String,
+        joinTableName: String? = nil,
+        table1Column: String? = nil,
+        table2Column: String? = nil,
+        table1ReferenceRemoved: ForeignKeyAction = .cascade,
+        table1ReferenceUpdated: ForeignKeyAction = .cascade,
+        table2ReferenceRemoved: ForeignKeyAction = .cascade,
+        table2ReferenceUpdated: ForeignKeyAction = .cascade,
+        additionalColumns: [ColumnBuilder] = []
+    ) {
+        self.table1 = table1
+        self.table2 = table2
+        self.joinTableName = joinTableName
+        self.table1Column = table1Column ?? "\(table1.replacingOccurrences(of: "_", with: "").singularized())_id"
+        self.table2Column = table2Column ?? "\(table2.replacingOccurrences(of: "_", with: "").singularized())_id"
+        self.table1ReferenceRemoved = table1ReferenceRemoved
+        self.table1ReferenceUpdated = table1ReferenceUpdated
+        self.table2ReferenceRemoved = table2ReferenceRemoved
+        self.table2ReferenceUpdated = table2ReferenceUpdated
+        self.additionalColumns = additionalColumns
+    }
+    
+    /// Generate the join table name
+    var generatedJoinTableName: String {
+        if let joinTableName = joinTableName {
+            return joinTableName
+        }
+        
+        // Generate join table name: sort table names alphabetically and combine
+        let sortedTables = [table1, table2].sorted()
+        return "\(sortedTables[0])_\(sortedTables[1])"
+    }
+    
+    /// Generate the join table ZyraTable
+    public func generateJoinTable(dbPrefix: String = "") -> ZyraTable {
+        let joinTableName = "\(dbPrefix)\(generatedJoinTableName)"
+        
+        var columns: [ColumnBuilder] = []
+        
+        // Add foreign key columns
+        columns.append(
+            zf.text(table1Column)
+                .references(table1,
+                           referenceUpdated: table1ReferenceUpdated,
+                           referenceRemoved: table1ReferenceRemoved)
+                .notNull()
+        )
+        
+        columns.append(
+            zf.text(table2Column)
+                .references(table2,
+                           referenceUpdated: table2ReferenceUpdated,
+                           referenceRemoved: table2ReferenceRemoved)
+                .notNull()
+        )
+        
+        // Add additional columns
+        columns.append(contentsOf: additionalColumns)
+        
+        return ZyraTable(
+            name: joinTableName,
+            primaryKey: "id",
+            columns: columns
+        )
+    }
+}
+
+extension String {
+    /// Simple singularization (handles common cases)
+    func singularized() -> String {
+        if self.hasSuffix("ies") {
+            return String(self.dropLast(3)) + "y"
+        } else if self.hasSuffix("es") && self.count > 3 {
+            return String(self.dropLast(2))
+        } else if self.hasSuffix("s") && self.count > 1 {
+            return String(self.dropLast())
+        }
+        return self
+    }
 }
 
 /// Foreign key action when referenced row is updated or deleted
@@ -939,6 +1087,9 @@ public struct ZyraTable: Hashable {
     public let defaultOrderBy: String
     public let rlsPolicies: [RLSPolicy]
     
+    // Store original column builders for many-to-many relationship detection
+    private let originalColumnBuilders: [ColumnBuilder]
+    
     public func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
@@ -960,6 +1111,7 @@ public struct ZyraTable: Hashable {
         self.primaryKey = primaryKey
         self.defaultOrderBy = defaultOrderBy
         self.rlsPolicies = rlsPolicies
+        self.originalColumnBuilders = columns
         
         // Build metadata for all columns
         var allColumns = columns.map { $0.build() }
@@ -1006,6 +1158,11 @@ public struct ZyraTable: Hashable {
         )
     }
     
+    /// Get original column builders (for many-to-many relationship detection)
+    internal func getOriginalColumnBuilders() -> [ColumnBuilder] {
+        return originalColumnBuilders
+    }
+    
     /// Get all enums used by this table
     public func getEnums() -> Set<DatabaseEnum> {
         return Set(columns.compactMap { $0.enumType })
@@ -1049,7 +1206,7 @@ public struct ZyraTable: Hashable {
     // MARK: - Foreign Key Operations
     
     /// Generate SQL foreign key constraints
-    func generateForeignKeyConstraints() -> [String] {
+    public func generateForeignKeyConstraints() -> [String] {
         return columns.compactMap { column in
             guard let fk = column.foreignKey else { return nil }
             
@@ -1064,7 +1221,7 @@ public struct ZyraTable: Hashable {
     }
     
     /// Get all foreign key relationships
-    func getForeignKeys() -> [(column: String, foreignKey: ForeignKey)] {
+    public func getForeignKeys() -> [(column: String, foreignKey: ForeignKey)] {
         return columns.compactMap { column in
             guard let fk = column.foreignKey else { return nil }
             return (column.name, fk)
@@ -1074,7 +1231,7 @@ public struct ZyraTable: Hashable {
     // MARK: - SQL Generation
     
     /// Generate SQL CREATE TABLE statement with defaults, foreign keys, and triggers
-    func generateCreateTableSQL() -> String {
+    public func generateCreateTableSQL() -> String {
         var columnDefinitions: [String] = []
         
         // Add primary key
@@ -1130,7 +1287,7 @@ public struct ZyraTable: Hashable {
     }
     
     /// Generate PostgreSQL trigger function and trigger for automatic updated_at updates
-    func generateUpdatedAtTrigger() -> String {
+    public func generateUpdatedAtTrigger() -> String {
         let functionName = "\(name.replacingOccurrences(of: "-", with: "_"))_update_updated_at"
         let triggerName = "\(name.replacingOccurrences(of: "-", with: "_"))_updated_at_trigger"
         
@@ -1153,13 +1310,13 @@ public struct ZyraTable: Hashable {
     }
     
     /// Generate just the trigger SQL (without CREATE TABLE)
-    func generateUpdatedAtTriggerOnly() -> String? {
+    public func generateUpdatedAtTriggerOnly() -> String? {
         guard columns.contains(where: { $0.name.lowercased() == "updated_at" }) else { return nil }
         return generateUpdatedAtTrigger()
     }
     
     /// Generate CREATE TABLE SQL only (without triggers)
-    func generateCreateTableSQLOnly() -> String {
+    public func generateCreateTableSQLOnly() -> String {
         var columnDefinitions: [String] = []
         
         // Add primary key
@@ -1267,7 +1424,7 @@ public struct ZyraTable: Hashable {
     // MARK: - Swift Model Generation
     
     /// Generate Swift model struct code
-    func generateSwiftModel(modelName: String? = nil) -> String {
+    public func generateSwiftModel(modelName: String? = nil) -> String {
         // Note: dbPrefix should be provided by the app configuration
         let structName = modelName ?? toPascalCase(name)
         
@@ -1303,7 +1460,7 @@ public struct ZyraTable: Hashable {
     }
     
     /// Generate standalone Swift model file
-    func generateSwiftModelFile(modelName: String? = nil) -> String {
+    public func generateSwiftModelFile(modelName: String? = nil) -> String {
         let structName = modelName ?? toPascalCase(name)
         
         var code = "import Foundation\n\n"
@@ -1315,7 +1472,7 @@ public struct ZyraTable: Hashable {
     // MARK: - Drizzle Schema Generation
     
     /// Generate Drizzle ORM schema code (TypeScript)
-    func generateDrizzleSchema(tableVariableName: String? = nil, includeImports: Bool = false, dbPrefix: String = "") -> String {
+    public func generateDrizzleSchema(tableVariableName: String? = nil, includeImports: Bool = false, dbPrefix: String = "") -> String {
         let varName = tableVariableName ?? toCamelCase(name.replacingOccurrences(of: dbPrefix, with: ""))
         let tableName = name.replacingOccurrences(of: dbPrefix, with: "")
         
@@ -1367,7 +1524,7 @@ public struct ZyraTable: Hashable {
     }
     
     /// Generate standalone Drizzle table file
-    func generateDrizzleTableFile(tableVariableName: String? = nil) -> String {
+    public func generateDrizzleTableFile(tableVariableName: String? = nil) -> String {
         return generateDrizzleSchema(tableVariableName: tableVariableName, includeImports: true)
     }
     
@@ -1474,7 +1631,7 @@ public struct ZyraTable: Hashable {
     // MARK: - Zod Schema Generation
     
     /// Generate Zod schema code (TypeScript)
-    func generateZodSchema(dbPrefix: String = "") -> String {
+    public func generateZodSchema(dbPrefix: String = "") -> String {
         let schemaName = toCamelCase(name.replacingOccurrences(of: dbPrefix, with: ""))
         
         var code = "import { z } from \"zod\";\n\n"
@@ -1723,20 +1880,102 @@ public struct ZyraTable: Hashable {
 public struct ZyraSchema {
     public let tables: [ZyraTable]
     public let enums: [DatabaseEnum]
+    private let joinTables: [ZyraTable]
     
-    public init(tables: [ZyraTable], enums: [DatabaseEnum] = []) {
-        self.tables = tables
+    public init(tables: [ZyraTable], enums: [DatabaseEnum] = [], dbPrefix: String = "") {
+        var processedTables = tables
+        var generatedJoinTables: [ZyraTable] = []
+        var tableMap: [String: ZyraTable] = [:]
+        
+        // Build table map for quick lookup
+        for table in tables {
+            tableMap[table.name] = table
+        }
+        
+        // Process each table to find many-to-many relationships
+        for (index, table) in processedTables.enumerated() {
+            var updatedColumns: [ColumnBuilder] = []
+            var tableJoinTables: [ZyraTable] = []
+            
+            // Check each original column builder for many-to-many relationships
+            for columnBuilder in table.getOriginalColumnBuilders() {
+                // Check if this column builder has a many-to-many relationship
+                if let manyToMany = columnBuilder._manyToManyRelationship {
+                    // Find the referenced table
+                    let referencedTableName = manyToMany.table2
+                    
+                    // Check if the referenced table exists
+                    if let referencedTable = tableMap[referencedTableName] {
+                        // Create the join table with correct table1 name
+                        let joinTable = ManyToManyRelationship(
+                            table1: table.name,
+                            table2: referencedTableName,
+                            joinTableName: manyToMany.joinTableName,
+                            table1Column: nil, // Auto-generate based on table1 name
+                            table2Column: manyToMany.table2Column.isEmpty ? nil : manyToMany.table2Column,
+                            table1ReferenceRemoved: manyToMany.table1ReferenceRemoved,
+                            table1ReferenceUpdated: manyToMany.table1ReferenceUpdated,
+                            table2ReferenceRemoved: manyToMany.table2ReferenceRemoved,
+                            table2ReferenceUpdated: manyToMany.table2ReferenceUpdated,
+                            additionalColumns: manyToMany.additionalColumns
+                        ).generateJoinTable(dbPrefix: dbPrefix)
+                        
+                        tableJoinTables.append(joinTable)
+                        // Don't add this column to the table - it's just a marker
+                        continue
+                    } else {
+                        print("⚠️ Warning: Referenced table '\(referencedTableName)' not found for many-to-many relationship")
+                        // Keep the column but remove the many-to-many marker
+                        var cleanBuilder = columnBuilder
+                        cleanBuilder._manyToManyRelationship = nil
+                        updatedColumns.append(cleanBuilder)
+                        continue
+                    }
+                }
+                
+                // Regular column - keep it
+                updatedColumns.append(columnBuilder)
+            }
+            
+            // Rebuild the table without many-to-many marker columns
+            if updatedColumns.count != table.getOriginalColumnBuilders().count {
+                let newTable = ZyraTable(
+                    name: table.name,
+                    primaryKey: table.primaryKey,
+                    defaultOrderBy: table.defaultOrderBy,
+                    columns: updatedColumns,
+                    rlsPolicies: table.rlsPolicies
+                )
+                processedTables[index] = newTable
+                tableMap[table.name] = newTable
+            }
+            
+            // Add generated join tables
+            generatedJoinTables.append(contentsOf: tableJoinTables)
+        }
+        
+        // Combine regular tables with join tables
+        self.tables = processedTables
+        self.joinTables = generatedJoinTables
         
         // Collect all enums from tables
         var allEnums = Set(enums)
-        for table in tables {
+        for table in processedTables {
+            allEnums.formUnion(table.getEnums())
+        }
+        for table in generatedJoinTables {
             allEnums.formUnion(table.getEnums())
         }
         self.enums = Array(allEnums)
     }
     
+    /// Get all tables including join tables
+    public var allTables: [ZyraTable] {
+        return tables + joinTables
+    }
+    
     /// Generate complete migration SQL with proper ordering
-    func generateMigrationSQL() -> String {
+    public func generateMigrationSQL() -> String {
         var sql: [String] = []
         
         // 1. Create all enums first
@@ -1748,9 +1987,10 @@ public struct ZyraSchema {
             sql.append("")
         }
         
-        // 2. Create tables in topological order
+        // 2. Create tables in topological order (including join tables)
         sql.append("-- Create Tables")
-        let orderedTables = topologicalSortTables()
+        let allTables = tables + joinTables
+        let orderedTables = topologicalSortTables(allTables: allTables)
         
         for table in orderedTables {
             sql.append(table.generateCreateTableSQLOnly())
@@ -1773,11 +2013,12 @@ public struct ZyraSchema {
     }
     
     /// Topologically sort tables based on foreign key dependencies
-    private func topologicalSortTables() -> [ZyraTable] {
+    private func topologicalSortTables(allTables: [ZyraTable]? = nil) -> [ZyraTable] {
+        let tablesToSort = allTables ?? tables
         var dependencies: [String: Set<String>] = [:]
         var tableMap: [String: ZyraTable] = [:]
         
-        for table in tables {
+        for table in tablesToSort {
             tableMap[table.name] = table
             dependencies[table.name] = table.getReferencedTables()
         }
@@ -1828,23 +2069,23 @@ public struct ZyraSchema {
             }
         }
         
-        if result.count != tables.count {
+        if result.count != tablesToSort.count {
             print("⚠️ Warning: Circular dependency detected or missing referenced table")
-            return tables
+            return tablesToSort
         }
         
         return result
     }
     
     /// Convert to PowerSync Schema
-    func toPowerSyncSchema() -> PowerSync.Schema {
+    public func toPowerSyncSchema() -> PowerSync.Schema {
         return PowerSync.Schema(
-            tables: tables.map { $0.toPowerSyncTable() }
+            tables: allTables.map { $0.toPowerSyncTable() }
         )
     }
     
     /// Generate Drizzle schema code for all tables and enums
-    func generateDrizzleSchema(dbPrefix: String = "") -> String {
+    public func generateDrizzleSchema(dbPrefix: String = "") -> String {
         var code = "import { sql } from \"drizzle-orm\";\n"
         code += "import { createTable, pgTableCreator, text, integer, boolean, timestamp, uuid, pgEnum } from \"drizzle-orm/pg-core\";\n"
         code += "import { foreignKey } from \"drizzle-orm/pg-core\";\n"
@@ -1910,8 +2151,8 @@ public struct ZyraSchema {
     }
     
     /// Generate Swift model code for all tables in schema
-    func generateAllSwiftModels() -> String {
-        return tables.map { $0.generateSwiftModel() }.joined(separator: "\n\n")
+    public func generateAllSwiftModels() -> String {
+        return allTables.map { $0.generateSwiftModel() }.joined(separator: "\n\n")
     }
     
     /// Generate complete Prisma schema file
@@ -1960,7 +2201,8 @@ public struct ZyraSchema {
         }
         
         // Generate models in dependency order
-        let orderedTables = topologicalSortTables()
+        let allTables = tables + joinTables
+        let orderedTables = topologicalSortTables(allTables: allTables)
         for table in orderedTables {
             code += table.generatePrismaModel(dbPrefix: dbPrefix)
             code += "\n\n"
