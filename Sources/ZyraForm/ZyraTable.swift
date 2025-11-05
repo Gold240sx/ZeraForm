@@ -342,20 +342,44 @@ public struct ColumnBuilder {
         return builder
     }
     
+    /// Create a foreign key relationship
+    /// - Parameters:
+    ///   - table: The referenced table name
+    ///   - column: The referenced column name (defaults to "id")
+    ///   - referenceUpdated: Action when referenced row is updated (defaults to .cascade)
+    ///   - referenceRemoved: Action when referenced row is deleted (defaults to .setNull)
+    /// - Returns: ColumnBuilder with foreign key relationship
+    func references(
+        _ table: String,
+        column: String = "id",
+        referenceUpdated: ForeignKeyAction = .cascade,
+        referenceRemoved: ForeignKeyAction = .setNull
+    ) -> ColumnBuilder {
+        var builder = self
+        builder.foreignKey = ForeignKey(
+            referencedTable: table,
+            referencedColumn: column,
+            onDelete: referenceRemoved,
+            onUpdate: referenceUpdated
+        )
+        return builder
+    }
+    
+    /// Legacy method name for backward compatibility
+    /// - Parameters:
+    ///   - table: The referenced table name
+    ///   - column: The referenced column name (defaults to "id")
+    ///   - onDelete: Action when referenced row is deleted (defaults to .setNull)
+    ///   - onUpdate: Action when referenced row is updated (defaults to .cascade)
+    /// - Returns: ColumnBuilder with foreign key relationship
+    @available(*, deprecated, renamed: "references(_:column:referenceUpdated:referenceRemoved:)")
     func references(
         _ table: String,
         column: String = "id",
         onDelete: ForeignKeyAction = .setNull,
         onUpdate: ForeignKeyAction = .cascade
     ) -> ColumnBuilder {
-        var builder = self
-        builder.foreignKey = ForeignKey(
-            referencedTable: table,
-            referencedColumn: column,
-            onDelete: onDelete,
-            onUpdate: onUpdate
-        )
-        return builder
+        return self.references(table, column: column, referenceUpdated: onUpdate, referenceRemoved: onDelete)
     }
     
     // MARK: - Validation Methods
@@ -672,11 +696,22 @@ public struct ForeignKey {
     let onUpdate: ForeignKeyAction
 }
 
+/// Foreign key action when referenced row is updated or deleted
+/// Maps to PostgreSQL ON UPDATE / ON DELETE actions
 public enum ForeignKeyAction {
+    /// CASCADE: Delete/update the row when the referenced row is deleted/updated
     case cascade
+    
+    /// RESTRICT: Prevent deletion/update if any rows reference it
     case restrict
+    
+    /// SET NULL: Set the foreign key column to NULL when referenced row is deleted/updated
     case setNull
+    
+    /// SET DEFAULT: Set the foreign key column to its default value when referenced row is deleted/updated
     case setDefault
+    
+    /// NO ACTION: Similar to RESTRICT but checked at end of statement
     case noAction
     
     var sqlString: String {
