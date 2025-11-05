@@ -2372,6 +2372,84 @@ public struct ZyraSchema {
         return tables + joinTables
     }
     
+    /// Check if a table is a join table
+    public func isJoinTable(_ table: ZyraTable) -> Bool {
+        return joinTableNames.contains(table.name)
+    }
+    
+    /// Get join table names
+    public var joinTableNames: Set<String> {
+        return Set(joinTables.map { $0.name })
+    }
+    
+    /// Generate PowerSync bucket definitions (YAML format)
+    public func generatePowerSyncBucketDefinitions(dbPrefix: String = "") -> String {
+        var yaml = "bucket_definitions:\n"
+        yaml += "  global:\n"
+        yaml += "    data:\n"
+        yaml += "      # Sync all rows\n"
+        yaml += "      #   - SELECT * FROM \"power_sync_counters\"\n"
+        yaml += "      \n"
+        
+        // Sort tables: regular tables first, then join tables
+        let sortedTables = allTables.sorted { table1, table2 in
+            let isJoin1 = isJoinTable(table1)
+            let isJoin2 = isJoinTable(table2)
+            
+            // Join tables come after regular tables
+            if isJoin1 != isJoin2 {
+                return !isJoin1 // Regular tables first
+            }
+            
+            // Within same type, sort alphabetically
+            return table1.name < table2.name
+        }
+        
+        var hasRegularTables = false
+        var hasJoinTables = false
+        
+        for table in sortedTables {
+            let isJoin = isJoinTable(table)
+            
+            // Add section comment for join tables
+            if isJoin && !hasJoinTables && hasRegularTables {
+                yaml += "      \n"
+                yaml += "      # Join Tables\n"
+                hasJoinTables = true
+            }
+            
+            // Format table name for PowerSync
+            var tableName = table.name
+            
+            // Join tables get "JOIN-" prefix in PowerSync bucket definitions
+            // Remove dbPrefix temporarily to add JOIN- prefix, then add it back
+            if isJoin {
+                if !dbPrefix.isEmpty && tableName.hasPrefix(dbPrefix) {
+                    let nameWithoutPrefix = String(tableName.dropFirst(dbPrefix.count))
+                    tableName = "\(dbPrefix)JOIN-\(nameWithoutPrefix)"
+                } else {
+                    tableName = "JOIN-\(tableName)"
+                }
+            }
+            
+            yaml += "      - SELECT * FROM \"\(tableName)\"\n"
+            
+            if !isJoin && !hasRegularTables {
+                hasRegularTables = true
+            }
+        }
+        
+        // Add comment about user-specific buckets
+        yaml += "      \n"
+        yaml += "   # User-specific buckets (optional)\n"
+        yaml += "   # by_user:\n"
+        yaml += "   #   parameters: SELECT request.user_id() as user_id\n"
+        yaml += "   #   data:\n"
+        yaml += "   #   - SELECT * FROM mytable WHERE mytable.user_id = bucket.user_id\n"
+        
+        return yaml
+    }
+    
     /// Generate complete migration SQL with proper ordering
     public func generateMigrationSQL() -> String {
         var sql: [String] = []
