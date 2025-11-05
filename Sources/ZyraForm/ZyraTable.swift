@@ -1585,11 +1585,9 @@ public struct ZyraTable: Hashable {
         let fkConstraints = generateForeignKeyConstraints()
         let allConstraints = columnDefinitions + fkConstraints
         
-        var sql = """
-        CREATE TABLE "\(name)" (
-            \(allConstraints.joined(separator: ",\n    "))
-        );
-        """
+        var sql = "CREATE TABLE \"\(name)\" (\n"
+        sql += "    \(allConstraints.joined(separator: ",\n    "))\n"
+        sql += ");"
         
         // Generate trigger for updated_at if present
         if let updatedAtColumn = columns.first(where: { $0.name.lowercased() == "updated_at" }) {
@@ -1680,11 +1678,11 @@ public struct ZyraTable: Hashable {
         let fkConstraints = generateForeignKeyConstraints()
         let allConstraints = columnDefinitions + fkConstraints
         
-        return """
-        CREATE TABLE "\(name)" (
-            \(allConstraints.joined(separator: ",\n    "))
-        );
-        """
+        var sql = "CREATE TABLE \"\(name)\" (\n"
+        sql += "    \(allConstraints.joined(separator: ",\n    "))\n"
+        sql += ");"
+        
+        return sql
     }
     
     // MARK: - RLS Generation
