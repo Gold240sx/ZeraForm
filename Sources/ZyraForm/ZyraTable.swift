@@ -1160,6 +1160,26 @@ public struct RLSPolicyBuilder {
         )
     }
     
+    /// Policy for admin users to perform operations on any row (not just their own)
+    public func adminCanDelete() -> RLSPolicy {
+        return admin(operation: .delete)
+    }
+    
+    /// Policy for admin users to perform operations on any row (not just their own)
+    public func adminCanUpdate() -> RLSPolicy {
+        return admin(operation: .update)
+    }
+    
+    /// Policy for admin users to perform operations on any row (not just their own)
+    public func adminCanInsert() -> RLSPolicy {
+        return admin(operation: .insert)
+    }
+    
+    /// Policy for admin users to perform operations on any row (not just their own)
+    public func adminCanSelect() -> RLSPolicy {
+        return admin(operation: .select)
+    }
+    
     /// Policy for editor users (admin or editor)
     public func editor(operation: RLSOperation = .all) -> RLSPolicy {
         RLSPolicy(
