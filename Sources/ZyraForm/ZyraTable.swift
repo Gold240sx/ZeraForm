@@ -2447,8 +2447,6 @@ public struct ZyraSchema {
             yaml += "  global:\n"
             yaml += "    data:\n"
             yaml += "      # Sync all rows\n"
-            yaml += "      #   - SELECT * FROM \"power_sync_counters\"\n"
-            yaml += "      \n"
             
             // Sort global tables: regular first, then join tables
             let sortedGlobalTables = globalTables.sorted { table1, table2 in
@@ -2476,7 +2474,10 @@ public struct ZyraSchema {
                 }
                 
                 var tableName = formatTableNameForPowerSync(table: table, dbPrefix: dbPrefix)
-                yaml += "      - SELECT * FROM \(tableName)\n"
+                // Table names with hyphens/special chars need quotes in SQL
+                let needsQuotes = tableName.contains("-") || tableName.contains(" ") || tableName != tableName.lowercased()
+                let quotedTableName = needsQuotes ? "\"\(tableName)\"" : tableName
+                yaml += "      - SELECT * FROM \(quotedTableName)\n"
                 
                 if !isJoin && !hasRegularTables {
                     hasRegularTables = true
@@ -2522,8 +2523,13 @@ public struct ZyraSchema {
                 // Find the user_id column name (case-sensitive)
                 let userIdCol = table.columns.first { $0.name.lowercased() == userIdColumn.lowercased() }?.name ?? userIdColumn
                 
-                // Generate WHERE clause (PowerSync prefers unquoted table names)
-                yaml += "      - SELECT * FROM \(tableName) WHERE \(tableName).\(userIdCol) = bucket.user_id\n"
+                // Table names with hyphens/special chars need quotes in SQL
+                let needsQuotes = tableName.contains("-") || tableName.contains(" ") || tableName != tableName.lowercased()
+                let quotedTableName = needsQuotes ? "\"\(tableName)\"" : tableName
+                let quotedColumnName = needsQuotes ? "\"\(userIdCol)\"" : userIdCol
+                
+                // Generate WHERE clause - format: SELECT * FROM tablename WHERE tablename.user_id = bucket.user_id
+                yaml += "      - SELECT * FROM \(quotedTableName) WHERE \(quotedTableName).\(quotedColumnName) = bucket.user_id\n"
                 
                 if !isJoin && !hasRegularTables {
                     hasRegularTables = true
