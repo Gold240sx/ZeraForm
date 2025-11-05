@@ -1520,12 +1520,8 @@ public struct ZyraTable: Hashable {
             guard let fk = column.foreignKey else { return nil }
             
             let constraintName = "\(name)_\(column.name)_fkey"
-            return """
-                CONSTRAINT "\(constraintName)" FOREIGN KEY (\(column.name)) 
-                REFERENCES "\(fk.referencedTable)" (\(fk.referencedColumn)) 
-                ON UPDATE \(fk.onUpdate.sqlString) 
-                ON DELETE \(fk.onDelete.sqlString)
-            """
+            let constraint = "CONSTRAINT \"\(constraintName)\" FOREIGN KEY (\(column.name)) REFERENCES \"\(fk.referencedTable)\" (\(fk.referencedColumn)) ON UPDATE \(fk.onUpdate.sqlString) ON DELETE \(fk.onDelete.sqlString)"
+            return constraint.trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
     
