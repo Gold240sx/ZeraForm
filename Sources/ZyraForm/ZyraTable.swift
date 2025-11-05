@@ -1004,7 +1004,7 @@ public struct RLSPolicyBuilder {
     
     /// Generate SQL expression for checking if user owns the row
     private func userExpression() -> String {
-        return "\(userIdColumn) = auth.uid()::text"
+        return "\(userIdColumn) = (auth.uid())::uuid"
     }
     
     /// Generate SQL expression for checking if user is authenticated
@@ -1022,7 +1022,7 @@ public struct RLSPolicyBuilder {
         return """
         EXISTS (
             SELECT 1 FROM public.\(usersTableName)
-            WHERE id = auth.uid()::text
+            WHERE id = (auth.uid())::uuid
             AND \(isSuperUserColumn) = true
         )
         """
@@ -1033,7 +1033,7 @@ public struct RLSPolicyBuilder {
         return """
         EXISTS (
             SELECT 1 FROM public.\(usersTableName)
-            WHERE id = auth.uid()::text
+            WHERE id = (auth.uid())::uuid
             AND role = 'admin'
         )
         """
@@ -1044,7 +1044,7 @@ public struct RLSPolicyBuilder {
         return """
         EXISTS (
             SELECT 1 FROM public.\(usersTableName)
-            WHERE id = auth.uid()::text
+            WHERE id = (auth.uid())::uuid
             AND role IN ('admin', 'editor')
         )
         """
@@ -1055,7 +1055,7 @@ public struct RLSPolicyBuilder {
         return """
         EXISTS (
             SELECT 1 FROM public.\(usersTableName)
-            WHERE id = auth.uid()::text
+            WHERE id = (auth.uid())::uuid
             AND \(isOnlineColumn) = true
         )
         """
