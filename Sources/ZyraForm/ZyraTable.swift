@@ -27,6 +27,7 @@ public struct ColumnMetadata {
     public let isEncrypted: Bool
     public let swiftType: SwiftColumnType
     public let isNullable: Bool
+    public let isUnique: Bool
     public let foreignKey: ForeignKey?
     public let defaultValue: String?
     public let enumType: DatabaseEnum?
@@ -204,6 +205,7 @@ public struct ColumnBuilder {
     public var isEncrypted: Bool = false
     public var swiftType: ColumnMetadata.SwiftColumnType = .string
     public var isNullable: Bool = false
+    public var isUnique: Bool = false
     public var foreignKey: ForeignKey? = nil
     public var defaultValue: String? = nil
     public var enumType: DatabaseEnum? = nil
@@ -305,6 +307,12 @@ public struct ColumnBuilder {
     public func notNull() -> ColumnBuilder {
         var builder = self
         builder.isNullable = false
+        return builder
+    }
+    
+    public func unique() -> ColumnBuilder {
+        var builder = self
+        builder.isUnique = true
         return builder
     }
     
@@ -667,6 +675,7 @@ public struct ColumnBuilder {
             isEncrypted: isEncrypted,
             swiftType: swiftType,
             isNullable: isNullable,
+            isUnique: isUnique,
             foreignKey: foreignKey,
             defaultValue: defaultValue,
             enumType: enumType ?? swiftType.enumValue,
@@ -975,17 +984,20 @@ public struct RLSPolicyBuilder {
     private let userIdColumn: String
     private let usersTableName: String
     private let isSuperUserColumn: String
+    private let isOnlineColumn: String
     
     public init(
         tableName: String,
         userIdColumn: String = "user_id",
         usersTableName: String = "users",
-        isSuperUserColumn: String = "is_superuser"
+        isSuperUserColumn: String = "is_superuser",
+        isOnlineColumn: String = "is_online"
     ) {
         self.tableName = tableName
         self.userIdColumn = userIdColumn
         self.usersTableName = usersTableName
         self.isSuperUserColumn = isSuperUserColumn
+        self.isOnlineColumn = isOnlineColumn
     }
     
     // MARK: - Permission Helpers
@@ -1034,6 +1046,17 @@ public struct RLSPolicyBuilder {
             SELECT 1 FROM public.\(usersTableName)
             WHERE id = auth.uid()::text
             AND role IN ('admin', 'editor')
+        )
+        """
+    }
+    
+    /// Generate SQL expression for checking if user is online
+    private func onlineExpression() -> String {
+        return """
+        EXISTS (
+            SELECT 1 FROM public.\(usersTableName)
+            WHERE id = auth.uid()::text
+            AND \(isOnlineColumn) = true
         )
         """
     }
@@ -1186,6 +1209,15 @@ public struct RLSPolicyBuilder {
             name: "\(tableName)_editor_\(operation.rawValue.lowercased())",
             operation: operation,
             usingExpression: editorExpression()
+        )
+    }
+    
+    /// Policy for online users only
+    public func online(operation: RLSOperation = .all) -> RLSPolicy {
+        RLSPolicy(
+            name: "\(tableName)_online_\(operation.rawValue.lowercased())",
+            operation: operation,
+            usingExpression: onlineExpression()
         )
     }
     
@@ -1617,6 +1649,11 @@ public struct ZyraTable: Hashable {
                 colDef += " NOT NULL"
             }
             
+            // Add UNIQUE constraint if required
+            if column.isUnique {
+                colDef += " UNIQUE"
+            }
+            
             // Add default value if present
             if let defaultValue = column.defaultValue {
                 if defaultValue.contains("(") || defaultValue.uppercased() == "NOW()" || defaultValue.uppercased() == "CURRENT_TIMESTAMP" {
@@ -1697,13 +1734,15 @@ public struct ZyraTable: Hashable {
     public func rls(
         userIdColumn: String = "user_id",
         usersTableName: String = "users",
-        isSuperUserColumn: String = "is_superuser"
+        isSuperUserColumn: String = "is_superuser",
+        isOnlineColumn: String = "is_online"
     ) -> RLSPolicyBuilder {
         return RLSPolicyBuilder(
             tableName: name,
             userIdColumn: userIdColumn,
             usersTableName: usersTableName,
-            isSuperUserColumn: isSuperUserColumn
+            isSuperUserColumn: isSuperUserColumn,
+            isOnlineColumn: isOnlineColumn
         )
     }
     
@@ -1886,6 +1925,10 @@ public struct ZyraTable: Hashable {
         
         if !column.isNullable {
             def += ".notNull()"
+        }
+        
+        if column.isUnique && column.name != primaryKey {
+            def += ".unique()"
         }
         
         // Handle updated_at special case
@@ -2104,6 +2147,11 @@ public struct ZyraTable: Hashable {
                 } else if column.isNanoid == true {
                     attributes.append("@default(cuid())")
                 }
+            }
+            
+            // Unique constraint
+            if column.isUnique && column.name != primaryKey {
+                attributes.append("@unique")
             }
             
             // Default values
