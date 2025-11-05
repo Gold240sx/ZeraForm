@@ -1521,7 +1521,7 @@ public struct ZyraTable: Hashable {
             
             let constraintName = "\(name)_\(column.name)_fkey"
             return """
-                CONSTRAINT \(constraintName) FOREIGN KEY (\(column.name)) 
+                CONSTRAINT "\(constraintName)" FOREIGN KEY (\(column.name)) 
                 REFERENCES "\(fk.referencedTable)" (\(fk.referencedColumn)) 
                 ON UPDATE \(fk.onUpdate.sqlString) 
                 ON DELETE \(fk.onDelete.sqlString)
