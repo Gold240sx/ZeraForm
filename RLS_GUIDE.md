@@ -28,10 +28,13 @@ When you generate migration SQL, RLS will be automatically enabled and policies 
 ```sql
 ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "users_own_access" PERMISSIVE ON "users" 
-FOR ALL USING (user_id = auth.uid()::text) 
-WITH CHECK (user_id = auth.uid()::text);
+CREATE POLICY "users_own_access" 
+ON "users" AS PERMISSIVE FOR ALL 
+USING (user_id::uuid = (auth.uid())::uuid) 
+WITH CHECK (user_id::uuid = (auth.uid())::uuid);
 ```
+
+**Note:** All `auth.uid()` comparisons use UUID casting: `(auth.uid())::uuid`. If your `user_id` columns are TEXT type, they're automatically cast: `user_id::uuid = (auth.uid())::uuid`.
 
 ## RLS Policy Types
 
@@ -73,10 +76,10 @@ let personalTable = ZyraTable(
 
 **Generated SQL:**
 ```sql
-CREATE POLICY "personal_notes_own_access" PERMISSIVE ON "personal_notes" 
-FOR ALL 
-USING (user_id = auth.uid()::text) 
-WITH CHECK (user_id = auth.uid()::text);
+CREATE POLICY "personal_notes_own_access" 
+ON "personal_notes" AS PERMISSIVE FOR ALL 
+USING (user_id::uuid = (auth.uid())::uuid) 
+WITH CHECK (user_id::uuid = (auth.uid())::uuid);
 ```
 
 ### 2. Users Can Access All Rows
@@ -120,23 +123,23 @@ let postsTable = ZyraTable(
 
 **Generated SQL:**
 ```sql
-CREATE POLICY "posts_read_all" PERMISSIVE ON "posts" 
-FOR SELECT 
+CREATE POLICY "posts_read_all" 
+ON "posts" AS PERMISSIVE FOR SELECT 
 USING (true);
 
-CREATE POLICY "posts_modify_own" PERMISSIVE ON "posts" 
-FOR UPDATE 
-USING (author_id = auth.uid()::text) 
-WITH CHECK (author_id = auth.uid()::text);
+CREATE POLICY "posts_modify_own" 
+ON "posts" AS PERMISSIVE FOR UPDATE 
+USING (author_id::uuid = (auth.uid())::uuid) 
+WITH CHECK (author_id::uuid = (auth.uid())::uuid);
 
-CREATE POLICY "posts_delete_own" PERMISSIVE ON "posts" 
-FOR DELETE 
-USING (author_id = auth.uid()::text);
+CREATE POLICY "posts_delete_own" 
+ON "posts" AS PERMISSIVE FOR DELETE 
+USING (author_id::uuid = (auth.uid())::uuid);
 
-CREATE POLICY "posts_insert_own" PERMISSIVE ON "posts" 
-FOR INSERT 
+CREATE POLICY "posts_insert_own" 
+ON "posts" AS PERMISSIVE FOR INSERT 
 USING (true) 
-WITH CHECK (author_id = auth.uid()::text);
+WITH CHECK (author_id::uuid = (auth.uid())::uuid);
 ```
 
 ## Custom RLS Policies
@@ -175,7 +178,7 @@ let teamTable = ZyraTable(
 
 ### Using Supabase auth.uid()
 
-For Supabase integration:
+For Supabase integration with UUID casting:
 
 ```swift
 let secureTable = ZyraTable(
@@ -185,14 +188,24 @@ let secureTable = ZyraTable(
         zf.text("owner_id").notNull()
     ],
     rlsPolicies: [
+        // Using auth.uid() with UUID casting (default)
         RLSPolicyBuilder(tableName: "secrets").usingAuthUid(
             operation: .all,
             column: "owner_id",
-            function: "auth.uid()::text"
+            function: "(auth.uid())::uuid"  // Default function
+        ),
+        
+        // With role bypass
+        RLSPolicyBuilder(tableName: "secrets").usingAuthUid(
+            operation: .all,
+            column: "owner_id",
+            allowRoles: ["admin", "moderator"]
         )
     ]
 )
 ```
+
+**Note:** The default function is `(auth.uid())::uuid`, and columns are automatically cast to UUID: `owner_id::uuid = (auth.uid())::uuid`.
 
 ### Using Custom Functions
 
@@ -232,19 +245,21 @@ let sharedTable = ZyraTable(
         RLSPolicyBuilder(tableName: "shared_resources").custom(
             name: "owner_access",
             operation: .all,
-            usingExpression: "owner_id = auth.uid()::text"
+            usingExpression: "owner_id::uuid = (auth.uid())::uuid"
         ),
         // Users can access resources shared with them
         RLSPolicyBuilder(tableName: "shared_resources").custom(
             name: "shared_access",
             operation: .select,
-            usingExpression: "shared_with_id = auth.uid()::text"
+            usingExpression: "shared_with_id::uuid = (auth.uid())::uuid"
         )
     ]
 )
 ```
 
-### Role-Based Access Control
+### Role-Based Access Control (RBAC)
+
+ZyraForm uses [Supabase RBAC](https://supabase.com/features/role-based-access-control) for role-based permissions. Roles are stored in a `role` column (default) in your users table:
 
 ```swift
 let adminTable = ZyraTable(
@@ -254,13 +269,23 @@ let adminTable = ZyraTable(
         zf.text("value").notNull()
     ],
     rlsPolicies: [
-        RLSPolicyBuilder(tableName: "admin_settings").custom(
+        // Simple admin check
+        table.rls().admin(operation: .all),
+        
+        // Or use hasRole for specific roles
+        table.rls().hasRole("admin", operation: .all),
+        
+        // Multiple roles
+        table.rls().hasRole(["admin", "super_admin"], operation: .all),
+        
+        // Custom role check
+        RLSPolicyBuilder(tableName: "admin_settings", roleColumn: "role").custom(
             name: "admin_only",
             operation: .all,
             usingExpression: """
                 EXISTS (
-                    SELECT 1 FROM user_roles 
-                    WHERE user_id = auth.uid()::text 
+                    SELECT 1 FROM public.users 
+                    WHERE id = (auth.uid())::uuid 
                     AND role = 'admin'
                 )
             """
@@ -268,6 +293,14 @@ let adminTable = ZyraTable(
     ]
 )
 ```
+
+**Built-in RBAC Methods:**
+- `admin()` - Users with "admin" role
+- `editor()` - Users with "admin" or "editor" role
+- `hasRole(_ roles:)` - Check for specific role(s)
+- `canAccessOwn(allowRoles:)` - Own access + role bypass
+- `canRead(allowRoles:)` - Read access + roles
+- `canUpdateOwn(allowRoles:)` - Update own + roles
 
 ### Time-Based Access
 
@@ -312,14 +345,14 @@ let granularTable = ZyraTable(
         RLSPolicyBuilder(tableName: "documents").custom(
             name: "modify_own",
             operation: .update,
-            usingExpression: "user_id = auth.uid()::text",
-            withCheckExpression: "user_id = auth.uid()::text"
+            usingExpression: "user_id::uuid = (auth.uid())::uuid",
+            withCheckExpression: "user_id::uuid = (auth.uid())::uuid"
         ),
         // Only owners can delete
         RLSPolicyBuilder(tableName: "documents").custom(
             name: "delete_own",
             operation: .delete,
-            usingExpression: "user_id = auth.uid()::text"
+            usingExpression: "user_id::uuid = (auth.uid())::uuid"
         ),
         // Anyone authenticated can create
         RLSPolicyBuilder(tableName: "documents").custom(
@@ -347,8 +380,8 @@ let strictTable = ZyraTable(
             name: "strict_access",
             operation: .all,
             policyType: .restrictive,  // Use restrictive
-            usingExpression: "user_id = auth.uid()::text",
-            withCheckExpression: "user_id = auth.uid()::text"
+            usingExpression: "user_id::uuid = (auth.uid())::uuid",
+            withCheckExpression: "user_id::uuid = (auth.uid())::uuid"
         ),
         // If you add another restrictive policy, BOTH must pass
         RLSPolicy(
@@ -357,8 +390,8 @@ let strictTable = ZyraTable(
             policyType: .restrictive,
             usingExpression: """
                 EXISTS (
-                    SELECT 1 FROM users 
-                    WHERE id = auth.uid()::text 
+                    SELECT 1 FROM public.users 
+                    WHERE id = (auth.uid())::uuid 
                     AND verified = true
                 )
             """
@@ -422,7 +455,7 @@ RLSPolicyBuilder(tableName: "posts").custom(
     name: "insert_own",
     operation: .insert,
     usingExpression: "true",
-    withCheckExpression: "author_id = auth.uid()::text"  // ✅ Prevents setting wrong author_id
+    withCheckExpression: "author_id::uuid = (auth.uid())::uuid"  // ✅ Prevents setting wrong author_id
 )
 ```
 
@@ -431,8 +464,8 @@ RLSPolicyBuilder(tableName: "posts").custom(
 RLS policies are evaluated for every query. Keep them simple and ensure indexed columns:
 
 ```swift
-// ✅ Good: Uses indexed column
-"user_id = auth.uid()::text"
+// ✅ Good: Uses indexed column with UUID casting
+"user_id::uuid = (auth.uid())::uuid"
 
 // ⚠️ Can be slow: Complex subquery
 "id IN (SELECT ... FROM ... WHERE ...)"
@@ -462,12 +495,22 @@ The generated SQL will include:
 
 | Method | Description | Returns |
 |--------|-------------|---------|
-| `canAccessOwn()` | Users can only access their own rows | `RLSPolicy` |
+| `canAccessOwn(allowRoles:)` | Users can only access their own rows (with optional role bypass) | `RLSPolicy` |
 | `canAccessAll()` | Users can access all rows | `RLSPolicy` |
-| `canReadAllModifyOwn()` | Read all, modify own (single policy) | `RLSPolicy` |
-| `canReadAllModifyOwnSeparate()` | Read all, modify own (separate policies) | `[RLSPolicy]` |
+| `canReadAllModifyOwnSeparate(allowRoles:)` | Read all, modify own (separate policies with optional role bypass) | `[RLSPolicy]` |
+| `canRead(allowRoles:)` | Read access for authenticated users (with optional role bypass) | `RLSPolicy` |
+| `canWriteOwn(operation:allowRoles:)` | Write own records (with optional role bypass) | `RLSPolicy` |
+| `canUpdateOwn(allowRoles:)` | Update own records (with optional role bypass) | `RLSPolicy` |
+| `canDeleteOwn(allowRoles:)` | Delete own records (with optional role bypass) | `RLSPolicy` |
+| `authenticated(operation:)` | Only authenticated users | `RLSPolicy` |
+| `anonymous(operation:)` | Only anonymous users | `RLSPolicy` |
+| `hasRole(_ roles:operation:)` | Users with specific role(s) | `RLSPolicy` |
+| `admin(operation:)` | Users with admin role | `RLSPolicy` |
+| `editor(operation:)` | Users with admin or editor role | `RLSPolicy` |
+| `online(operation:)` | Only online users | `RLSPolicy` |
+| `userOrPermission(name:operation:permission:permissionColumn:)` | User OR has permission | `RLSPolicy` |
 | `custom(name:operation:usingExpression:withCheckExpression:)` | Custom policy with SQL | `RLSPolicy` |
-| `usingAuthUid(operation:column:function:)` | Policy using Supabase auth.uid() | `RLSPolicy` |
+| `usingAuthUid(operation:column:function:allowRoles:)` | Policy using Supabase auth.uid() (with optional role bypass) | `RLSPolicy` |
 | `usingFunction(name:operation:functionCall:withCheckFunction:)` | Policy using custom function | `RLSPolicy` |
 
 ### ZyraTable RLS Methods
@@ -476,8 +519,14 @@ The generated SQL will include:
 |-----------------|-------------|---------|
 | `rlsPolicies` | Array of RLS policies | `[RLSPolicy]` |
 | `hasRLS` | Check if RLS is enabled | `Bool` |
-| `rls(userIdColumn:)` | Get RLS policy builder | `RLSPolicyBuilder` |
+| `rls(userIdColumn:usersTableName:roleColumn:isOnlineColumn:)` | Get RLS policy builder | `RLSPolicyBuilder` |
 | `generateRLSSQL()` | Generate RLS SQL | `String` |
+
+**RLS Builder Parameters:**
+- `userIdColumn`: Column name for user ID (default: `"user_id"`)
+- `usersTableName`: Name of users table (default: `"users"`)
+- `roleColumn`: Column name for role in users table (default: `"role"`) - Used for RBAC
+- `isOnlineColumn`: Column name for online status (default: `"is_online"`)
 
 ### RLSPolicy Properties
 
@@ -521,7 +570,7 @@ The generated SQL will include:
 
 4. **Test policy directly:**
    ```sql
-   SELECT * FROM your_table WHERE user_id = auth.uid()::text;
+   SELECT * FROM your_table WHERE user_id::uuid = (auth.uid())::uuid;
    ```
 
 ### Common Issues

@@ -39,14 +39,14 @@ Add ZyraForm to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "1.2.0")
+    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "1.3.0")
 ]
 ```
 
 Or add it via Xcode:
 1. File → Add Package Dependencies
 2. Enter the repository URL
-3. Select version `1.2.0` or later
+3. Select version `1.3.0` or later
 
 ## Quick Start
 
@@ -157,7 +157,7 @@ let usersTable = ZyraTable(
 
 ## Row Level Security (RLS)
 
-ZyraForm provides comprehensive RLS support with both convenience methods and custom SQL expressions.
+ZyraForm provides comprehensive RLS support aligned with [Supabase RBAC (Role-Based Access Control)](https://supabase.com/features/role-based-access-control). All policies use role-based permissions instead of superuser flags.
 
 ### Quick Start RLS
 
@@ -170,8 +170,8 @@ let postsTable = ZyraTable(
         zf.text("user_id").notNull()
     ],
     rlsPolicies: [
-        // Users can only access their own posts
-        table.rls().canAccessOwn(),
+        // Users can only access their own posts, admins can access all
+        table.rls().canAccessOwn(allowRoles: ["admin"]),
         
         // Admins can delete any post
         table.rls().adminCanDelete()
@@ -187,16 +187,17 @@ ZyraForm provides convenient shortform methods for common RLS patterns:
 // Permission-based policies
 table.rls().authenticated()      // Only authenticated users
 table.rls().anonymous()          // Only anonymous users
-table.rls().superUser()          // Only superusers
+table.rls().hasRole("admin")     // Users with specific role
+table.rls().hasRole(["admin", "super_admin"])  // Multiple roles
 table.rls().admin()              // Only admins
 table.rls().editor()             // Admins or editors
 table.rls().online()             // Only online users
 
-// Convenience methods
-table.rls().canRead()            // Read access for authenticated users
-table.rls().canWriteOwn()        // Write own records
-table.rls().canUpdateOwn()       // Update own records
-table.rls().canDeleteIfSuperuser() // Delete if superuser
+// Convenience methods with role support
+table.rls().canRead(allowRoles: ["admin"])           // Read access + roles
+table.rls().canWriteOwn(allowRoles: ["admin"])      // Write own + roles
+table.rls().canUpdateOwn(allowRoles: ["admin"])     // Update own + roles
+table.rls().canDeleteOwn(allowRoles: ["admin"])     // Delete own + roles
 
 // Admin shortcuts
 table.rls().adminCanDelete()     // Admin can delete
@@ -208,11 +209,14 @@ table.rls().adminCanSelect()     // Admin can select
 ### Common RLS Patterns
 
 ```swift
-// Users can only access their own rows
+// Users can only access their own rows (no role bypass)
 table.rls().canAccessOwn()
 
-// Everyone can read, but only owners can modify
-table.rls().canReadAllModifyOwnSeparate()
+// Users can only access their own rows, admins can access all
+table.rls().canAccessOwn(allowRoles: ["admin"])
+
+// Everyone can read, but only owners (or admins) can modify
+table.rls().canReadAllModifyOwnSeparate(allowRoles: ["admin"])
 
 // Allow all operations (no restrictions)
 table.rls().canAccessAll()
@@ -221,13 +225,13 @@ table.rls().canAccessAll()
 table.rls().custom(
     name: "custom_policy",
     operation: .select,
-    usingExpression: "published = true OR user_id = auth.uid()::text"
+    usingExpression: "published = true OR user_id::uuid = (auth.uid())::uuid"
 )
 ```
 
-### User Role Permissions
+### User Role Permissions (RBAC)
 
-ZyraForm includes built-in helpers for role-based access control:
+ZyraForm uses Supabase RBAC for role-based access control. Roles are stored in a `role` column (default) in your users table:
 
 ```swift
 // Check for admin role
@@ -236,16 +240,21 @@ table.rls().admin(operation: .delete)
 // Check for editor role (admin or editor)
 table.rls().editor(operation: .all)
 
-// Check for superuser status
-table.rls().superUser(operation: .all)
+// Check for specific role(s)
+table.rls().hasRole("moderator", operation: .all)
+table.rls().hasRole(["admin", "super_admin"], operation: .all)
 
-// Custom role check
+// Custom role check with permission
 table.rls().userOrPermission(
     name: "moderator_access",
     operation: .all,
     permission: "moderator",
     permissionColumn: "role"
 )
+
+// Allow roles to bypass ownership checks
+table.rls().canAccessOwn(allowRoles: ["admin", "moderator"])
+table.rls().canUpdateOwn(allowRoles: ["admin"])
 ```
 
 ### isOnline RLS Permissions
@@ -268,23 +277,32 @@ let messagesTable = ZyraTable(
 
 ### RLS Policy Builder
 
-The `RLSPolicyBuilder` provides fine-grained control:
+The `RLSPolicyBuilder` provides fine-grained control with RBAC:
 
 ```swift
 RLSPolicyBuilder(
     tableName: "posts",
     userIdColumn: "author_id",
     usersTableName: "users",
-    isSuperUserColumn: "is_superuser",
+    roleColumn: "role",           // Role column name (default: "role")
     isOnlineColumn: "is_online"
 )
 .custom(
     name: "authors_can_edit",
     operation: .update,
-    usingExpression: "author_id = auth.uid()::text",
-    withCheckExpression: "author_id = auth.uid()::text"
+    usingExpression: "author_id::uuid = (auth.uid())::uuid",
+    withCheckExpression: "author_id::uuid = (auth.uid())::uuid"
 )
 ```
+
+**Note:** All `auth.uid()` comparisons are cast to UUID: `(auth.uid())::uuid`. If your `user_id` columns are TEXT type, they're automatically cast: `user_id::uuid = (auth.uid())::uuid`.
+
+### Special Handling for Users Tables
+
+Tables ending with `"users"` (e.g., `"users"`, `"app_users"`) receive special RLS policies:
+- Users can only `SELECT` and `UPDATE` their own records
+- Direct `INSERT` and `DELETE` are implicitly disallowed (handled by Supabase Auth)
+- This ensures users can view/update their profile but cannot create or delete user accounts directly
 
 See [RLS_GUIDE.md](RLS_GUIDE.md) for complete RLS documentation.
 
@@ -482,12 +500,13 @@ struct Employee: Codable, Identifiable, Hashable {
 ### SQL Migrations
 
 ```swift
-let sql = schema.generateSQL()
+let sql = schema.generateMigrationSQL()
 print(sql)
 ```
 
 Generates:
 ```sql
+-- Create Tables
 CREATE TABLE "app_employees" (
     id TEXT PRIMARY KEY,
     email TEXT NOT NULL UNIQUE,
@@ -495,16 +514,74 @@ CREATE TABLE "app_employees" (
     age TEXT,
     website TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMPTZ
+    updated_at TIMESTAMPTZ,
+    CONSTRAINT "app_employees_email_fkey" FOREIGN KEY (email) REFERENCES "users" (email) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
--- RLS Policies
+-- Create Trigger
+CREATE OR REPLACE FUNCTION app_employees_update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER app_employees_updated_at_trigger
+BEFORE UPDATE ON "app_employees"
+FOR EACH ROW
+EXECUTE FUNCTION app_employees_update_updated_at();
+
+-- Enable Row Level Security
 ALTER TABLE "app_employees" ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "app_employees_own_access" PERMISSIVE ON "app_employees"
-FOR ALL USING (user_id = auth.uid()::text)
-WITH CHECK (user_id = auth.uid()::text);
+-- RLS Policies
+CREATE POLICY "app_employees_own_access" 
+ON "app_employees" AS PERMISSIVE FOR ALL 
+USING (user_id::uuid = (auth.uid())::uuid) 
+WITH CHECK (user_id::uuid = (auth.uid())::uuid);
 ```
+
+### PowerSync Bucket Definitions
+
+Generate PowerSync bucket definitions for data synchronization:
+
+```swift
+let bucketDefinitions = schema.generatePowerSyncBucketDefinitions(
+    dbPrefix: "app_",
+    userIdColumn: "user_id"
+)
+print(bucketDefinitions)
+```
+
+Generates:
+```yaml
+bucket_definitions:
+  global:
+    data:
+      # Sync all rows
+      - SELECT * FROM "app_tags"
+      - SELECT * FROM "app_categories"
+      
+      # Join Tables
+      - SELECT * FROM "app-JOIN-posts_tags"
+  
+  by_user:
+    # Only sync rows belonging to the user
+    parameters: SELECT request.user_id() as user_id
+    data:
+      - SELECT * FROM "app_posts" WHERE "app_posts"."user_id" = bucket.user_id
+      - SELECT * FROM "app_comments" WHERE "app_comments"."user_id" = bucket.user_id
+      
+      # Join Tables
+      - SELECT * FROM "app-JOIN-posts_tags" WHERE "app-JOIN-posts_tags"."user_id" = bucket.user_id
+```
+
+**Features:**
+- Automatically separates tables into `global` and `by_user` buckets based on `user_id` column presence
+- Generates proper WHERE clauses for user-specific tables
+- Handles join tables with `JOIN-` prefix
+- Skips `users` table (handled by Supabase Auth)
 
 ## Encryption
 
@@ -729,9 +806,34 @@ See the example app in `ZyraForm/ZyraForm/` for:
 - RLS policy examples
 - CRUD operations
 
+## PowerSync Bucket Definitions
+
+ZyraForm can generate PowerSync bucket definitions for data synchronization:
+
+```swift
+let bucketYAML = schema.generatePowerSyncBucketDefinitions(
+    dbPrefix: "app_",
+    userIdColumn: "user_id"
+)
+```
+
+This automatically:
+- Separates tables into `global` (no `user_id`) and `by_user` (has `user_id`) buckets
+- Generates proper WHERE clauses: `WHERE "table_name"."user_id" = bucket.user_id`
+- Handles join tables with `JOIN-` prefix
+- Skips `users` table (managed by Supabase Auth)
+
 ## Version
 
-Current version: **1.2.0**
+Current version: **1.3.0**
+
+### What's New in 1.3.0
+
+- **RBAC Support**: Replaced superuser permissions with Supabase Role-Based Access Control
+- **PowerSync Bucket Definitions**: Generate bucket definitions for data synchronization
+- **UUID Casting**: Proper UUID casting for `auth.uid()` comparisons (`user_id::uuid = (auth.uid())::uuid`)
+- **SQL Generation Improvements**: Fixed CREATE TABLE syntax, foreign key constraints, and RLS policy formatting
+- **Enhanced RLS**: Added `hasRole()` methods and `allowRoles` parameters for flexible role-based policies
 
 ## License
 

@@ -979,24 +979,26 @@ public enum RLSPolicyType: String {
 }
 
 /// RLS policy builder for common patterns
+/// Uses Supabase RBAC (Role-Based Access Control) instead of superuser permissions
+/// Reference: https://supabase.com/features/role-based-access-control
 public struct RLSPolicyBuilder {
     private let tableName: String
     private let userIdColumn: String
     private let usersTableName: String
-    private let isSuperUserColumn: String
+    private let roleColumn: String
     private let isOnlineColumn: String
     
     public init(
         tableName: String,
         userIdColumn: String = "user_id",
         usersTableName: String = "users",
-        isSuperUserColumn: String = "is_superuser",
+        roleColumn: String = "role",
         isOnlineColumn: String = "is_online"
     ) {
         self.tableName = tableName
         self.userIdColumn = userIdColumn
         self.usersTableName = usersTableName
-        self.isSuperUserColumn = isSuperUserColumn
+        self.roleColumn = roleColumn
         self.isOnlineColumn = isOnlineColumn
     }
     
@@ -1004,7 +1006,7 @@ public struct RLSPolicyBuilder {
     
     /// Generate SQL expression for checking if user owns the row
     private func userExpression() -> String {
-        return "\(userIdColumn) = (auth.uid())::uuid"
+        return "\(userIdColumn)::uuid = (auth.uid())::uuid"
     }
     
     /// Generate SQL expression for checking if user is authenticated
@@ -1017,37 +1019,38 @@ public struct RLSPolicyBuilder {
         return "auth.uid() IS NULL"
     }
     
-    /// Generate SQL expression for checking if user is superuser
-    private func superUserExpression() -> String {
-        return """
-        EXISTS (
-            SELECT 1 FROM public.\(usersTableName)
-            WHERE id = (auth.uid())::uuid
-            AND \(isSuperUserColumn) = true
-        )
-        """
+    /// Generate SQL expression for checking if user has any of the specified roles
+    /// Uses Supabase RBAC - roles are stored in the role column
+    private func roleExpression(_ roles: [String]) -> String {
+        guard !roles.isEmpty else { return "false" }
+        if roles.count == 1 {
+            return """
+            EXISTS (
+                SELECT 1 FROM public.\(usersTableName)
+                WHERE id = (auth.uid())::uuid
+                AND \(roleColumn) = '\(roles[0])'
+            )
+            """
+        } else {
+            let rolesList = roles.map { "'\($0)'" }.joined(separator: ", ")
+            return """
+            EXISTS (
+                SELECT 1 FROM public.\(usersTableName)
+                WHERE id = (auth.uid())::uuid
+                AND \(roleColumn) IN (\(rolesList))
+            )
+            """
+        }
     }
     
     /// Generate SQL expression for checking if user is admin
     private func adminExpression() -> String {
-        return """
-        EXISTS (
-            SELECT 1 FROM public.\(usersTableName)
-            WHERE id = (auth.uid())::uuid
-            AND role = 'admin'
-        )
-        """
+        return roleExpression(["admin"])
     }
     
-    /// Generate SQL expression for checking if user is editor
+    /// Generate SQL expression for checking if user is editor (admin or editor)
     private func editorExpression() -> String {
-        return """
-        EXISTS (
-            SELECT 1 FROM public.\(usersTableName)
-            WHERE id = (auth.uid())::uuid
-            AND role IN ('admin', 'editor')
-        )
-        """
+        return roleExpression(["admin", "editor"])
     }
     
     /// Generate SQL expression for checking if user is online
@@ -1068,14 +1071,15 @@ public struct RLSPolicyBuilder {
     
     // MARK: - Common Policy Patterns
     
-    /// Users can only access their own rows (or superusers can access all)
-    /// Requires: auth.uid() or current_setting('app.user_id') to match user_id column
-    public func canAccessOwn(allowSuperUser: Bool = true) -> RLSPolicy {
+    /// Users can only access their own rows (optionally allow specific roles)
+    /// Uses Supabase RBAC for role-based permissions
+    /// - Parameter allowRoles: Array of role names that can access any row (e.g., ["admin"])
+    public func canAccessOwn(allowRoles: [String] = []) -> RLSPolicy {
         let expression: String
-        if allowSuperUser {
+        if !allowRoles.isEmpty {
             expression = combineExpressions([
                 userExpression(),
-                superUserExpression()
+                roleExpression(allowRoles)
             ])
         } else {
             expression = userExpression()
@@ -1099,7 +1103,7 @@ public struct RLSPolicyBuilder {
     }
     
     /// Users can read all but only modify their own
-    public func canReadAllModifyOwn(allowSuperUser: Bool = true) -> RLSPolicy {
+    public func canReadAllModifyOwn(allowRoles: [String] = []) -> RLSPolicy {
         RLSPolicy(
             name: "\(tableName)_read_all_modify_own",
             operation: .select,
@@ -1108,12 +1112,13 @@ public struct RLSPolicyBuilder {
     }
     
     /// Users can read all but only modify their own (separate policies)
-    public func canReadAllModifyOwnSeparate(allowSuperUser: Bool = true) -> [RLSPolicy] {
+    /// - Parameter allowRoles: Array of role names that can modify any row (e.g., ["admin"])
+    public func canReadAllModifyOwnSeparate(allowRoles: [String] = []) -> [RLSPolicy] {
         let modifyExpression: String
-        if allowSuperUser {
+        if !allowRoles.isEmpty {
             modifyExpression = combineExpressions([
                 userExpression(),
-                superUserExpression()
+                roleExpression(allowRoles)
             ])
         } else {
             modifyExpression = userExpression()
@@ -1140,7 +1145,7 @@ public struct RLSPolicyBuilder {
                 name: "\(tableName)_insert_own",
                 operation: .insert,
                 usingExpression: "true",
-                withCheckExpression: allowSuperUser ? modifyExpression : userExpression()
+                withCheckExpression: !allowRoles.isEmpty ? modifyExpression : userExpression()
             )
         ]
     }
@@ -1165,13 +1170,22 @@ public struct RLSPolicyBuilder {
         )
     }
     
-    /// Policy for superusers only
-    public func superUser(operation: RLSOperation = .all) -> RLSPolicy {
+    /// Policy for users with specific role(s)
+    /// Uses Supabase RBAC - checks if user has any of the specified roles
+    /// - Parameter roles: Array of role names (e.g., ["admin", "super_admin"])
+    /// - Parameter operation: The operation this policy applies to
+    public func hasRole(_ roles: [String], operation: RLSOperation = .all) -> RLSPolicy {
         RLSPolicy(
-            name: "\(tableName)_superuser_\(operation.rawValue.lowercased())",
+            name: "\(tableName)_role_\(roles.joined(separator: "_"))_\(operation.rawValue.lowercased())",
             operation: operation,
-            usingExpression: superUserExpression()
+            usingExpression: roleExpression(roles)
         )
+    }
+    
+    /// Policy for users with a specific role
+    /// Convenience method for single role check
+    public func hasRole(_ role: String, operation: RLSOperation = .all) -> RLSPolicy {
+        hasRole([role], operation: operation)
     }
     
     /// Policy for admin users only
@@ -1224,12 +1238,13 @@ public struct RLSPolicyBuilder {
     // MARK: - Additional Convenience Methods
     
     /// Policy for read access (alias for authenticated SELECT)
-    public func canRead(allowSuperUser: Bool = true) -> RLSPolicy {
+    /// - Parameter allowRoles: Array of role names that can read all rows (e.g., ["admin"])
+    public func canRead(allowRoles: [String] = []) -> RLSPolicy {
         let expression: String
-        if allowSuperUser {
+        if !allowRoles.isEmpty {
             expression = combineExpressions([
                 authenticatedExpression(),
-                superUserExpression()
+                roleExpression(allowRoles)
             ])
         } else {
             expression = authenticatedExpression()
@@ -1243,12 +1258,14 @@ public struct RLSPolicyBuilder {
     }
     
     /// Policy for users to write their own rows
-    public func canWriteOwn(operation: RLSOperation = .insert, allowSuperUser: Bool = true) -> RLSPolicy {
+    /// - Parameter operation: The operation (default: insert)
+    /// - Parameter allowRoles: Array of role names that can write any row (e.g., ["admin"])
+    public func canWriteOwn(operation: RLSOperation = .insert, allowRoles: [String] = []) -> RLSPolicy {
         let expression: String
-        if allowSuperUser {
+        if !allowRoles.isEmpty {
             expression = combineExpressions([
                 userExpression(),
-                superUserExpression()
+                roleExpression(allowRoles)
             ])
         } else {
             expression = userExpression()
@@ -1263,12 +1280,13 @@ public struct RLSPolicyBuilder {
     }
     
     /// Policy for users to update their own rows
-    public func canUpdateOwn(allowSuperUser: Bool = true) -> RLSPolicy {
+    /// - Parameter allowRoles: Array of role names that can update any row (e.g., ["admin"])
+    public func canUpdateOwn(allowRoles: [String] = []) -> RLSPolicy {
         let expression: String
-        if allowSuperUser {
+        if !allowRoles.isEmpty {
             expression = combineExpressions([
                 userExpression(),
-                superUserExpression()
+                roleExpression(allowRoles)
             ])
         } else {
             expression = userExpression()
@@ -1282,20 +1300,21 @@ public struct RLSPolicyBuilder {
         )
     }
     
-    /// Policy for users to delete if they own the row OR are superuser
-    public func canDeleteIfSuperuser(allowSuperUser: Bool = true) -> RLSPolicy {
+    /// Policy for users to delete if they own the row OR have specific roles
+    /// - Parameter allowRoles: Array of role names that can delete any row (e.g., ["admin"])
+    public func canDeleteOwn(allowRoles: [String] = []) -> RLSPolicy {
         let expression: String
-        if allowSuperUser {
+        if !allowRoles.isEmpty {
             expression = combineExpressions([
                 userExpression(),
-                superUserExpression()
+                roleExpression(allowRoles)
             ])
         } else {
             expression = userExpression()
         }
         
         return RLSPolicy(
-            name: "\(tableName)_can_delete_if_superuser",
+            name: "\(tableName)_can_delete_own",
             operation: .delete,
             usingExpression: expression
         )
@@ -1343,19 +1362,23 @@ public struct RLSPolicyBuilder {
     }
     
     /// Policy using Supabase auth.uid()
+    /// - Parameter operation: The operation this policy applies to
+    /// - Parameter column: The column to compare (defaults to userIdColumn)
+    /// - Parameter function: The function to use (defaults to "(auth.uid())::uuid")
+    /// - Parameter allowRoles: Array of role names that can bypass the user_id check (e.g., ["admin"])
     public func usingAuthUid(
         operation: RLSOperation = .all,
         column: String? = nil,
         function: String = "(auth.uid())::uuid",
-        allowSuperUser: Bool = true
+        allowRoles: [String] = []
     ) -> RLSPolicy {
         let col = column ?? userIdColumn
-        var expression = "\(col) = \(function)"
+        var expression = "\(col)::uuid = \(function)"
         
-        if allowSuperUser {
+        if !allowRoles.isEmpty {
             expression = combineExpressions([
                 expression,
-                superUserExpression()
+                roleExpression(allowRoles)
             ])
         }
         
@@ -1763,17 +1786,22 @@ public struct ZyraTable: Hashable {
     }
     
     /// Get RLS policy builder for this table
+    /// Uses Supabase RBAC (Role-Based Access Control)
+    /// - Parameter userIdColumn: Name of the user_id column (default: "user_id")
+    /// - Parameter usersTableName: Name of the users table (default: "users")
+    /// - Parameter roleColumn: Name of the role column in users table (default: "role")
+    /// - Parameter isOnlineColumn: Name of the is_online column (default: "is_online")
     public func rls(
         userIdColumn: String = "user_id",
         usersTableName: String = "users",
-        isSuperUserColumn: String = "is_superuser",
+        roleColumn: String = "role",
         isOnlineColumn: String = "is_online"
     ) -> RLSPolicyBuilder {
         return RLSPolicyBuilder(
             tableName: name,
             userIdColumn: userIdColumn,
             usersTableName: usersTableName,
-            isSuperUserColumn: isSuperUserColumn,
+            roleColumn: roleColumn,
             isOnlineColumn: isOnlineColumn
         )
     }
