@@ -1305,6 +1305,160 @@ public struct ZyraTable: Hashable {
         
         return field
     }
+    
+    // MARK: - Prisma Schema Generation
+    
+    /// Generate Prisma model code
+    public func generatePrismaModel(modelName: String? = nil, dbPrefix: String = "") -> String {
+        let modelName = modelName ?? toPascalCase(name.replacingOccurrences(of: dbPrefix, with: ""))
+        let tableName = name.replacingOccurrences(of: dbPrefix, with: "")
+        
+        var code = "model \(modelName) {\n"
+        
+        // Generate fields
+        var fields: [String] = []
+        
+        for column in columns {
+            let fieldName = toCamelCase(column.name)
+            var fieldDef = "  \(fieldName)"
+            
+            // Check if this is a foreign key
+            if let fk = column.foreignKey {
+                // Foreign key field - use the type of the referenced column
+                let referencedFieldName = toCamelCase(fk.referencedColumn)
+                
+                // Foreign key fields use the same type as the referenced column
+                // Since we're generating for a single table, we'll use String for now
+                // The type will be correct when generating the full schema
+                fieldDef += " " + generatePrismaType(column)
+                
+                // Add relation attribute
+                let relatedModelName = toPascalCase(fk.referencedTable.replacingOccurrences(of: dbPrefix, with: ""))
+                let relationName = "\(modelName)\(relatedModelName)"
+                var attributes: [String] = ["@relation(fields: [\(fieldName)], references: [\(referencedFieldName)], name: \"\(relationName)\")"]
+                
+                // Map column name if different from field name
+                if column.name != fieldName {
+                    attributes.append("@map(\"\(column.name)\")")
+                }
+                
+                // Make optional if nullable
+                if column.isNullable {
+                    fieldDef += "?"
+                }
+                
+                fieldDef += " " + attributes.joined(separator: " ")
+                fields.append(fieldDef)
+                continue
+            }
+            
+            // Regular field (not a foreign key)
+            fieldDef += " " + generatePrismaType(column)
+            
+            // Add attributes
+            var attributes: [String] = []
+            
+            // Primary key
+            if column.name == primaryKey {
+                attributes.append("@id")
+                
+                // Add default if it's a UUID or cuid
+                if column.isUuid == true {
+                    attributes.append("@default(uuid())")
+                } else if column.isCuid == true {
+                    attributes.append("@default(cuid())")
+                } else if column.isCuid2 == true {
+                    attributes.append("@default(cuid())")
+                } else if column.isNanoid == true {
+                    attributes.append("@default(cuid())")
+                }
+            }
+            
+            // Default values
+            if let defaultValue = column.defaultValue {
+                if column.name.lowercased() == "created_at" {
+                    attributes.append("@default(now())")
+                } else if column.name.lowercased() == "updated_at" {
+                    attributes.append("@updatedAt")
+                } else if defaultValue.uppercased() == "NOW()" || defaultValue.uppercased() == "CURRENT_TIMESTAMP" {
+                    if column.name.lowercased() == "updated_at" {
+                        attributes.append("@updatedAt")
+                    } else {
+                        attributes.append("@default(now())")
+                    }
+                } else if column.swiftType == .boolean {
+                    let boolValue = defaultValue.lowercased() == "true"
+                    attributes.append("@default(\(boolValue))")
+                } else if column.swiftType == .integer {
+                    attributes.append("@default(\(defaultValue))")
+                } else {
+                    attributes.append("@default(\"\(defaultValue)\")")
+                }
+            }
+            
+            // Map column name if different from field name
+            if column.name != fieldName {
+                attributes.append("@map(\"\(column.name)\")")
+            }
+            
+            // Add attributes
+            if !attributes.isEmpty {
+                fieldDef += " " + attributes.joined(separator: " ")
+            }
+            
+            // Make optional if nullable
+            if column.isNullable && column.name != primaryKey {
+                fieldDef += "?"
+            }
+            
+            fields.append(fieldDef)
+        }
+        
+        code += fields.joined(separator: "\n")
+        
+        // Add table mapping
+        if tableName != modelName.lowercased() {
+            code += "\n\n  @@map(\"\(tableName)\")"
+        }
+        
+        code += "\n}"
+        
+        return code
+    }
+    
+    /// Generate Prisma type string for a column
+    private func generatePrismaType(_ column: ColumnMetadata) -> String {
+        if let enumType = column.enumType {
+            return toPascalCase(enumType.name)
+        }
+        
+        switch column.swiftType {
+        case .string:
+            if column.isUuid == true {
+                return "String"
+            } else if column.isDate == true || column.name.lowercased().contains("_at") {
+                return "DateTime"
+            } else {
+                return "String"
+            }
+        case .integer:
+            return "Int"
+        case .boolean:
+            return "Boolean"
+        case .double:
+            return "Float"
+        case .uuid:
+            return "String"
+        case .date:
+            return "DateTime"
+        case .enum:
+            return "String"
+        case .object:
+            return "String" // JSON stored as String in Prisma
+        case .array:
+            return "String" // JSON stored as String in Prisma
+        }
+    }
 }
 
 // MARK: - Zyra Schema
@@ -1482,8 +1636,89 @@ public struct ZyraSchema {
         return first.lowercased() + rest.joined()
     }
     
+    /// Helper to convert name to PascalCase
+    private func toPascalCase(_ name: String) -> String {
+        let components = name
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .split(separator: " ")
+            .map { $0.capitalized }
+        
+        return components.joined()
+    }
+    
     /// Generate Swift model code for all tables in schema
     func generateAllSwiftModels() -> String {
         return tables.map { $0.generateSwiftModel() }.joined(separator: "\n\n")
+    }
+    
+    /// Generate complete Prisma schema file
+    public func generatePrismaSchema(
+        dbPrefix: String = "",
+        provider: String = "postgresql",
+        datasourceUrl: String = "env(\"DATABASE_URL\")"
+    ) -> String {
+        var code = "// This file was auto-generated from ZyraForm schema\n"
+        code += "// Run `npx prisma format` to format this file\n\n"
+        
+        // Generator block
+        code += "generator client {\n"
+        code += "  provider = \"prisma-client-js\"\n"
+        code += "}\n\n"
+        
+        // Datasource block
+        code += "datasource db {\n"
+        code += "  provider = \"\(provider)\"\n"
+        code += "  url      = \(datasourceUrl)\n"
+        code += "}\n\n"
+        
+        // Generate enums first
+        if !enums.isEmpty {
+            for dbEnum in enums {
+                let enumName = toPascalCase(dbEnum.name.replacingOccurrences(of: dbPrefix, with: ""))
+                code += "enum \(enumName) {\n"
+                
+                for value in dbEnum.values {
+                    // Convert enum value to PascalCase for Prisma
+                    // Handle both snake_case and regular strings
+                    let prismaValue: String
+                    if value.contains("_") {
+                        prismaValue = value.split(separator: "_")
+                            .map { $0.capitalized }
+                            .joined()
+                    } else {
+                        // Capitalize first letter if single word
+                        prismaValue = value.capitalized
+                    }
+                    code += "  \(prismaValue)\n"
+                }
+                
+                code += "}\n\n"
+            }
+        }
+        
+        // Generate models in dependency order
+        let orderedTables = topologicalSortTables()
+        for table in orderedTables {
+            code += table.generatePrismaModel(dbPrefix: dbPrefix)
+            code += "\n\n"
+        }
+        
+        return code.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    /// Generate Prisma schema and write to file path
+    public func generatePrismaSchemaFile(
+        at path: String,
+        dbPrefix: String = "",
+        provider: String = "postgresql",
+        datasourceUrl: String = "env(\"DATABASE_URL\")"
+    ) throws {
+        let prismaSchema = generatePrismaSchema(
+            dbPrefix: dbPrefix,
+            provider: provider,
+            datasourceUrl: datasourceUrl
+        )
+        try prismaSchema.write(toFile: path, atomically: true, encoding: .utf8)
     }
 }
