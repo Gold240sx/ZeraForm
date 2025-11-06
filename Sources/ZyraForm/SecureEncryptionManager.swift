@@ -94,6 +94,72 @@ public final class SecureEncryptionManager {
         // The encryption uses per-user keys derived from the master key
     }
     
+    /// Encrypt a string value using shared/master key (light encryption)
+    /// Uses the master key directly - anyone with the master key can decrypt
+    /// RLS and privacy controls determine access - encryption is just for at-rest protection
+    public func encryptShared(_ plaintext: String) throws -> String {
+        guard !plaintext.isEmpty else { return plaintext }
+        
+        let masterKey = try getMasterKey()
+        let data = plaintext.data(using: .utf8)!
+        
+        let sealedBox = try AES.GCM.seal(data, using: masterKey)
+        let encryptedData = sealedBox.combined!
+        
+        return encryptedData.base64EncodedString()
+    }
+    
+    /// Decrypt a string value using shared/master key (light encryption)
+    public func decryptShared(_ encryptedText: String) throws -> String {
+        guard !encryptedText.isEmpty else { return encryptedText }
+        
+        let masterKey = try getMasterKey()
+        guard let encryptedData = Data(base64Encoded: encryptedText) else {
+            throw SecureEncryptionError.invalidEncryptedData
+        }
+        
+        let sealedBox = try AES.GCM.SealedBox(combined: encryptedData)
+        let decryptedData = try AES.GCM.open(sealedBox, using: masterKey)
+        
+        guard let plaintext = String(data: decryptedData, encoding: .utf8) else {
+            throw SecureEncryptionError.decryptionFailed
+        }
+        
+        return plaintext
+    }
+    
+    /// Encrypt a value using shared/master key only if encryption is enabled
+    public func encryptSharedIfEnabled(_ plaintext: String) throws -> String {
+        let enabled = isEncryptionEnabled
+        
+        guard enabled else {
+            return plaintext
+        }
+        
+        return try encryptShared(plaintext)
+    }
+    
+    /// Decrypt a value using shared/master key only if encryption is enabled
+    public func decryptSharedIfEnabled(_ encryptedText: String) throws -> String {
+        let enabled = isEncryptionEnabled
+        
+        guard enabled else {
+            return encryptedText
+        }
+        
+        // Check if the text appears to be encrypted (base64 and longer than original)
+        if encryptedText.count > 20 && encryptedText.range(of: "^[A-Za-z0-9+/]*={0,2}$", options: .regularExpression) != nil {
+            do {
+                return try decryptShared(encryptedText)
+            } catch {
+                // If decryption fails, assume it's unencrypted
+                return encryptedText
+            }
+        } else {
+            return encryptedText
+        }
+    }
+    
     /// Encrypt a string value for a specific user
     public func encrypt(_ plaintext: String, for userId: String) throws -> String {
         guard !plaintext.isEmpty else { return plaintext }

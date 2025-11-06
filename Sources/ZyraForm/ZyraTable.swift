@@ -9,7 +9,21 @@
 import Foundation
 import PowerSync
 
-// MARK: - TableFieldConfig
+// MARK: - Encryption Mode
+
+/// Encryption mode for encrypted fields
+public enum EncryptionMode: Equatable {
+    /// Per-user encryption (deep encryption)
+    /// Uses user-specific keys - only the record owner can decrypt
+    /// Best for highly sensitive data that should never be shared
+    case perUser
+    
+    /// Shared/master key encryption (light encryption)
+    /// Uses a single master key - anyone with access can decrypt
+    /// RLS and privacy controls determine who can access
+    /// Best for at-rest encryption where RLS/privacy handle access control
+    case shared
+}
 
 /// Configuration for table fields used by PowerSync services
 public struct TableFieldConfig {
@@ -25,6 +39,8 @@ public struct ColumnMetadata {
     public let name: String
     public let powerSyncColumn: PowerSync.Column
     public let isEncrypted: Bool
+    public let encryptionMode: EncryptionMode?
+    public let isPrivate: Bool
     public let swiftType: SwiftColumnType
     public let isNullable: Bool
     public let isUnique: Bool
@@ -246,6 +262,8 @@ public struct ColumnBuilder {
     public let name: String
     public let powerSyncColumn: PowerSync.Column
     public var isEncrypted: Bool = false
+    public var encryptionMode: EncryptionMode? = nil
+    public var isPrivate: Bool = false
     public var swiftType: ColumnMetadata.SwiftColumnType = .string
     public var isNullable: Bool = false
     public var isUnique: Bool = false
@@ -314,6 +332,37 @@ public struct ColumnBuilder {
     public func encrypted() -> ColumnBuilder {
         var builder = self
         builder.isEncrypted = true
+        builder.encryptionMode = .perUser  // Default to per-user (deep encryption)
+        return builder
+    }
+    
+    /// Mark this column as encrypted with shared/master key (light encryption)
+    /// Uses a single master key instead of per-user keys
+    /// RLS and privacy controls determine access - encryption is just for at-rest protection
+    /// - Returns: ColumnBuilder with shared encryption flag set
+    /// - Example:
+    ///   ```swift
+    ///   zf.text("api_key").encryptedLight().private()
+    ///   zf.text("token").encryptedLight().nullable()
+    ///   ```
+    public func encryptedLight() -> ColumnBuilder {
+        var builder = self
+        builder.isEncrypted = true
+        builder.encryptionMode = .shared  // Shared/master key encryption
+        return builder
+    }
+    
+    /// Mark this column as private (only visible to record owner)
+    /// Private columns are filtered in generated views unless user owns the record
+    /// - Returns: ColumnBuilder with private flag set
+    /// - Example:
+    ///   ```swift
+    ///   zf.text("api_key").private().nullable()
+    ///   zf.number("revenue").private().notNull()
+    ///   ```
+    public func `private`() -> ColumnBuilder {
+        var builder = self
+        builder.isPrivate = true
         return builder
     }
     
@@ -791,6 +840,8 @@ public struct ColumnBuilder {
             name: name,
             powerSyncColumn: powerSyncColumn,
             isEncrypted: isEncrypted,
+            encryptionMode: encryptionMode,
+            isPrivate: isPrivate,
             swiftType: swiftType,
             isNullable: isNullable,
             isUnique: isUnique,
@@ -2374,6 +2425,16 @@ public struct ZyraTable: Hashable {
             columnDefinitions.append(colDef)
         }
         
+        // Add _private_fields JSONB column if table has private columns
+        if hasPrivateColumns && !columns.contains(where: { $0.name.lowercased() == "_private_fields" }) {
+            columnDefinitions.append("_private_fields JSONB DEFAULT '{}'::jsonb")
+        }
+        
+        // Add shared_fields JSONB array for user-controlled field sharing
+        if hasPrivateColumns && !columns.contains(where: { $0.name.lowercased() == "shared_fields" }) {
+            columnDefinitions.append("shared_fields JSONB DEFAULT '[]'::jsonb")
+        }
+        
         // NO foreign key constraints here - they'll be added with ALTER TABLE
         
         var sql = "CREATE TABLE \"\(name)\" (\n"
@@ -3045,6 +3106,131 @@ public struct ZyraTable: Hashable {
     /// Check if RLS is enabled for this table
     public var hasRLS: Bool {
         return !rlsPolicies.isEmpty
+    }
+    
+    /// Check if this table has any private columns
+    public var hasPrivateColumns: Bool {
+        return columns.contains { $0.isPrivate }
+    }
+    
+    /// Get the user_id column name (defaults to "user_id")
+    /// Looks for common user_id column names in the table
+    private func getUserIdColumn() -> String {
+        // Check for common user_id column names
+        let commonNames = ["user_id", "owner_id", "created_by", "owner_user_id"]
+        for name in commonNames {
+            if columns.contains(where: { $0.name.lowercased() == name.lowercased() }) {
+                return name
+            }
+        }
+        return "user_id" // Default fallback
+    }
+    
+    /// Generate SQL to add _private_fields JSONB column if table has private columns
+    public func generatePrivateFieldsColumnSQL() -> String? {
+        guard hasPrivateColumns else { return nil }
+        
+        // Check if _private_fields column already exists
+        if columns.contains(where: { $0.name.lowercased() == "_private_fields" }) {
+            return nil // Column already exists
+        }
+        
+        return """
+        -- Add privacy metadata column for \(name)
+        ALTER TABLE "\(name)" ADD COLUMN IF NOT EXISTS "_private_fields" JSONB DEFAULT '{}'::jsonb;
+        """
+    }
+    
+    /// Generate SQL to add shared_fields JSONB column for user-controlled field sharing
+    /// This allows users to explicitly control which fields are shared per record
+    public func generateSharedFieldsColumnSQL() -> String? {
+        guard hasPrivateColumns else { return nil }
+        
+        // Check if shared_fields column already exists
+        if columns.contains(where: { $0.name.lowercased() == "shared_fields" }) {
+            return nil // Column already exists
+        }
+        
+        return """
+        -- Add shared fields column for \(name) (user-controlled field sharing)
+        ALTER TABLE "\(name)" ADD COLUMN IF NOT EXISTS "shared_fields" JSONB DEFAULT '[]'::jsonb;
+        """
+    }
+    
+    /// Generate SQL for privacy view that filters private columns based on ownership
+    /// Private fields are shown if:
+    /// 1. User owns the record (user_id = auth.uid()), OR
+    /// 2. Field name is in the shared_fields JSONB array for that record
+    /// 
+    /// **Encrypted Fields Special Handling:**
+    /// - Encrypted fields are encrypted with the owner's user-specific key
+    /// - Only the owner can decrypt encrypted fields
+    /// - Encrypted fields are NEVER returned unless user owns the record (even if in shared_fields)
+    /// - This prevents exposing encrypted hashes to unauthorized users
+    /// - Parameter userIdColumn: Name of the user_id column (defaults to auto-detected)
+    public func generatePrivacyViewSQL(userIdColumn: String? = nil) -> String? {
+        guard hasPrivateColumns else { return nil }
+        
+        let userIdCol = userIdColumn ?? getUserIdColumn()
+        let privateColumns = columns.filter { $0.isPrivate }
+        let publicColumns = columns.filter { !$0.isPrivate }
+        
+        var selectClauses: [String] = []
+        
+        // Add all public columns
+        for column in publicColumns {
+            // Public encrypted fields: always returned (but can only be decrypted by owner)
+            // Public non-encrypted fields: always returned
+            selectClauses.append("    \(column.name)")
+        }
+        
+        // Add private columns with conditional logic
+        for column in privateColumns {
+            let nullable = column.isNullable ? "" : "::text"
+            
+            // Check encryption mode
+            let isPerUserEncryption = column.isEncrypted && column.encryptionMode == .perUser
+            
+            if isPerUserEncryption {
+                // Per-user encrypted private fields: ONLY return if user owns the record
+                // Never return even if in shared_fields (can't decrypt anyway, and we don't expose hashes)
+                selectClauses.append("""
+            CASE 
+                WHEN \(userIdCol)::uuid = (auth.uid())::uuid 
+                THEN \(column.name)\(nullable)
+                ELSE NULL 
+            END AS \(column.name)
+            """)
+            } else {
+                // Non-encrypted OR shared-encrypted private fields: return if user owns OR field is in shared_fields
+                // Shared encryption can be decrypted by anyone with access, so sharing is allowed
+                selectClauses.append("""
+            CASE 
+                WHEN \(userIdCol)::uuid = (auth.uid())::uuid 
+                     OR "shared_fields" @> '["\(column.name)"]'::jsonb
+                THEN \(column.name)\(nullable)
+                ELSE NULL 
+            END AS \(column.name)
+            """)
+            }
+        }
+        
+        let selectSQL = selectClauses.joined(separator: ",\n")
+        let viewName = "\(name)_public"
+        
+        return """
+        -- Create privacy view for \(name)
+        -- Private fields are visible if user owns the record OR field is in shared_fields array
+        -- Per-user encrypted private fields are ONLY visible to the record owner (never shared)
+        -- Shared-encrypted private fields can be shared like non-encrypted fields
+        CREATE OR REPLACE VIEW "\(viewName)" AS
+        SELECT
+        \(selectSQL)
+        FROM "\(name)";
+        
+        -- Grant access to authenticated users
+        GRANT SELECT ON "\(viewName)" TO authenticated;
+        """
     }
     
     /// Get RLS policy builder for this table
@@ -4751,6 +4937,14 @@ public struct ZyraSchema {
             if table.hasRLS {
                 sql.append(table.generateRLSSQL())
                 sql.append("")
+            }
+            
+            // Add privacy views if table has private columns
+            if table.hasPrivateColumns {
+                if let privacyViewSQL = table.generatePrivacyViewSQL() {
+                    sql.append(privacyViewSQL)
+                    sql.append("")
+                }
             }
         }
         

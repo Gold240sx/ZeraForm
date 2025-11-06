@@ -559,11 +559,25 @@ let powerSyncBuckets = schema.generatePowerSyncBucketDefinitions()
 
 ### Field Encryption
 
-Mark sensitive fields for encryption:
+Mark sensitive fields for encryption. ZyraForm supports two encryption modes:
+
+**1. Per-User Encryption (Deep Encryption) - `.encrypted()`**
+- Uses user-specific keys - only the record owner can decrypt
+- Best for highly sensitive data that should never be shared
 
 ```swift
 zf.text("password").encrypted().notNull()
 zf.text("ssn").encrypted().nullable()
+```
+
+**2. Shared/Master Key Encryption (Light Encryption) - `.encryptedLight()`**
+- Uses a single master key - anyone with access can decrypt
+- RLS and privacy controls determine access - encryption is just for at-rest protection
+- Can be shared via `shared_fields` like non-encrypted fields
+
+```swift
+zf.text("api_key").encryptedLight().private().nullable()
+zf.text("token").encryptedLight().nullable()
 ```
 
 Encrypted fields are stored as TEXT in the database but validated on decrypted values.
@@ -633,6 +647,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Inspired by Prisma, Drizzle, and Zod
 
 ---
+
+**Version 2.0.5** - Added light encryption mode (`.encryptedLight()`) for shared/master key encryption. RLS and privacy controls handle access - encryption is just for at-rest protection. Per-user encryption (`.encrypted()`) remains for highly sensitive data.
 
 **Version 2.0.4** - Added `zf.number()` and `zf.int()` convenience aliases for integer columns.
 
