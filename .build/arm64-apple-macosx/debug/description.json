@@ -7469,11 +7469,11 @@
         },
         {
           "kind" : "directory",
-          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/powersync-sqlite-core.framework"
+          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSyncKotlin.framework"
         },
         {
           "kind" : "directory",
-          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSyncKotlin.framework"
+          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/powersync-sqlite-core.framework"
         },
         {
           "kind" : "file",
@@ -9053,6 +9053,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/Version.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/ZyraForm.swift"
         },
         {
@@ -9102,6 +9106,7 @@
       "objects" : [
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraForm.build/PowerSyncBackendConnector.swift.o",
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraForm.build/SecureEncryptionManager.swift.o",
+        "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraForm.build/Version.swift.o",
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraForm.build/ZyraForm.swift.o",
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraForm.build/ZyraFormConfig.swift.o",
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraForm.build/ZyraFormLogger.swift.o",
@@ -9185,6 +9190,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraForm.build/Version.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/ZyraForm.build/ZyraForm.swift.o"
         },
         {
@@ -9216,6 +9225,7 @@
       "sources" : [
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/PowerSyncBackendConnector.swift",
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/SecureEncryptionManager.swift",
+        "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/Version.swift",
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/ZyraForm.swift",
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/ZyraFormConfig.swift",
         "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/ZyraFormLogger.swift",
@@ -9269,11 +9279,11 @@
         },
         {
           "kind" : "directory",
-          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSyncKotlin.framework"
+          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/powersync-sqlite-core.framework"
         },
         {
           "kind" : "directory",
-          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/powersync-sqlite-core.framework"
+          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSyncKotlin.framework"
         },
         {
           "kind" : "file",
@@ -11246,6 +11256,7 @@
       "-c",
       "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/PowerSyncBackendConnector.swift",
       "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/SecureEncryptionManager.swift",
+      "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/Version.swift",
       "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/ZyraForm.swift",
       "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/ZyraFormConfig.swift",
       "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/ZyraFormLogger.swift",
@@ -13740,6 +13751,10 @@
         {
           "kind" : "file",
           "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/SecureEncryptionManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/Sources/ZyraForm/Version.swift"
         },
         {
           "kind" : "file",

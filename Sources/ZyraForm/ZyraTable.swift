@@ -389,28 +389,21 @@ public struct ColumnBuilder {
     /// Automatically uses the referenced table's primary key (validated)
     /// - Parameters:
     ///   - table: The referenced ZyraTable instance
-    ///   - column: The referenced column name (must be the table's primary key, ignored if provided)
     ///   - referenceUpdated: Action when referenced row is updated (defaults to .cascade)
     ///   - referenceRemoved: Action when referenced row is deleted (defaults to .setNull)
     /// - Returns: ColumnBuilder with foreign key relationship
-    /// - Precondition: Foreign keys must reference primary keys. If `column` is provided, it must match the table's primary key.
+    /// - Precondition: Foreign keys must reference primary keys. This method always uses the table's primary key.
     /// - Example:
     ///   ```swift
     ///   zf.text("user_type_id").references(UserTypes)
-    ///   // Always references UserTypes.primaryKey, regardless of column parameter
+    ///   // Always references UserTypes.primaryKey
     ///   ```
     public func references(
         _ table: ZyraTable,
-        column: String? = nil,
         referenceUpdated: ForeignKeyAction = .cascade,
         referenceRemoved: ForeignKeyAction = .setNull
     ) -> ColumnBuilder {
-        // Validate that if column is provided, it matches the primary key
-        if let providedColumn = column, providedColumn.lowercased() != table.primaryKey.lowercased() {
-            fatalError("Foreign key must reference the primary key. Table '\(table.name)' has primary key '\(table.primaryKey)', but '\(providedColumn)' was specified. Use '\(table.primaryKey)' or omit the column parameter.")
-        }
-        
-        // Always use the primary key
+        // Always use the primary key - call the String-based method explicitly
         return self.references(
             table.name,
             column: table.primaryKey,
