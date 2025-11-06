@@ -958,6 +958,11 @@ public struct zf {
     public static func timestampz(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.text(name).isoDateTime()
     }
+    
+    /// Create a UUID column (validates UUID format)
+    public static func uuid(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.text(name).uuid()
+    }
 }
 
 extension PowerSync.Column {
