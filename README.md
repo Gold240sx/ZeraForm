@@ -46,7 +46,7 @@ dependencies: [
 Or add it via Xcode:
 1. File → Add Package Dependencies
 2. Enter the repository URL
-3. Select version `1.5.31` or later
+3. Select version `1.6.0` or later
 
 ## Quick Start
 
@@ -848,7 +848,7 @@ This automatically:
 
 ## Version
 
-Current version: **1.5.31**
+Current version: **1.6.0**
 
 ### What's New in 1.5.0
 

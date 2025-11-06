@@ -963,6 +963,16 @@ public struct zf {
     public static func uuid(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.text(name).uuid()
     }
+    
+    /// Create a URL column (validates URL format)
+    public static func url(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.text(name).url()
+    }
+    
+    /// Create an email column (validates email format)
+    public static func email(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.text(name).email()
+    }
 }
 
 extension PowerSync.Column {
