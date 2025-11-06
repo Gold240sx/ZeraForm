@@ -1,6 +1,6 @@
 # ZyraForm
 
-**Version 2.0.2**
+**Version 2.0.3**
 
 A comprehensive Swift package for defining database schemas with a fluent API and generating code for multiple platforms. Define your schema once in Swift and generate PostgreSQL migrations, MySQL schemas, Prisma models, Drizzle schemas, Zod validators, Swift models, and PowerSync bucket definitions.
 
@@ -268,9 +268,17 @@ Generates columns: `address-street`, `address-city`, `address-zip`
 Store nested data as JSONB (PostgreSQL) or JSON (MySQL):
 
 ```swift
+// Dictionary syntax (original)
 zf.object("metadata", schema: [
     "preferences": zf.text("preferences").nullable(),
     "settings": zf.text("settings").nullable()
+], strategy: .jsonb)
+
+// Simplified array syntax (new in 2.0.3)
+zf.object("slug", schema: [
+    zf.text("pc").nullable(),
+    zf.text("mac").nullable(),
+    zf.text("linux").nullable()
 ], strategy: .jsonb)
 ```
 
@@ -623,6 +631,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Inspired by Prisma, Drizzle, and Zod
 
 ---
+
+**Version 2.0.3** - Added simplified array syntax for `zf.object()` schema definition.
 
 **Version 2.0.2** - Added `zf.bool()` convenience method for boolean columns.
 

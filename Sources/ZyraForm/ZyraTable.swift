@@ -1119,6 +1119,28 @@ public struct zf {
         return builder.object(schema, strategy: finalStrategy)
     }
     
+    /// Create a nested object column with simplified array syntax
+    /// Automatically creates a dictionary using column names as keys
+    /// - Parameters:
+    ///   - name: Column name (used as prefix for flattened strategy)
+    ///   - schema: Array of ColumnBuilders (column names are used as dictionary keys)
+    ///   - strategy: Storage strategy (default: flattened with column name as prefix)
+    /// - Returns: ColumnBuilder with object type
+    /// - Example:
+    ///   ```swift
+    ///   zf.object("slug", schema: [
+    ///       zf.text("pc"),
+    ///       zf.text("mac"),
+    ///       zf.text("linux")
+    ///   ], strategy: .jsonb)
+    ///   // Automatically creates: ["pc": zf.text("pc"), "mac": zf.text("mac"), "linux": zf.text("linux")]
+    ///   ```
+    public static func object(_ name: String, schema: [ColumnBuilder], strategy: ObjectStorageStrategy = .flattened(prefix: nil)) -> ColumnBuilder {
+        // Convert array to dictionary using column names as keys
+        let schemaDict = Dictionary(uniqueKeysWithValues: schema.map { ($0.name, $0) })
+        return object(name, schema: schemaDict, strategy: strategy)
+    }
+    
     /// Create a nested array column
     /// - Parameters:
     ///   - name: Column name (used as prefix for flattened strategy)
