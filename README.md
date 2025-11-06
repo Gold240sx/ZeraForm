@@ -344,7 +344,7 @@ zf.integer("age")
 ### Enum Validations
 
 ```swift
-let UserRoleEnum = DatabaseEnum(
+let UserRoleEnum = ZyraEnum(
     name: "user_role",
     values: ["admin", "editor", "user"]
 )
@@ -708,7 +708,7 @@ let commentsTable = ZyraTable(
 Define enums that work across all code generators:
 
 ```swift
-let UserRoleEnum = DatabaseEnum(
+let UserRoleEnum = ZyraEnum(
     name: "user_role",
     values: ["admin", "editor", "user", "guest"]
 )

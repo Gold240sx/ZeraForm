@@ -30,7 +30,7 @@ public struct ColumnMetadata {
     public let isUnique: Bool
     public let foreignKey: ForeignKey?
     public let defaultValue: String?
-    public let enumType: DatabaseEnum?
+    public let enumType: ZyraEnum?
     public let nestedSchema: NestedSchema?
     
     // Validation properties (like Zod)
@@ -78,14 +78,14 @@ public struct ColumnMetadata {
         case double
         case uuid
         case date
-        case `enum`(DatabaseEnum)
+        case `enum`(ZyraEnum)
         case object(NestedSchema)
         case array(NestedSchema)
     }
 }
 
 extension ColumnMetadata.SwiftColumnType {
-    var enumValue: DatabaseEnum? {
+    var enumValue: ZyraEnum? {
         if case .enum(let dbEnum) = self {
             return dbEnum
         }
@@ -93,7 +93,7 @@ extension ColumnMetadata.SwiftColumnType {
     }
     
     /// Convert to Swift type string
-    public func toSwiftType(isNullable: Bool, enumType: DatabaseEnum? = nil) -> String {
+    public func toSwiftType(isNullable: Bool, enumType: ZyraEnum? = nil) -> String {
         let type: String
         switch self {
         case .string:
@@ -208,7 +208,7 @@ public struct ColumnBuilder {
     public var isUnique: Bool = false
     public var foreignKey: ForeignKey? = nil
     public var defaultValue: String? = nil
-    public var enumType: DatabaseEnum? = nil
+    public var enumType: ZyraEnum? = nil
     
     // Validation properties
     public var isPositive: Bool? = nil
@@ -354,7 +354,7 @@ public struct ColumnBuilder {
     
     // MARK: - Enum and Foreign Key
     
-    public func `enum`(_ enumType: DatabaseEnum) -> ColumnBuilder {
+    public func `enum`(_ enumType: ZyraEnum) -> ColumnBuilder {
         var builder = self
         builder.enumType = enumType
         builder.swiftType = .enum(enumType)
@@ -751,7 +751,7 @@ public struct ColumnBuilder {
 // MARK: - Enum Support
 
 /// Database enum definition
-public struct DatabaseEnum: Hashable {
+public struct ZyraEnum: Hashable {
     public let name: String
     public let values: [String]
     
@@ -1524,7 +1524,7 @@ public struct ZyraTable: Hashable {
     }
     
     /// Get all enums used by this table
-    public func getEnums() -> Set<DatabaseEnum> {
+    public func getEnums() -> Set<ZyraEnum> {
         return Set(columns.compactMap { $0.enumType })
     }
     
@@ -2469,10 +2469,10 @@ public struct ZyraTable: Hashable {
 /// Complete schema definition with tables and enums
 public struct ZyraSchema {
     public let tables: [ZyraTable]
-    public let enums: [DatabaseEnum]
+    public let enums: [ZyraEnum]
     private let joinTables: [ZyraTable]
     
-    public init(tables: [ZyraTable], enums: [DatabaseEnum] = [], dbPrefix: String = "") {
+    public init(tables: [ZyraTable], enums: [ZyraEnum] = [], dbPrefix: String = "") {
         var processedTables = tables
         var generatedJoinTables: [ZyraTable] = []
         var tableMap: [String: ZyraTable] = [:]
