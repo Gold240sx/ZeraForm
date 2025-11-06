@@ -32,6 +32,7 @@ public struct ColumnMetadata {
     public let defaultValue: String?
     public let enumType: ZyraEnum?
     public let nestedSchema: NestedSchema?
+    public let checkConstraint: String?
     
     // Validation properties (like Zod)
     public let isPositive: Bool?
@@ -74,8 +75,10 @@ public struct ColumnMetadata {
     public indirect enum SwiftColumnType: Equatable {
         case string
         case integer
-        case boolean
+        case bigInt
+        case bool
         case double
+        case decimal(precision: Int, scale: Int)
         case uuid
         case date
         case `enum`(ZyraEnum)
@@ -100,10 +103,14 @@ extension ColumnMetadata.SwiftColumnType {
             type = "String"
         case .integer:
             type = "Int"
-        case .boolean:
+        case .bigInt:
+            type = "Int64"
+        case .bool:
             type = "Bool"
         case .double:
             type = "Double"
+        case .decimal:
+            type = "Decimal"
         case .uuid:
             type = "String"
         case .date:
@@ -128,20 +135,45 @@ extension ColumnMetadata.SwiftColumnType {
     }
 }
 
+// MARK: - Object Storage Strategy
+
+/// Strategy for storing nested objects/arrays in the database
+public enum ObjectStorageStrategy: Equatable {
+    /// Flatten nested fields into columns with a prefix delimiter
+    /// Example: address object becomes address-addr_ln1, address-addr_ln2, etc.
+    case flattened(prefix: String? = nil)
+    
+    /// Store as JSONB (PostgreSQL) or JSON (MySQL/SQLite)
+    case jsonb
+    
+    /// Store in a separate table with a foreign key relationship
+    /// - tableName: Name of the separate table (auto-generated if nil)
+    /// - relationshipType: One-to-one or one-to-many
+    case separateTable(tableName: String? = nil, relationshipType: RelationshipType = .oneToOne)
+}
+
+/// Relationship type for separate table strategy
+public enum RelationshipType: Equatable {
+    /// One-to-one: Parent has exactly one child record
+    case oneToOne
+    /// One-to-many: Parent can have multiple child records (for arrays)
+    case oneToMany
+}
+
 // MARK: - Nested Schema
 
 /// Nested schema for objects and arrays (supports recursion)
 /// Uses indirect enum to break circular reference with ColumnBuilder
 public indirect enum NestedSchema: Equatable {
-    case object(fields: [String: ColumnBuilder])
-    case array(elementType: ColumnBuilder)
+    case object(fields: [String: ColumnBuilder], strategy: ObjectStorageStrategy = .flattened(prefix: nil))
+    case array(elementType: ColumnBuilder, strategy: ObjectStorageStrategy = .flattened(prefix: nil))
     
-    public init(fields: [String: ColumnBuilder]) {
-        self = .object(fields: fields)
+    public init(fields: [String: ColumnBuilder], strategy: ObjectStorageStrategy = .flattened(prefix: nil)) {
+        self = .object(fields: fields, strategy: strategy)
     }
     
-    public init(elementType: ColumnBuilder) {
-        self = .array(elementType: elementType)
+    public init(elementType: ColumnBuilder, strategy: ObjectStorageStrategy = .flattened(prefix: nil)) {
+        self = .array(elementType: elementType, strategy: strategy)
     }
     
     public var isObject: Bool {
@@ -159,24 +191,35 @@ public indirect enum NestedSchema: Equatable {
     }
     
     public var fields: [String: ColumnBuilder] {
-        if case .object(let fields) = self {
+        if case .object(let fields, _) = self {
             return fields
         }
         return [:]
     }
     
     public var elementType: ColumnBuilder? {
-        if case .array(let elementType) = self {
+        if case .array(let elementType, _) = self {
             return elementType
         }
         return nil
     }
     
+    public var strategy: ObjectStorageStrategy {
+        switch self {
+        case .object(_, let strategy):
+            return strategy
+        case .array(_, let strategy):
+            return strategy
+        }
+    }
+    
     // Custom Equatable implementation
     // Note: Compares schema structure, ignoring function closures in ColumnBuilder
     public static func == (lhs: NestedSchema, rhs: NestedSchema) -> Bool {
+        guard lhs.strategy == rhs.strategy else { return false }
+        
         switch (lhs, rhs) {
-        case (.object(let lhsFields), .object(let rhsFields)):
+        case (.object(let lhsFields, _), .object(let rhsFields, _)):
             // Compare field names and basic properties, ignoring closures
             return lhsFields.keys == rhsFields.keys &&
                    lhsFields.keys.allSatisfy { key in
@@ -186,7 +229,7 @@ public indirect enum NestedSchema: Equatable {
                               lhsBuilder.swiftType == rhsBuilder.swiftType &&
                               lhsBuilder.isNullable == rhsBuilder.isNullable
                    }
-        case (.array(let lhsElement), .array(let rhsElement)):
+        case (.array(let lhsElement, _), .array(let rhsElement, _)):
             return lhsElement.name == rhsElement.name &&
                    lhsElement.swiftType == rhsElement.swiftType &&
                    lhsElement.isNullable == rhsElement.isNullable
@@ -209,6 +252,7 @@ public struct ColumnBuilder {
     public var foreignKey: ForeignKey? = nil
     public var defaultValue: String? = nil
     public var enumType: ZyraEnum? = nil
+    public var checkConstraint: String? = nil
     
     // Validation properties
     public var isPositive: Bool? = nil
@@ -281,13 +325,39 @@ public struct ColumnBuilder {
     
     public func bool() -> ColumnBuilder {
         var builder = self
-        builder.swiftType = .boolean
+        builder.swiftType = .bool
         return builder
     }
     
     public func double() -> ColumnBuilder {
         var builder = self
         builder.swiftType = .double
+        return builder
+    }
+    
+    public func bigint() -> ColumnBuilder {
+        var builder = self
+        builder.swiftType = .bigInt
+        return builder
+    }
+    
+    public func decimal(precision: Int = 10, scale: Int = 2) -> ColumnBuilder {
+        var builder = self
+        builder.swiftType = .decimal(precision: precision, scale: scale)
+        return builder
+    }
+    
+    /// Add a CHECK constraint to the column
+    /// - Parameter expression: SQL expression for the check constraint (e.g., "age >= 0", "price > 0")
+    /// - Returns: ColumnBuilder with check constraint
+    /// - Example:
+    ///   ```swift
+    ///   zf.integer("age").check("age >= 0 AND age <= 150")
+    ///   zf.real("price").check("price > 0")
+    ///   ```
+    public func check(_ expression: String) -> ColumnBuilder {
+        var builder = self
+        builder.checkConstraint = expression
         return builder
     }
     
@@ -662,16 +732,53 @@ public struct ColumnBuilder {
     
     // MARK: - Nested Schema Methods
     
-    public func object(_ schema: [String: ColumnBuilder]) -> ColumnBuilder {
+    /// Create a nested object field
+    /// - Parameters:
+    ///   - schema: Dictionary of field names to ColumnBuilders
+    ///   - strategy: Storage strategy (default: flattened with column name as prefix)
+    /// - Returns: ColumnBuilder with object type
+    /// - Example:
+    ///   ```swift
+    ///   zf.text("address").object([
+    ///       "addr_ln1": zf.text("addr_ln1").notNull(),
+    ///       "city": zf.text("city").notNull()
+    ///   ], strategy: .flattened())
+    ///   // Generates: address-addr_ln1, address-city columns
+    ///   ```
+    public func object(_ schema: [String: ColumnBuilder], strategy: ObjectStorageStrategy = .flattened(prefix: nil)) -> ColumnBuilder {
         var builder = self
-        builder.nestedSchema = NestedSchema(fields: schema)
-        builder.swiftType = .object(NestedSchema(fields: schema))
+        
+        // If strategy is flattened with nil prefix, use the column name as prefix
+        let finalStrategy: ObjectStorageStrategy
+        if case .flattened(let prefix) = strategy, prefix == nil {
+            finalStrategy = .flattened(prefix: self.name)
+        } else {
+            finalStrategy = strategy
+        }
+        
+        let nested = NestedSchema(fields: schema, strategy: finalStrategy)
+        builder.nestedSchema = nested
+        builder.swiftType = .object(nested)
         return builder
     }
     
-    public func array(_ elementType: ColumnBuilder) -> ColumnBuilder {
+    /// Create a nested array field
+    /// - Parameters:
+    ///   - elementType: ColumnBuilder for array elements
+    ///   - strategy: Storage strategy (default: flattened with column name as prefix)
+    /// - Returns: ColumnBuilder with array type
+    public func array(_ elementType: ColumnBuilder, strategy: ObjectStorageStrategy = .flattened(prefix: nil)) -> ColumnBuilder {
         var builder = self
-        let nested = NestedSchema(elementType: elementType)
+        
+        // If strategy is flattened with nil prefix, use the column name as prefix
+        let finalStrategy: ObjectStorageStrategy
+        if case .flattened(let prefix) = strategy, prefix == nil {
+            finalStrategy = .flattened(prefix: self.name)
+        } else {
+            finalStrategy = strategy
+        }
+        
+        let nested = NestedSchema(elementType: elementType, strategy: finalStrategy)
         builder.nestedSchema = nested
         builder.swiftType = .array(nested)
         return builder
@@ -691,6 +798,7 @@ public struct ColumnBuilder {
             defaultValue: defaultValue,
             enumType: enumType ?? swiftType.enumValue,
             nestedSchema: nestedSchema,
+            checkConstraint: checkConstraint,
             isPositive: isPositive,
             isNegative: isNegative,
             isEven: isEven,
@@ -927,6 +1035,20 @@ public struct zf {
         return PowerSync.Column.real(name)
     }
     
+    /// Create a big integer column (BIGINT type in SQL)
+    public static func bigint(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.bigint(name)
+    }
+    
+    /// Create a decimal column (DECIMAL/NUMERIC type in SQL)
+    /// - Parameters:
+    ///   - name: Column name
+    ///   - precision: Total number of digits (default: 10)
+    ///   - scale: Number of digits after decimal point (default: 2)
+    public static func decimal(_ name: String, precision: Int = 10, scale: Int = 2) -> ColumnBuilder {
+        return PowerSync.Column.decimal(name, precision: precision, scale: scale)
+    }
+    
     /// Create a date column (DATE type in SQL)
     public static func date(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.text(name).date()
@@ -956,6 +1078,54 @@ public struct zf {
     public static func email(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.text(name).email()
     }
+    
+    /// Create a nested object column
+    /// - Parameters:
+    ///   - name: Column name (used as prefix for flattened strategy)
+    ///   - schema: Dictionary of field names to ColumnBuilders
+    ///   - strategy: Storage strategy (default: flattened with column name as prefix)
+    /// - Returns: ColumnBuilder with object type
+    /// - Example:
+    ///   ```swift
+    ///   zf.object("address", schema: [
+    ///       "addr_ln1": zf.text("addr_ln1").notNull(),
+    ///       "city": zf.text("city").notNull()
+    ///   ], strategy: .flattened())
+    ///   // Generates: address-addr_ln1, address-city columns
+    ///   ```
+    public static func object(_ name: String, schema: [String: ColumnBuilder], strategy: ObjectStorageStrategy = .flattened(prefix: nil)) -> ColumnBuilder {
+        let builder = ColumnBuilder(name: name, powerSyncColumn: PowerSync.Column.text(name))
+        
+        // If strategy is flattened with nil prefix, use the column name as prefix
+        let finalStrategy: ObjectStorageStrategy
+        if case .flattened(let prefix) = strategy, prefix == nil {
+            finalStrategy = .flattened(prefix: name)
+        } else {
+            finalStrategy = strategy
+        }
+        
+        return builder.object(schema, strategy: finalStrategy)
+    }
+    
+    /// Create a nested array column
+    /// - Parameters:
+    ///   - name: Column name (used as prefix for flattened strategy)
+    ///   - elementType: ColumnBuilder for array elements
+    ///   - strategy: Storage strategy (default: flattened with column name as prefix)
+    /// - Returns: ColumnBuilder with array type
+    public static func array(_ name: String, elementType: ColumnBuilder, strategy: ObjectStorageStrategy = .flattened(prefix: nil)) -> ColumnBuilder {
+        let builder = ColumnBuilder(name: name, powerSyncColumn: PowerSync.Column.text(name))
+        
+        // If strategy is flattened with nil prefix, use the column name as prefix
+        let finalStrategy: ObjectStorageStrategy
+        if case .flattened(let prefix) = strategy, prefix == nil {
+            finalStrategy = .flattened(prefix: name)
+        } else {
+            finalStrategy = strategy
+        }
+        
+        return builder.array(elementType, strategy: finalStrategy)
+    }
 }
 
 extension PowerSync.Column {
@@ -971,6 +1141,22 @@ extension PowerSync.Column {
     public static func real(_ name: String) -> ColumnBuilder {
         return ColumnBuilder(name: name, powerSyncColumn: .real(name))
             .double()
+    }
+    
+    /// Create a big integer column (BIGINT type in SQL)
+    public static func bigint(_ name: String) -> ColumnBuilder {
+        return ColumnBuilder(name: name, powerSyncColumn: .integer(name))
+            .bigint()
+    }
+    
+    /// Create a decimal column (DECIMAL/NUMERIC type in SQL)
+    /// - Parameters:
+    ///   - name: Column name
+    ///   - precision: Total number of digits (default: 10)
+    ///   - scale: Number of digits after decimal point (default: 2)
+    public static func decimal(_ name: String, precision: Int = 10, scale: Int = 2) -> ColumnBuilder {
+        return ColumnBuilder(name: name, powerSyncColumn: .real(name))
+            .decimal(precision: precision, scale: scale)
     }
 }
 
@@ -1017,6 +1203,37 @@ public enum RLSOperation: String, CaseIterable {
 public enum RLSPolicyType: String {
     case permissive = "PERMISSIVE"
     case restrictive = "RESTRICTIVE"
+}
+
+/// RLS role types for who can access
+public enum RLSRole: String, CaseIterable {
+    case anonymous = "anonymous"
+    case authenticated = "authenticated"
+    case unauthenticated = "unauthenticated"
+    case admin = "admin"
+    case superadmin = "superadmin"
+}
+
+/// RLS access operations
+public enum RLSAccess: String, CaseIterable {
+    case read = "read"
+    case write = "write"
+    case update = "update"
+    case delete = "delete"
+    
+    /// Convert to RLSOperation for SQL generation
+    var operation: RLSOperation {
+        switch self {
+        case .read:
+            return .select
+        case .write:
+            return .insert
+        case .update:
+            return .update
+        case .delete:
+            return .delete
+        }
+    }
 }
 
 /// RLS policy builder for common patterns
@@ -1449,6 +1666,175 @@ public struct RLSPolicyBuilder {
     }
 }
 
+// MARK: - New Fluent RLS Policy Builder
+
+/// New fluent API for building RLS policies
+/// Example:
+/// ```
+/// .rls()
+///   .who([.authenticated, .admin])
+///   .permissive()
+///   .access([.read, .write, .update])
+///   .match("user_id = auth.uid()")
+/// ```
+public struct FluentRLSPolicyBuilder {
+    private let tableName: String
+    private let userIdColumn: String
+    private let usersTableName: String
+    private let roleColumn: String
+    
+    private var who: [RLSRole] = []
+    private var policyType: RLSPolicyType = .permissive
+    private var access: [RLSAccess] = []
+    private var matchExpression: String?
+    private var useOwnRow: Bool = false
+    
+    public init(
+        tableName: String,
+        userIdColumn: String = "user_id",
+        usersTableName: String = "public.user_public",
+        roleColumn: String = "role"
+    ) {
+        self.tableName = tableName
+        self.userIdColumn = userIdColumn
+        self.usersTableName = usersTableName
+        self.roleColumn = roleColumn
+    }
+    
+    /// Define who can access (roles array)
+    /// - Parameter roles: Array of roles (anonymous, authenticated, unauthenticated, admin, superadmin)
+    public func who(_ roles: [RLSRole]) -> FluentRLSPolicyBuilder {
+        var builder = self
+        builder.who = roles
+        return builder
+    }
+    
+    /// Set policy type to permissive (default)
+    public func permissive() -> FluentRLSPolicyBuilder {
+        var builder = self
+        builder.policyType = .permissive
+        return builder
+    }
+    
+    /// Set policy type to restrictive
+    public func restrictive() -> FluentRLSPolicyBuilder {
+        var builder = self
+        builder.policyType = .restrictive
+        return builder
+    }
+    
+    /// Define access operations (read, write, update, delete)
+    /// - Parameter operations: Array of access operations
+    public func access(_ operations: [RLSAccess]) -> FluentRLSPolicyBuilder {
+        var builder = self
+        builder.access = operations
+        return builder
+    }
+    
+    /// Custom matching expression (e.g., "user_id = auth.uid()" or "row.value = session.uuid()")
+    /// - Parameter expression: SQL expression for matching rows
+    public func match(_ expression: String) -> FluentRLSPolicyBuilder {
+        var builder = self
+        builder.matchExpression = expression
+        builder.useOwnRow = false
+        return builder
+    }
+    
+    /// Use default "own row" matching (user_id = auth.uid())
+    /// This is a convenience method for the most common case
+    /// Equivalent to: `.match("user_id::uuid = (auth.uid())::uuid")`
+    public func own() -> FluentRLSPolicyBuilder {
+        var builder = self
+        builder.useOwnRow = true
+        builder.matchExpression = nil
+        return builder
+    }
+    
+    /// Build the RLS policies from the fluent configuration
+    public func build() -> [RLSPolicy] {
+        guard !who.isEmpty, !access.isEmpty else {
+            return []
+        }
+        
+        // Generate SQL expression for "who"
+        let whoExpression = generateWhoExpression()
+        
+        // Generate match expression
+        let matchExpr = matchExpression ?? (useOwnRow ? "\(userIdColumn)::uuid = (auth.uid())::uuid" : "true")
+        
+        // Combine expressions
+        let combinedExpression: String
+        if matchExpr == "true" {
+            combinedExpression = whoExpression
+        } else {
+            combinedExpression = "(\(whoExpression)) AND (\(matchExpr))"
+        }
+        
+        // Generate policies for each access operation
+        var policies: [RLSPolicy] = []
+        
+        for accessOp in access {
+            let operation = accessOp.operation
+            let policyName = "\(tableName)_\(who.map { $0.rawValue }.joined(separator: "_"))_\(accessOp.rawValue)"
+            
+            // For INSERT and UPDATE, we need WITH CHECK
+            let withCheck: String?
+            if operation == .insert || operation == .update {
+                withCheck = combinedExpression
+            } else {
+                withCheck = nil
+            }
+            
+            let policy = RLSPolicy(
+                name: policyName,
+                operation: operation,
+                policyType: policyType,
+                usingExpression: combinedExpression,
+                withCheckExpression: withCheck
+            )
+            
+            policies.append(policy)
+        }
+        
+        return policies
+    }
+    
+    /// Generate SQL expression for "who" roles
+    private func generateWhoExpression() -> String {
+        var expressions: [String] = []
+        
+        for role in who {
+            switch role {
+            case .anonymous:
+                expressions.append("auth.uid() IS NULL")
+            case .authenticated:
+                expressions.append("auth.uid() IS NOT NULL")
+            case .unauthenticated:
+                expressions.append("auth.uid() IS NULL")
+            case .admin:
+                expressions.append("""
+                EXISTS (
+                    SELECT 1 FROM \(usersTableName)
+                    WHERE id = (auth.uid())::uuid
+                    AND \(roleColumn) = 'admin'
+                )
+                """)
+            case .superadmin:
+                expressions.append("""
+                EXISTS (
+                    SELECT 1 FROM \(usersTableName)
+                    WHERE id = (auth.uid())::uuid
+                    AND \(roleColumn) = 'superadmin'
+                )
+                """)
+            }
+        }
+        
+        // Combine with OR (any of the roles can match)
+        return expressions.joined(separator: " OR ")
+    }
+}
+
 // MARK: - Zyra Table
 
 /// Zyra table that includes metadata
@@ -1570,7 +1956,7 @@ public struct ZyraTable: Hashable {
             .map { $0.name }
         
         let booleanFields = columns
-            .filter { $0.swiftType == .boolean }
+            .filter { $0.swiftType == .bool }
             .map { $0.name }
         
         return TableFieldConfig(
@@ -1708,6 +2094,476 @@ public struct ZyraTable: Hashable {
         return generateUpdatedAtTrigger()
     }
     
+    /// Generate column definitions for nested schema based on strategy
+    /// - Parameters:
+    ///   - nestedSchema: The nested schema to process
+    ///   - parentColumnName: The parent column name for flattened naming
+    ///   - visited: Set of visited schema paths to prevent circular references
+    ///   - depth: Current recursion depth (max 10 to prevent infinite loops)
+    private func generateNestedSchemaColumns(
+        _ nestedSchema: NestedSchema,
+        parentColumnName: String,
+        visited: Set<String> = [],
+        depth: Int = 0
+    ) -> [String] {
+        // Prevent infinite recursion
+        guard depth < 10 else {
+            print("⚠️ Warning: Maximum recursion depth reached for nested schema at \(parentColumnName)")
+            return []
+        }
+        
+        // Prevent circular references
+        let schemaPath = "\(parentColumnName)"
+        if visited.contains(schemaPath) {
+            print("⚠️ Warning: Circular reference detected in nested schema at \(parentColumnName), using JSONB fallback")
+            return ["\"\(parentColumnName)\" JSONB"]
+        }
+        
+        var newVisited = visited
+        newVisited.insert(schemaPath)
+        var nestedColumns: [String] = []
+        
+        switch nestedSchema.strategy {
+        case .flattened(let prefix):
+            let columnPrefix = prefix ?? parentColumnName
+            
+            switch nestedSchema {
+            case .object(let fields, _):
+                // Generate flattened columns for each field
+                for (fieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                    let flattenedName = "\(columnPrefix)-\(fieldName)"
+                    let fieldMetadata = fieldBuilder.build()
+                    
+                    var colDef = "\"\(flattenedName)\""
+                    
+                    // Handle nested schemas recursively (including arrays) with cycle detection
+                    if let nested = fieldMetadata.nestedSchema {
+                        nestedColumns.append(contentsOf: generateNestedSchemaColumns(
+                            nested,
+                            parentColumnName: flattenedName,
+                            visited: newVisited,
+                            depth: depth + 1
+                        ))
+                        continue
+                    }
+                    
+                    // Handle foreign keys in nested objects (flattened strategy)
+                    // Foreign keys will be added via ALTER TABLE in generateAlterTableForForeignKeys()
+                    
+                    // Add type
+                    if fieldMetadata.isEncrypted {
+                        colDef += " TEXT"
+                    } else if let enumType = fieldMetadata.enumType {
+                        colDef += " \"\(enumType.name)\""
+                    } else if fieldMetadata.swiftType == .date {
+                        colDef += " TIMESTAMPTZ"
+                    } else {
+                        colDef += " TEXT"
+                    }
+                    
+                    // Add NOT NULL if required
+                    if !fieldMetadata.isNullable {
+                        colDef += " NOT NULL"
+                    }
+                    
+                    // Add UNIQUE constraint if required
+                    if fieldMetadata.isUnique {
+                        colDef += " UNIQUE"
+                    }
+                    
+                    // Add default value if present
+                    if let defaultValue = fieldMetadata.defaultValue {
+                        if defaultValue.contains("(") || defaultValue.uppercased() == "NOW()" || defaultValue.uppercased() == "CURRENT_TIMESTAMP" {
+                            colDef += " DEFAULT \(defaultValue)"
+                        } else {
+                            colDef += " DEFAULT '\(defaultValue)'"
+                        }
+                    }
+                    
+                    nestedColumns.append(colDef)
+                }
+                
+            case .array(let elementType, _):
+                // Arrays with flattened strategy fall back to JSONB (can't flatten arrays)
+                // For PostgreSQL, we could use native array types, but JSONB is more portable
+                var colDef = "\"\(parentColumnName)\" JSONB"
+                let elementMetadata = elementType.build()
+                if !elementMetadata.isNullable {
+                    colDef += " NOT NULL"
+                }
+                nestedColumns.append(colDef)
+            }
+            
+        case .jsonb:
+            // Generate a single JSONB column
+            var colDef = "\"\(parentColumnName)\" JSONB"
+            
+            // Determine nullability from nested schema
+            switch nestedSchema {
+            case .object(let fields, _):
+                // Object is nullable if all fields are nullable (conservative approach)
+                // For now, make it nullable by default
+                break
+            case .array(let elementType, _):
+                let elementMetadata = elementType.build()
+                if !elementMetadata.isNullable {
+                    colDef += " NOT NULL"
+                }
+            }
+            
+            nestedColumns.append(colDef)
+            
+        case .separateTable:
+            // Separate table strategy - don't generate columns here
+            // The table will be generated separately by ZyraSchema
+            // Parent table doesn't get a column for this
+            break
+        }
+        
+        return nestedColumns
+    }
+    
+    /// Generate CREATE TABLE SQL without foreign keys (for circular dependency handling)
+    public func generateCreateTableSQLWithoutFKs() -> String {
+        var columnDefinitions: [String] = []
+        
+        // Add primary key
+        columnDefinitions.append("\(primaryKey) TEXT PRIMARY KEY")
+        
+        // Add each column with its definition (skip primary key since already added)
+        for column in columns {
+            // Skip primary key column since it's already added above
+            if column.name.lowercased() == primaryKey.lowercased() {
+                continue
+            }
+            
+            // Handle nested schemas
+            if let nestedSchema = column.nestedSchema {
+                switch nestedSchema.strategy {
+                case .separateTable:
+                    // Separate table strategy - skip this column
+                    // The table will be generated separately
+                    continue
+                case .flattened, .jsonb:
+                    // Generate columns for nested schema
+                    let nestedCols = generateNestedSchemaColumns(nestedSchema, parentColumnName: column.name)
+                    columnDefinitions.append(contentsOf: nestedCols)
+                    continue
+                }
+            }
+            
+            var colDef = "\"\(column.name)\""
+            
+            // Add type
+            if column.isEncrypted {
+                colDef += " TEXT"
+            } else if let enumType = column.enumType {
+                colDef += " \"\(enumType.name)\""
+            } else {
+                switch column.swiftType {
+                case .string:
+                    if let maxLength = column.maxLength {
+                        colDef += " VARCHAR(\(maxLength))"
+                    } else {
+                        colDef += " TEXT"
+                    }
+                case .integer:
+                    colDef += " INTEGER"
+                case .bigInt:
+                    colDef += " BIGINT"
+                case .bool:
+                    colDef += " BOOLEAN"
+                case .double:
+                    colDef += " DOUBLE PRECISION"
+                case .decimal(let precision, let scale):
+                    colDef += " DECIMAL(\(precision), \(scale))"
+                case .uuid:
+                    colDef += " UUID"
+                case .date:
+                    colDef += " TIMESTAMPTZ"
+                case .enum:
+                    // Handled above
+                    colDef += " TEXT"
+                case .object, .array:
+                    colDef += " JSONB"
+                }
+            }
+            
+            // Add NOT NULL if required
+            if !column.isNullable {
+                colDef += " NOT NULL"
+            }
+            
+            // Add UNIQUE constraint if required
+            if column.isUnique {
+                colDef += " UNIQUE"
+            }
+            
+            // Add CHECK constraint if present
+            if let checkConstraint = column.checkConstraint {
+                colDef += " CHECK (\(checkConstraint))"
+            }
+            
+            // Add default value if present
+            if let defaultValue = column.defaultValue {
+                if defaultValue.contains("(") || defaultValue.uppercased() == "NOW()" || defaultValue.uppercased() == "CURRENT_TIMESTAMP" {
+                    colDef += " DEFAULT \(defaultValue)"
+                } else {
+                    colDef += " DEFAULT '\(defaultValue)'"
+                }
+            }
+            
+            columnDefinitions.append(colDef)
+        }
+        
+        // NO foreign key constraints here - they'll be added with ALTER TABLE
+        
+        var sql = "CREATE TABLE \"\(name)\" (\n"
+        sql += "    \(columnDefinitions.joined(separator: ",\n    "))\n"
+        sql += ");"
+        
+        return sql
+    }
+    
+    /// Collect foreign keys from nested schemas (for flattened strategy)
+    /// - Parameters:
+    ///   - nestedSchema: The nested schema to process
+    ///   - parentColumnName: The parent column name for flattened naming
+    ///   - visited: Set of visited schema paths to prevent circular references
+    ///   - depth: Current recursion depth (max 10 to prevent infinite loops)
+    private func collectForeignKeysFromNestedSchema(
+        _ nestedSchema: NestedSchema,
+        parentColumnName: String,
+        visited: Set<String> = [],
+        depth: Int = 0
+    ) -> [(columnName: String, fk: ForeignKey)] {
+        // Prevent infinite recursion
+        guard depth < 10 else {
+            print("⚠️ Warning: Maximum recursion depth reached for nested schema at \(parentColumnName)")
+            return []
+        }
+        
+        // Prevent circular references
+        let schemaPath = "\(parentColumnName)"
+        if visited.contains(schemaPath) {
+            print("⚠️ Warning: Circular reference detected in nested schema at \(parentColumnName)")
+            return []
+        }
+        
+        var newVisited = visited
+        newVisited.insert(schemaPath)
+        var foreignKeys: [(String, ForeignKey)] = []
+        
+        switch nestedSchema {
+        case .object(let fields, _):
+            for (fieldName, fieldBuilder) in fields {
+                let fieldMetadata = fieldBuilder.build()
+                let flattenedName = "\(parentColumnName)-\(fieldName)"
+                
+                // Check for foreign key in this field
+                if let fk = fieldMetadata.foreignKey {
+                    foreignKeys.append((flattenedName, fk))
+                }
+                
+                // Recursively check nested schemas (with cycle detection)
+                if let nested = fieldMetadata.nestedSchema {
+                    foreignKeys.append(contentsOf: collectForeignKeysFromNestedSchema(
+                        nested,
+                        parentColumnName: flattenedName,
+                        visited: newVisited,
+                        depth: depth + 1
+                    ))
+                }
+            }
+            
+        case .array(let elementType, _):
+            let elementMetadata = elementType.build()
+            
+            // Check for foreign key in array element
+            if let fk = elementMetadata.foreignKey {
+                // For arrays, foreign keys would be in the separate table, not here
+                // But we can still collect them for reference
+                foreignKeys.append((parentColumnName, fk))
+            }
+            
+            // Recursively check nested schemas in array elements (with cycle detection)
+            if let nested = elementMetadata.nestedSchema {
+                foreignKeys.append(contentsOf: collectForeignKeysFromNestedSchema(
+                    nested,
+                    parentColumnName: parentColumnName,
+                    visited: newVisited,
+                    depth: depth + 1
+                ))
+            }
+        }
+        
+        return foreignKeys
+    }
+    
+    /// Generate ALTER TABLE statements for foreign keys (including nested schemas)
+    public func generateAlterTableForForeignKeys() -> [String] {
+        var fkStatements: [String] = []
+        
+        // Collect foreign keys from top-level columns
+        for column in columns {
+            guard let fk = column.foreignKey else { continue }
+            
+            let constraintName = "\(name)_\(column.name)_fkey"
+            fkStatements.append("ALTER TABLE \"\(name)\" ADD CONSTRAINT \"\(constraintName)\" FOREIGN KEY (\(column.name)) REFERENCES \"\(fk.referencedTable)\" (\(fk.referencedColumn)) ON UPDATE \(fk.onUpdate.sqlString) ON DELETE \(fk.onDelete.sqlString);")
+        }
+        
+        // Collect foreign keys from nested schemas (flattened strategy)
+        for column in columns {
+            guard let nestedSchema = column.nestedSchema,
+                  case .flattened = nestedSchema.strategy else {
+                continue
+            }
+            
+            let nestedFKs = collectForeignKeysFromNestedSchema(nestedSchema, parentColumnName: column.name)
+            for (flattenedColumnName, fk) in nestedFKs {
+                let constraintName = "\(name)_\(flattenedColumnName.replacingOccurrences(of: "-", with: "_"))_fkey"
+                fkStatements.append("ALTER TABLE \"\(name)\" ADD CONSTRAINT \"\(constraintName)\" FOREIGN KEY (\"\(flattenedColumnName)\") REFERENCES \"\(fk.referencedTable)\" (\(fk.referencedColumn)) ON UPDATE \(fk.onUpdate.sqlString) ON DELETE \(fk.onDelete.sqlString);")
+            }
+        }
+        
+        return fkStatements
+    }
+    
+    /// Generate MySQL column definitions for nested schema based on strategy
+    /// - Parameters:
+    ///   - nestedSchema: The nested schema to process
+    ///   - parentColumnName: The parent column name for flattened naming
+    ///   - visited: Set of visited schema paths to prevent circular references
+    ///   - depth: Current recursion depth (max 10 to prevent infinite loops)
+    private func generateMySQLNestedSchemaColumns(
+        _ nestedSchema: NestedSchema,
+        parentColumnName: String,
+        visited: Set<String> = [],
+        depth: Int = 0
+    ) -> [String] {
+        // Prevent infinite recursion
+        guard depth < 10 else {
+            print("⚠️ Warning: Maximum recursion depth reached for nested schema at \(parentColumnName)")
+            return []
+        }
+        
+        // Prevent circular references
+        let schemaPath = "\(parentColumnName)"
+        if visited.contains(schemaPath) {
+            print("⚠️ Warning: Circular reference detected in nested schema at \(parentColumnName), using JSON fallback")
+            return ["`\(parentColumnName)` JSON"]
+        }
+        
+        var newVisited = visited
+        newVisited.insert(schemaPath)
+        var nestedColumns: [String] = []
+        
+        switch nestedSchema.strategy {
+        case .flattened(let prefix):
+            let columnPrefix = prefix ?? parentColumnName
+            
+            switch nestedSchema {
+            case .object(let fields, _):
+                // Generate flattened columns for each field
+                for (fieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                    let flattenedName = "\(columnPrefix)-\(fieldName)"
+                    let fieldMetadata = fieldBuilder.build()
+                    
+                    var colDef = "`\(flattenedName)`"
+                    
+                    // Handle nested schemas recursively with cycle detection
+                    if let nested = fieldMetadata.nestedSchema {
+                        nestedColumns.append(contentsOf: generateMySQLNestedSchemaColumns(
+                            nested,
+                            parentColumnName: flattenedName,
+                            visited: newVisited,
+                            depth: depth + 1
+                        ))
+                        continue
+                    }
+                    
+                    // Add MySQL type
+                    if let enumType = fieldMetadata.enumType {
+                        let enumValues = enumType.values.map { "'\($0)'" }.joined(separator: ", ")
+                        colDef += " ENUM(\(enumValues))"
+                    } else {
+                        switch fieldMetadata.swiftType {
+                        case .integer:
+                            colDef += " INT"
+                        case .bigInt:
+                            colDef += " BIGINT"
+                        case .bool:
+                            colDef += " BOOLEAN"
+                        case .double:
+                            colDef += " DOUBLE"
+                        case .decimal(let precision, let scale):
+                            colDef += " DECIMAL(\(precision), \(scale))"
+                        case .uuid:
+                            colDef += " CHAR(36)"
+                        case .date:
+                            colDef += " DATETIME"
+                        case .string:
+                            if let maxLength = fieldMetadata.maxLength {
+                                colDef += " VARCHAR(\(maxLength))"
+                            } else {
+                                colDef += " TEXT"
+                            }
+                        default:
+                            colDef += " TEXT"
+                        }
+                    }
+                    
+                    // Add NOT NULL if required
+                    if !fieldMetadata.isNullable {
+                        colDef += " NOT NULL"
+                    }
+                    
+                    // Add UNIQUE constraint if required
+                    if fieldMetadata.isUnique {
+                        colDef += " UNIQUE"
+                    }
+                    
+                    // Add CHECK constraint if present
+                    if let checkConstraint = fieldMetadata.checkConstraint {
+                        colDef += " CHECK (\(checkConstraint))"
+                    }
+                    
+                    // Add default value if present
+                    if let defaultValue = fieldMetadata.defaultValue {
+                        if defaultValue.uppercased() == "NOW()" || defaultValue.uppercased() == "CURRENT_TIMESTAMP" {
+                            colDef += " DEFAULT CURRENT_TIMESTAMP"
+                        } else if defaultValue.contains("(") {
+                            colDef += " DEFAULT \(defaultValue)"
+                        } else {
+                            colDef += " DEFAULT '\(defaultValue)'"
+                        }
+                    }
+                    
+                    nestedColumns.append(colDef)
+                }
+                
+            case .array(let elementType, _):
+                // For arrays with flattened strategy, fall back to JSON
+                var colDef = "`\(parentColumnName)` JSON"
+                if !elementType.isNullable {
+                    colDef += " NOT NULL"
+                }
+                nestedColumns.append(colDef)
+            }
+            
+        case .jsonb:
+            // Generate a single JSON column (MySQL uses JSON, not JSONB)
+            var colDef = "`\(parentColumnName)` JSON"
+            nestedColumns.append(colDef)
+            
+        case .separateTable:
+            // Separate table strategy - don't generate columns here
+            break
+        }
+        
+        return nestedColumns
+    }
+    
     /// Generate CREATE TABLE SQL only (without triggers)
     public func generateCreateTableSQLOnly() -> String {
         var columnDefinitions: [String] = []
@@ -1720,6 +2576,20 @@ public struct ZyraTable: Hashable {
             // Skip primary key column since it's already added above
             if column.name.lowercased() == primaryKey.lowercased() {
                 continue
+            }
+            
+            // Handle nested schemas
+            if let nestedSchema = column.nestedSchema {
+                switch nestedSchema.strategy {
+                case .separateTable:
+                    // Separate table strategy - skip this column
+                    continue
+                case .flattened, .jsonb:
+                    // Generate columns for nested schema
+                    let nestedCols = generateNestedSchemaColumns(nestedSchema, parentColumnName: column.name)
+                    columnDefinitions.append(contentsOf: nestedCols)
+                    continue
+                }
             }
             
             var colDef = column.name
@@ -1772,8 +2642,8 @@ public struct ZyraTable: Hashable {
     
     // MARK: - MySQL Generation
     
-    /// Generate MySQL CREATE TABLE statement
-    public func generateMySQLTableSQL() -> String {
+    /// Generate MySQL CREATE TABLE SQL without foreign keys (for circular dependency handling)
+    public func generateMySQLTableSQLWithoutFKs() -> String {
         var columnDefinitions: [String] = []
         
         // Find primary key column to determine if it's integer (for AUTO_INCREMENT)
@@ -1810,10 +2680,14 @@ public struct ZyraTable: Hashable {
                 switch column.swiftType {
                 case .integer:
                     colDef += " INT"
-                case .boolean:
+                case .bigInt:
+                    colDef += " BIGINT"
+                case .bool:
                     colDef += " BOOLEAN"
                 case .double:
                     colDef += " DOUBLE"
+                case .decimal(let precision, let scale):
+                    colDef += " DECIMAL(\(precision), \(scale))"
                 case .uuid:
                     colDef += " CHAR(36)"
                 case .date:
@@ -1843,6 +2717,11 @@ public struct ZyraTable: Hashable {
                 colDef += " UNIQUE"
             }
             
+            // Add CHECK constraint if present
+            if let checkConstraint = column.checkConstraint {
+                colDef += " CHECK (\(checkConstraint))"
+            }
+            
             // Add default value if present
             if let defaultValue = column.defaultValue {
                 if defaultValue.uppercased() == "NOW()" || defaultValue.uppercased() == "CURRENT_TIMESTAMP" {
@@ -1857,12 +2736,156 @@ public struct ZyraTable: Hashable {
             columnDefinitions.append(colDef)
         }
         
-        // Add foreign key constraints
-        let fkConstraints = generateMySQLForeignKeyConstraints()
-        let allConstraints = columnDefinitions + fkConstraints
+        // NO foreign key constraints here - they'll be added with ALTER TABLE
         
         var sql = "CREATE TABLE `\(name)` (\n"
-        sql += "    \(allConstraints.joined(separator: ",\n    "))\n"
+        sql += "    \(columnDefinitions.joined(separator: ",\n    "))\n"
+        sql += ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
+        
+        return sql
+    }
+    
+    /// Generate MySQL ALTER TABLE statements for foreign keys (including nested schemas)
+    public func generateMySQLAlterTableForForeignKeys() -> [String] {
+        var fkStatements: [String] = []
+        
+        // Collect foreign keys from top-level columns
+        for column in columns {
+            guard let fk = column.foreignKey else { continue }
+            
+            let constraintName = "\(name)_\(column.name)_fkey"
+            fkStatements.append("ALTER TABLE `\(name)` ADD CONSTRAINT `\(constraintName)` FOREIGN KEY (`\(column.name)`) REFERENCES `\(fk.referencedTable)` (`\(fk.referencedColumn)`) ON UPDATE \(fk.onUpdate.sqlString) ON DELETE \(fk.onDelete.sqlString);")
+        }
+        
+        // Collect foreign keys from nested schemas (flattened strategy)
+        for column in columns {
+            guard let nestedSchema = column.nestedSchema,
+                  case .flattened = nestedSchema.strategy else {
+                continue
+            }
+            
+            let nestedFKs = collectForeignKeysFromNestedSchema(nestedSchema, parentColumnName: column.name)
+            for (flattenedColumnName, fk) in nestedFKs {
+                let constraintName = "\(name)_\(flattenedColumnName.replacingOccurrences(of: "-", with: "_"))_fkey"
+                fkStatements.append("ALTER TABLE `\(name)` ADD CONSTRAINT `\(constraintName)` FOREIGN KEY (`\(flattenedColumnName)`) REFERENCES `\(fk.referencedTable)` (`\(fk.referencedColumn)`) ON UPDATE \(fk.onUpdate.sqlString) ON DELETE \(fk.onDelete.sqlString);")
+            }
+        }
+        
+        return fkStatements
+    }
+    
+    /// Generate MySQL CREATE TABLE statement
+    public func generateMySQLTableSQL() -> String {
+        var columnDefinitions: [String] = []
+        
+        // Find primary key column to determine if it's integer (for AUTO_INCREMENT)
+        let primaryKeyColumn = columns.first { $0.name.lowercased() == primaryKey.lowercased() }
+        let isIntegerPrimaryKey = primaryKeyColumn?.swiftType == .integer
+        
+        // Add primary key
+        if isIntegerPrimaryKey {
+            columnDefinitions.append("`\(primaryKey)` INT AUTO_INCREMENT PRIMARY KEY")
+        } else {
+            // UUID or text primary key
+            if primaryKeyColumn?.isUuid == true {
+                columnDefinitions.append("`\(primaryKey)` CHAR(36) PRIMARY KEY")
+            } else {
+                columnDefinitions.append("`\(primaryKey)` VARCHAR(255) PRIMARY KEY")
+            }
+        }
+        
+        // Add each column with its definition (skip primary key since already added)
+        for column in columns {
+            // Skip primary key column since it's already added above
+            if column.name.lowercased() == primaryKey.lowercased() {
+                continue
+            }
+            
+            // Handle nested schemas
+            if let nestedSchema = column.nestedSchema {
+                switch nestedSchema.strategy {
+                case .separateTable:
+                    // Separate table strategy - skip this column
+                    continue
+                case .flattened, .jsonb:
+                    // Generate columns for nested schema
+                    let nestedCols = generateMySQLNestedSchemaColumns(nestedSchema, parentColumnName: column.name)
+                    columnDefinitions.append(contentsOf: nestedCols)
+                    continue
+                }
+            }
+            
+            var colDef = "`\(column.name)`"
+            
+            // Add MySQL type
+            if let enumType = column.enumType {
+                // MySQL ENUM type
+                let enumValues = enumType.values.map { "'\($0)'" }.joined(separator: ", ")
+                colDef += " ENUM(\(enumValues))"
+            } else {
+                switch column.swiftType {
+                case .integer:
+                    colDef += " INT"
+                case .bigInt:
+                    colDef += " BIGINT"
+                case .bool:
+                    colDef += " BOOLEAN"
+                case .double:
+                    colDef += " DOUBLE"
+                case .decimal(let precision, let scale):
+                    colDef += " DECIMAL(\(precision), \(scale))"
+                case .uuid:
+                    colDef += " CHAR(36)"
+                case .date:
+                    colDef += " DATETIME"
+                case .string:
+                    // Check if there's a maxLength constraint
+                    if let maxLength = column.maxLength {
+                        colDef += " VARCHAR(\(maxLength))"
+                    } else {
+                        colDef += " TEXT"
+                    }
+                case .enum:
+                    // Shouldn't happen, but fallback
+                    colDef += " VARCHAR(255)"
+                case .object, .array:
+                    colDef += " JSON"
+                }
+            }
+            
+            // Add NOT NULL if required
+            if !column.isNullable {
+                colDef += " NOT NULL"
+            }
+            
+            // Add UNIQUE constraint if required
+            if column.isUnique {
+                colDef += " UNIQUE"
+            }
+            
+            // Add CHECK constraint if present
+            if let checkConstraint = column.checkConstraint {
+                colDef += " CHECK (\(checkConstraint))"
+            }
+            
+            // Add default value if present
+            if let defaultValue = column.defaultValue {
+                if defaultValue.uppercased() == "NOW()" || defaultValue.uppercased() == "CURRENT_TIMESTAMP" {
+                    colDef += " DEFAULT CURRENT_TIMESTAMP"
+                } else if defaultValue.contains("(") {
+                    colDef += " DEFAULT \(defaultValue)"
+                } else {
+                    colDef += " DEFAULT '\(defaultValue)'"
+                }
+            }
+            
+            columnDefinitions.append(colDef)
+        }
+        
+        // NO foreign key constraints here - they'll be added with ALTER TABLE
+        
+        var sql = "CREATE TABLE `\(name)` (\n"
+        sql += "    \(columnDefinitions.joined(separator: ",\n    "))\n"
         sql += ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
         
         return sql
@@ -1987,6 +3010,32 @@ public struct ZyraTable: Hashable {
         )
     }
     
+    /// Get fluent RLS policy builder for this table (new API)
+    /// Example:
+    /// ```
+    /// let policies = table.fluentRls()
+    ///   .who([.authenticated, .admin])
+    ///   .permissive()
+    ///   .access([.read, .write, .update])
+    ///   .own()
+    ///   .build()
+    /// ```
+    /// - Parameter userIdColumn: Name of the user_id column (default: "user_id")
+    /// - Parameter usersTableName: Name of the users table (default: "public.user_public")
+    /// - Parameter roleColumn: Name of the role column in users table (default: "role")
+    public func fluentRls(
+        userIdColumn: String = "user_id",
+        usersTableName: String = "public.user_public",
+        roleColumn: String = "role"
+    ) -> FluentRLSPolicyBuilder {
+        return FluentRLSPolicyBuilder(
+            tableName: name,
+            userIdColumn: userIdColumn,
+            usersTableName: usersTableName,
+            roleColumn: roleColumn
+        )
+    }
+    
     // MARK: - Swift Model Generation
     
     /// Generate Swift model struct code
@@ -2102,8 +3151,32 @@ public struct ZyraTable: Hashable {
         var drizzleColumns: [String] = []
         
         for column in columns {
-            let drizzleColumn = generateDrizzleColumn(column, dbPrefix: dbPrefix)
-            drizzleColumns.append("    \(drizzleColumn)")
+            // Handle nested schemas with flattened strategy
+            if let nestedSchema = column.nestedSchema,
+               case .flattened(let prefix) = nestedSchema.strategy {
+                let columnPrefix = prefix ?? column.name
+                switch nestedSchema {
+                case .object(let fields, _):
+                    // Generate flattened columns
+                    for (fieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                        let flattenedName = "\(columnPrefix)-\(fieldName)"
+                        let fieldMetadata = fieldBuilder.build()
+                        let drizzleColumn = generateDrizzleColumnForNested(fieldMetadata, columnName: flattenedName, dbPrefix: dbPrefix)
+                        if !drizzleColumn.isEmpty {
+                            drizzleColumns.append("    \(drizzleColumn)")
+                        }
+                    }
+                case .array(let elementType, _):
+                    // Arrays with flattened fall back to JSONB
+                    let drizzleColumn = "\(column.name): d.jsonb()"
+                    drizzleColumns.append("    \(drizzleColumn)")
+                }
+            } else {
+                let drizzleColumn = generateDrizzleColumn(column, dbPrefix: dbPrefix)
+                if !drizzleColumn.isEmpty {
+                    drizzleColumns.append("    \(drizzleColumn)")
+                }
+            }
         }
         
         code += drizzleColumns.joined(separator: ",\n")
@@ -2132,6 +3205,21 @@ public struct ZyraTable: Hashable {
         let columnName = column.name
         var def = "\(columnName): "
         
+        // Handle nested schemas
+        if let nestedSchema = column.nestedSchema {
+            switch nestedSchema.strategy {
+            case .jsonb:
+                def += "d.jsonb()"
+            case .separateTable:
+                // Separate table - skip this column (handled separately)
+                return ""
+            case .flattened:
+                // Flattened is handled in generateDrizzleSchema
+                // Fall through to regular handling
+                break
+            }
+        }
+        
         // Determine Drizzle column type
         if let enumType = column.enumType {
             let enumVarName = toCamelCase(enumType.name.replacingOccurrences(of: dbPrefix, with: ""))
@@ -2142,10 +3230,14 @@ public struct ZyraTable: Hashable {
                 def += "d.text()"
             case .integer:
                 def += "d.integer()"
-            case .boolean:
+            case .bigInt:
+                def += "d.bigint()"
+            case .bool:
                 def += "d.boolean()"
             case .double:
                 def += "d.real()"
+            case .decimal(let precision, let scale):
+                def += "d.numeric(\(precision), \(scale))"
             case .uuid:
                 def += "d.text()"
             case .date:
@@ -2153,9 +3245,9 @@ public struct ZyraTable: Hashable {
             case .enum:
                 def += "d.text()"
             case .object:
-                def += "d.text()"
+                def += "d.jsonb()"
             case .array:
-                def += "d.text()"
+                def += "d.jsonb()"
             }
         }
         
@@ -2186,7 +3278,7 @@ public struct ZyraTable: Hashable {
                         def += ".default(\"\(defaultValue)\")"
                     } else if column.swiftType == .integer {
                         def += ".default(\(defaultValue))"
-                    } else if column.swiftType == .boolean {
+                    } else if column.swiftType == .bool {
                         def += ".default(\(defaultValue))"
                     } else {
                         def += ".default(\"\(defaultValue)\")"
@@ -2198,15 +3290,215 @@ public struct ZyraTable: Hashable {
         return def
     }
     
-    /// Generate Drizzle foreign key constraints
+    /// Helper to generate Drizzle column for nested schema fields (recursive)
+    /// - Parameters:
+    ///   - column: Column metadata
+    ///   - columnName: Column name
+    ///   - dbPrefix: Database prefix
+    ///   - visited: Set of visited schema paths to prevent circular references
+    ///   - depth: Current recursion depth (max 10 to prevent infinite loops)
+    private func generateDrizzleColumnForNested(
+        _ column: ColumnMetadata,
+        columnName: String,
+        dbPrefix: String = "",
+        visited: Set<String> = [],
+        depth: Int = 0
+    ) -> String {
+        // Prevent infinite recursion
+        guard depth < 10 else {
+            print("⚠️ Warning: Maximum recursion depth reached for Drizzle column at \(columnName)")
+            return "\(columnName): d.jsonb()"
+        }
+        
+        // Prevent circular references
+        let schemaPath = "\(columnName)"
+        if visited.contains(schemaPath) {
+            print("⚠️ Warning: Circular reference detected in Drizzle column at \(columnName), using JSONB fallback")
+            return "\(columnName): d.jsonb()"
+        }
+        
+        var newVisited = visited
+        newVisited.insert(schemaPath)
+        
+        // Handle nested schemas recursively
+        if let nestedSchema = column.nestedSchema {
+            switch nestedSchema.strategy {
+            case .flattened(let prefix):
+                let columnPrefix = prefix ?? columnName
+                switch nestedSchema {
+                case .object(let fields, _):
+                    // For flattened objects, generate individual columns
+                    var nestedColumns: [String] = []
+                    for (fieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                        let flattenedName = "\(columnPrefix)-\(fieldName)"
+                        let fieldMetadata = fieldBuilder.build()
+                        let nestedCol = generateDrizzleColumnForNested(
+                            fieldMetadata,
+                            columnName: flattenedName,
+                            dbPrefix: dbPrefix,
+                            visited: newVisited,
+                            depth: depth + 1
+                        )
+                        if !nestedCol.isEmpty {
+                            nestedColumns.append(nestedCol)
+                        }
+                    }
+                    return nestedColumns.joined(separator: ",\n    ")
+                    
+                case .array(let elementType, _):
+                    // Arrays with flattened fall back to JSONB
+                    return "\(columnName): d.jsonb()"
+                }
+                
+            case .jsonb:
+                return "\(columnName): d.jsonb()"
+                
+            case .separateTable:
+                // Separate table - skip (handled separately)
+                return ""
+            }
+        }
+        
+        // Base type handling
+        var def = "\(columnName): "
+        
+        if let enumType = column.enumType {
+            let enumVarName = toCamelCase(enumType.name.replacingOccurrences(of: dbPrefix, with: ""))
+            def += "\(enumVarName)"
+        } else {
+            switch column.swiftType {
+            case .string:
+                def += "d.text()"
+            case .integer:
+                def += "d.integer()"
+            case .bigInt:
+                def += "d.bigint()"
+            case .bool:
+                def += "d.boolean()"
+            case .double:
+                def += "d.real()"
+            case .decimal(let precision, let scale):
+                def += "d.numeric(\(precision), \(scale))"
+            case .uuid:
+                def += "d.text()"
+            case .date:
+                def += "d.timestamp({ withTimezone: true })"
+            default:
+                def += "d.text()"
+            }
+        }
+        
+        if !column.isNullable {
+            def += ".notNull()"
+        }
+        
+        if column.isUnique {
+            def += ".unique()"
+        }
+        
+        return def
+    }
+    
+    /// Collect foreign keys from nested schemas for Drizzle
+    /// - Parameters:
+    ///   - nestedSchema: The nested schema to process
+    ///   - parentColumnName: The parent column name
+    ///   - dbPrefix: Database prefix
+    ///   - visited: Set of visited schema paths to prevent circular references
+    ///   - depth: Current recursion depth (max 10 to prevent infinite loops)
+    private func collectDrizzleForeignKeysFromNested(
+        _ nestedSchema: NestedSchema,
+        parentColumnName: String,
+        dbPrefix: String = "",
+        visited: Set<String> = [],
+        depth: Int = 0
+    ) -> [String] {
+        // Prevent infinite recursion
+        guard depth < 10 else {
+            print("⚠️ Warning: Maximum recursion depth reached for Drizzle foreign keys at \(parentColumnName)")
+            return []
+        }
+        
+        // Prevent circular references
+        let schemaPath = "\(parentColumnName)"
+        if visited.contains(schemaPath) {
+            print("⚠️ Warning: Circular reference detected in Drizzle foreign keys at \(parentColumnName)")
+            return []
+        }
+        
+        var newVisited = visited
+        newVisited.insert(schemaPath)
+        var fkConstraints: [String] = []
+        
+        switch nestedSchema {
+        case .object(let fields, _):
+            for (fieldName, fieldBuilder) in fields {
+                let fieldMetadata = fieldBuilder.build()
+                let flattenedName = "\(parentColumnName)-\(fieldName)"
+                
+                // Check for foreign key
+                if let fk = fieldMetadata.foreignKey {
+                    let referencedTableVar = toCamelCase(fk.referencedTable.replacingOccurrences(of: dbPrefix, with: ""))
+                    fkConstraints.append("foreignKey({ columns: [t.\(flattenedName)], foreignKeys: [\(referencedTableVar)({ columns: [\(referencedTableVar).\(fk.referencedColumn)] }) ] })")
+                }
+                
+                // Recursively check nested schemas with cycle detection
+                if let nested = fieldMetadata.nestedSchema {
+                    fkConstraints.append(contentsOf: collectDrizzleForeignKeysFromNested(
+                        nested,
+                        parentColumnName: flattenedName,
+                        dbPrefix: dbPrefix,
+                        visited: newVisited,
+                        depth: depth + 1
+                    ))
+                }
+            }
+            
+        case .array(let elementType, _):
+            let elementMetadata = elementType.build()
+            if let fk = elementMetadata.foreignKey {
+                let referencedTableVar = toCamelCase(fk.referencedTable.replacingOccurrences(of: dbPrefix, with: ""))
+                fkConstraints.append("foreignKey({ columns: [t.\(parentColumnName)], foreignKeys: [\(referencedTableVar)({ columns: [\(referencedTableVar).\(fk.referencedColumn)] }) ] })")
+            }
+            
+            if let nested = elementMetadata.nestedSchema {
+                fkConstraints.append(contentsOf: collectDrizzleForeignKeysFromNested(
+                    nested,
+                    parentColumnName: parentColumnName,
+                    dbPrefix: dbPrefix,
+                    visited: newVisited,
+                    depth: depth + 1
+                ))
+            }
+        }
+        
+        return fkConstraints
+    }
+    
+    /// Generate Drizzle foreign key constraints (including nested schemas)
     private func generateDrizzleForeignKeys(dbPrefix: String = "") -> [String] {
-        return columns.compactMap { column in
-            guard let fk = column.foreignKey else { return nil }
+        var fkConstraints: [String] = []
+        
+        // Collect foreign keys from top-level columns
+        for column in columns {
+            guard let fk = column.foreignKey else { continue }
             
             let referencedTableVar = toCamelCase(fk.referencedTable.replacingOccurrences(of: dbPrefix, with: ""))
-            
-            return "foreignKey({ columns: [t.\(column.name)], foreignKeys: [\(referencedTableVar)({ columns: [\(referencedTableVar).\(fk.referencedColumn)] }) ] })"
+            fkConstraints.append("foreignKey({ columns: [t.\(column.name)], foreignKeys: [\(referencedTableVar)({ columns: [\(referencedTableVar).\(fk.referencedColumn)] }) ] })")
         }
+        
+        // Collect foreign keys from nested schemas (flattened strategy)
+        for column in columns {
+            guard let nestedSchema = column.nestedSchema,
+                  case .flattened = nestedSchema.strategy else {
+                continue
+            }
+            
+            let nestedFKs = collectDrizzleForeignKeysFromNested(nestedSchema, parentColumnName: column.name, dbPrefix: dbPrefix)
+            fkConstraints.append(contentsOf: nestedFKs)
+        }
+        
+        return fkConstraints
     }
     
     // MARK: - Helper Methods
@@ -2258,6 +3550,51 @@ public struct ZyraTable: Hashable {
     private func generateZodField(_ column: ColumnMetadata) -> String {
         var field = "\(column.name): "
         
+        // Handle nested schemas
+        if let nestedSchema = column.nestedSchema {
+            switch nestedSchema.strategy {
+            case .flattened:
+                // For flattened, generate individual fields with prefix
+                switch nestedSchema {
+                case .object(let fields, _):
+                    var zodFields: [String] = []
+                    let prefix = column.name
+                    for (fieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                        let flattenedName = "\(prefix)-\(fieldName)"
+                        let fieldMetadata = fieldBuilder.build()
+                        zodFields.append(generateZodFieldForNested(fieldMetadata, fieldName: flattenedName))
+                    }
+                    return zodFields.joined(separator: ",\n  ")
+                    
+                case .array(let elementType, _):
+                    let elementMetadata = elementType.build()
+                    let elementZod = generateZodFieldForNested(elementMetadata, fieldName: "element")
+                    return "\(column.name): z.array(\(elementZod.replacingOccurrences(of: "element: ", with: "")))"
+                }
+                
+            case .jsonb:
+                // For JSONB, generate z.object() or z.array()
+                switch nestedSchema {
+                case .object(let fields, _):
+                    var zodFields: [String] = []
+                    for (fieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                        let fieldMetadata = fieldBuilder.build()
+                        zodFields.append(generateZodFieldForNested(fieldMetadata, fieldName: fieldName))
+                    }
+                    return "\(column.name): z.object({\n    \(zodFields.joined(separator: ",\n    "))\n  })"
+                    
+                case .array(let elementType, _):
+                    let elementMetadata = elementType.build()
+                    let elementZod = generateZodFieldForNested(elementMetadata, fieldName: "element")
+                    return "\(column.name): z.array(\(elementZod.replacingOccurrences(of: "element: ", with: "")))"
+                }
+                
+            case .separateTable:
+                // Separate table - reference the separate table type
+                return "\(column.name): \(toPascalCase(column.name))Schema"
+            }
+        }
+        
         // Base type
         var zodType: String
         
@@ -2270,9 +3607,13 @@ public struct ZyraTable: Hashable {
                 zodType = "z.string()"
             case .integer:
                 zodType = "z.number().int()"
-            case .boolean:
+            case .bigInt:
+                zodType = "z.bigint()"
+            case .bool:
                 zodType = "z.boolean()"
             case .double:
+                zodType = "z.number()"
+            case .decimal:
                 zodType = "z.number()"
             case .uuid:
                 zodType = "z.string().uuid()"
@@ -2322,6 +3663,143 @@ public struct ZyraTable: Hashable {
         return field
     }
     
+    /// Helper to generate Zod field for nested schema fields (recursive)
+    /// - Parameters:
+    ///   - column: Column metadata
+    ///   - fieldName: Field name
+    ///   - visited: Set of visited schema paths to prevent circular references
+    ///   - depth: Current recursion depth (max 10 to prevent infinite loops)
+    private func generateZodFieldForNested(
+        _ column: ColumnMetadata,
+        fieldName: String,
+        visited: Set<String> = [],
+        depth: Int = 0
+    ) -> String {
+        // Prevent infinite recursion
+        guard depth < 10 else {
+            print("⚠️ Warning: Maximum recursion depth reached for Zod field at \(fieldName)")
+            return "\(fieldName): z.any()"
+        }
+        
+        // Prevent circular references
+        let schemaPath = "\(fieldName)"
+        if visited.contains(schemaPath) {
+            print("⚠️ Warning: Circular reference detected in Zod field at \(fieldName), using any() fallback")
+            return "\(fieldName): z.any()"
+        }
+        
+        var newVisited = visited
+        newVisited.insert(schemaPath)
+        var field = "\(fieldName): "
+        
+        // Handle nested schemas recursively
+        if let nestedSchema = column.nestedSchema {
+            switch nestedSchema.strategy {
+            case .flattened(let prefix):
+                let columnPrefix = prefix ?? fieldName
+                switch nestedSchema {
+                case .object(let fields, _):
+                    var zodFields: [String] = []
+                    for (nestedFieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                        let flattenedName = "\(columnPrefix)-\(nestedFieldName)"
+                        let fieldMetadata = fieldBuilder.build()
+                        zodFields.append(generateZodFieldForNested(
+                            fieldMetadata,
+                            fieldName: flattenedName,
+                            visited: newVisited,
+                            depth: depth + 1
+                        ))
+                    }
+                    return zodFields.joined(separator: ",\n  ")
+                    
+                case .array(let elementType, _):
+                    let elementMetadata = elementType.build()
+                    let elementZod = generateZodFieldForNested(
+                        elementMetadata,
+                        fieldName: "element",
+                        visited: newVisited,
+                        depth: depth + 1
+                    )
+                    return "\(fieldName): z.array(\(elementZod.replacingOccurrences(of: "element: ", with: "")))"
+                }
+                
+            case .jsonb:
+                switch nestedSchema {
+                case .object(let fields, _):
+                    var zodFields: [String] = []
+                    for (nestedFieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                        let fieldMetadata = fieldBuilder.build()
+                        zodFields.append(generateZodFieldForNested(
+                            fieldMetadata,
+                            fieldName: nestedFieldName,
+                            visited: newVisited,
+                            depth: depth + 1
+                        ))
+                    }
+                    return "\(fieldName): z.object({\n    \(zodFields.joined(separator: ",\n    "))\n  })"
+                    
+                case .array(let elementType, _):
+                    let elementMetadata = elementType.build()
+                    let elementZod = generateZodFieldForNested(
+                        elementMetadata,
+                        fieldName: "element",
+                        visited: newVisited,
+                        depth: depth + 1
+                    )
+                    return "\(fieldName): z.array(\(elementZod.replacingOccurrences(of: "element: ", with: "")))"
+                }
+                
+            case .separateTable:
+                return "\(fieldName): \(toPascalCase(fieldName))Schema"
+            }
+        }
+        
+        // Base type handling
+        if let enumType = column.enumType {
+            let enumValues = enumType.values.map { "\"\($0)\"" }.joined(separator: ", ")
+            field += "z.enum([\(enumValues)])"
+        } else {
+            switch column.swiftType {
+            case .string:
+                field += "z.string()"
+            case .integer:
+                field += "z.number().int()"
+            case .bigInt:
+                field += "z.bigint()"
+            case .bool:
+                field += "z.boolean()"
+            case .double:
+                field += "z.number()"
+            case .decimal:
+                field += "z.number()"
+            case .uuid:
+                field += "z.string().uuid()"
+            case .date:
+                field += "z.string().datetime()"
+            default:
+                field += "z.string()"
+            }
+        }
+        
+        if let minLength = column.minLength {
+            field += ".min(\(minLength))"
+        }
+        if let maxLength = column.maxLength {
+            field += ".max(\(maxLength))"
+        }
+        if column.isEmail == true {
+            field += ".email()"
+        }
+        if column.isUrl == true {
+            field += ".url()"
+        }
+        if column.isNullable {
+            field += ".nullable()"
+        }
+        
+        return field
+    }
+    
     // MARK: - Prisma Schema Generation
     
     /// Generate Prisma model code
@@ -2335,6 +3813,73 @@ public struct ZyraTable: Hashable {
         var fields: [String] = []
         
         for column in columns {
+            // Handle nested schemas
+            if let nestedSchema = column.nestedSchema {
+                switch nestedSchema.strategy {
+                case .flattened(let prefix):
+                    // Generate flattened fields
+                    let columnPrefix = prefix ?? column.name
+                    switch nestedSchema {
+                    case .object(let nestedFields, _):
+                        for (fieldName, fieldBuilder) in nestedFields.sorted(by: { $0.key < $1.key }) {
+                            let flattenedName = "\(columnPrefix)-\(fieldName)"
+                            let fieldMetadata = fieldBuilder.build()
+                            let fieldName = toCamelCase(flattenedName)
+                            var fieldDef = "  \(fieldName)"
+                            
+                            // Handle nested schemas recursively
+                            if let nested = fieldMetadata.nestedSchema {
+                                fieldDef += " " + generatePrismaTypeForNested(fieldMetadata, nestedSchema: nested, dbPrefix: dbPrefix)
+                            } else {
+                                fieldDef += " " + generatePrismaType(fieldMetadata)
+                            }
+                            
+                            // Handle foreign keys in nested objects
+                            if let fk = fieldMetadata.foreignKey {
+                                let referencedFieldName = toCamelCase(fk.referencedColumn)
+                                let relatedModelName = toPascalCase(fk.referencedTable.replacingOccurrences(of: dbPrefix, with: ""))
+                                let relationName = "\(modelName)\(relatedModelName)\(fieldName.capitalized)"
+                                var attributes: [String] = ["@relation(fields: [\(fieldName)], references: [\(referencedFieldName)], name: \"\(relationName)\")"]
+                                if flattenedName != fieldName {
+                                    attributes.append("@map(\"\(flattenedName)\")")
+                                }
+                                fieldDef += " " + attributes.joined(separator: " ")
+                            }
+                            
+                            if fieldMetadata.isNullable {
+                                fieldDef += "?"
+                            }
+                            fields.append(fieldDef)
+                        }
+                    case .array(let elementType, _):
+                        // Arrays with flattened fall back to Json
+                        let fieldName = toCamelCase(column.name)
+                        var fieldDef = "  \(fieldName)"
+                        fieldDef += " Json"
+                        if column.isNullable {
+                            fieldDef += "?"
+                        }
+                        fields.append(fieldDef)
+                    }
+                    continue
+                    
+                case .jsonb:
+                    // Generate Json field
+                    let fieldName = toCamelCase(column.name)
+                    var fieldDef = "  \(fieldName)"
+                    fieldDef += " Json"
+                    if column.isNullable {
+                        fieldDef += "?"
+                    }
+                    fields.append(fieldDef)
+                    continue
+                    
+                case .separateTable:
+                    // Separate table - skip (handled separately)
+                    continue
+                }
+            }
+            
             let fieldName = toCamelCase(column.name)
             var fieldDef = "  \(fieldName)"
             
@@ -2352,6 +3897,11 @@ public struct ZyraTable: Hashable {
                 let relatedModelName = toPascalCase(fk.referencedTable.replacingOccurrences(of: dbPrefix, with: ""))
                 let relationName = "\(modelName)\(relatedModelName)"
                 var attributes: [String] = ["@relation(fields: [\(fieldName)], references: [\(referencedFieldName)], name: \"\(relationName)\")"]
+                
+                // Add @db.Decimal annotation for decimal types
+                if case .decimal(let precision, let scale) = column.swiftType {
+                    attributes.append("@db.Decimal(\(precision), \(scale))")
+                }
                 
                 // Map column name if different from field name
                 if column.name != fieldName {
@@ -2373,6 +3923,11 @@ public struct ZyraTable: Hashable {
             
             // Add attributes
             var attributes: [String] = []
+            
+            // Add @db.Decimal annotation for decimal types
+            if case .decimal(let precision, let scale) = column.swiftType {
+                attributes.append("@db.Decimal(\(precision), \(scale))")
+            }
             
             // Primary key
             if column.name == primaryKey {
@@ -2407,7 +3962,7 @@ public struct ZyraTable: Hashable {
                     } else {
                         attributes.append("@default(now())")
                     }
-                } else if column.swiftType == .boolean {
+                } else if column.swiftType == .bool {
                     let boolValue = defaultValue.lowercased() == "true"
                     attributes.append("@default(\(boolValue))")
                 } else if column.swiftType == .integer {
@@ -2450,6 +4005,23 @@ public struct ZyraTable: Hashable {
         return code
     }
     
+    /// Generate Prisma type string for nested schemas
+    private func generatePrismaTypeForNested(_ column: ColumnMetadata, nestedSchema: NestedSchema, dbPrefix: String = "") -> String {
+        switch nestedSchema.strategy {
+        case .flattened:
+            // For flattened, generate individual fields (handled in generatePrismaModel)
+            return generatePrismaType(column)
+            
+        case .jsonb:
+            return "Json"
+            
+        case .separateTable(let tableName, _):
+            // Use provided table name or fallback to column name
+            let finalTableName = tableName ?? column.name
+            return toPascalCase(finalTableName.replacingOccurrences(of: dbPrefix, with: ""))
+        }
+    }
+    
     /// Generate Prisma type string for a column
     private func generatePrismaType(_ column: ColumnMetadata) -> String {
         if let enumType = column.enumType {
@@ -2467,10 +4039,14 @@ public struct ZyraTable: Hashable {
             }
         case .integer:
             return "Int"
-        case .boolean:
+        case .bigInt:
+            return "BigInt"
+        case .bool:
             return "Boolean"
         case .double:
             return "Float"
+        case .decimal:
+            return "Decimal"
         case .uuid:
             return "String"
         case .date:
@@ -2491,6 +4067,296 @@ public struct ZyraTable: Hashable {
 public struct ZyraSchema {
     public let tables: [ZyraTable]
     public let enums: [ZyraEnum]
+    /// Generate separate table from nested schema with separateTable strategy
+    private static func generateSeparateTable(
+        from nestedSchema: NestedSchema,
+        parentTable: ZyraTable,
+        parentColumnName: String,
+        dbPrefix: String = ""
+    ) -> ZyraTable? {
+        guard case .separateTable(let tableName, let relationshipType) = nestedSchema.strategy else {
+            return nil
+        }
+        
+        let finalTableName = tableName ?? "\(parentTable.name)_\(parentColumnName)"
+        let prefixedTableName = dbPrefix.isEmpty ? finalTableName : "\(dbPrefix)\(finalTableName)"
+        
+        var separateTableColumns: [ColumnBuilder] = []
+        
+        // Add primary key
+        separateTableColumns.append(zf.text("id").uuid().notNull())
+        
+        // Add foreign key to parent table
+        let parentKeyName = "\(parentTable.name.replacingOccurrences(of: dbPrefix, with: "").singularized())_id"
+        var parentKeyColumn = zf.uuid(parentKeyName)
+            .notNull()
+            .references(parentTable)
+        
+        // Add unique constraint for one-to-one relationships
+        if relationshipType == .oneToOne {
+            parentKeyColumn = parentKeyColumn.unique()
+        }
+        
+        separateTableColumns.append(parentKeyColumn)
+        
+        // Add columns from nested schema
+        switch nestedSchema {
+        case .object(let fields, _):
+            for (fieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                // Rebuild the column with the new name
+                let fieldMetadata = fieldBuilder.build()
+                
+                // Create a new builder starting from the swiftType
+                var newBuilder: ColumnBuilder
+                switch fieldMetadata.swiftType {
+                case .string, .uuid, .date:
+                    newBuilder = zf.text(fieldName)
+                case .integer:
+                    newBuilder = zf.integer(fieldName)
+                        case .bigInt:
+                            newBuilder = zf.bigint(fieldName)
+                case .double:
+                    newBuilder = zf.real(fieldName)
+                case .decimal(let precision, let scale):
+                    newBuilder = zf.decimal(fieldName, precision: precision, scale: scale)
+                case .bool:
+                    newBuilder = zf.text(fieldName).bool()
+                case .enum(let enumType):
+                    newBuilder = zf.text(fieldName).enum(enumType)
+                case .object, .array:
+                    newBuilder = zf.text(fieldName) // Will be handled by nested schema
+                }
+                
+                // Apply all the properties from the original builder
+                if fieldMetadata.isEncrypted {
+                    newBuilder = newBuilder.encrypted()
+                }
+                if !fieldMetadata.isNullable {
+                    newBuilder = newBuilder.notNull()
+                }
+                if fieldMetadata.isUnique {
+                    newBuilder = newBuilder.unique()
+                }
+                if let defaultValue = fieldMetadata.defaultValue {
+                    newBuilder = newBuilder.default(defaultValue)
+                }
+                if let enumType = fieldMetadata.enumType {
+                    newBuilder = newBuilder.enum(enumType)
+                }
+                if let fk = fieldMetadata.foreignKey {
+                    newBuilder = newBuilder.references(fk.referencedTable, column: fk.referencedColumn)
+                }
+                
+                // Preserve many-to-many relationships for separate table generation
+                // These will be handled when the separate table is processed by ZyraSchema
+                if fieldBuilder._manyToManyRelationship != nil {
+                    newBuilder._manyToManyRelationship = fieldBuilder._manyToManyRelationship
+                }
+                
+                separateTableColumns.append(newBuilder)
+            }
+            
+        case .array(let elementType, let arrayStrategy):
+            // For arrays, create columns based on element type
+            let elementMetadata = elementType.build()
+            
+            // Add an index/position column for ordering
+            separateTableColumns.append(zf.integer("position").notNull())
+            
+            // If element is a simple type, create a "value" column
+            // If element is an object, create columns for each field
+            if let nestedSchema = elementMetadata.nestedSchema {
+                // Array of objects - create columns for each object field
+                switch nestedSchema {
+                case .object(let fields, _):
+                    for (fieldName, fieldBuilder) in fields.sorted(by: { $0.key < $1.key }) {
+                        let fieldMetadata = fieldBuilder.build()
+                        
+                        var newBuilder: ColumnBuilder
+                        switch fieldMetadata.swiftType {
+                        case .string, .uuid, .date:
+                            newBuilder = zf.text(fieldName)
+                        case .integer:
+                            newBuilder = zf.integer(fieldName)
+                        case .bigInt:
+                            newBuilder = zf.bigint(fieldName)
+                        case .double:
+                            newBuilder = zf.real(fieldName)
+                        case .decimal(let precision, let scale):
+                            newBuilder = zf.decimal(fieldName, precision: precision, scale: scale)
+                        case .bool:
+                            newBuilder = zf.text(fieldName).bool()
+                        case .enum(let enumType):
+                            newBuilder = zf.text(fieldName).enum(enumType)
+                        case .object, .array:
+                            newBuilder = zf.text(fieldName)
+                        }
+                        
+                        if fieldMetadata.isEncrypted {
+                            newBuilder = newBuilder.encrypted()
+                        }
+                        if !fieldMetadata.isNullable {
+                            newBuilder = newBuilder.notNull()
+                        }
+                        if let defaultValue = fieldMetadata.defaultValue {
+                            newBuilder = newBuilder.default(defaultValue)
+                        }
+                        
+                        separateTableColumns.append(newBuilder)
+                    }
+                case .array:
+                    // Array of arrays - store as JSONB
+                    separateTableColumns.append(zf.text("value").object([:], strategy: .jsonb).nullable())
+                }
+            } else {
+                // Array of simple values - create a "value" column
+                var valueBuilder: ColumnBuilder
+                switch elementMetadata.swiftType {
+                case .string, .uuid, .date:
+                    valueBuilder = zf.text("value")
+                case .integer:
+                    valueBuilder = zf.integer("value")
+                case .bigInt:
+                    valueBuilder = zf.bigint("value")
+                case .double:
+                    valueBuilder = zf.real("value")
+                case .decimal(let precision, let scale):
+                    valueBuilder = zf.decimal("value", precision: precision, scale: scale)
+                case .bool:
+                    valueBuilder = zf.text("value").bool()
+                case .enum(let enumType):
+                    valueBuilder = zf.text("value").enum(enumType)
+                case .object, .array:
+                    valueBuilder = zf.text("value")
+                }
+                
+                if elementMetadata.isEncrypted {
+                    valueBuilder = valueBuilder.encrypted()
+                }
+                if !elementMetadata.isNullable {
+                    valueBuilder = valueBuilder.notNull()
+                }
+                if let defaultValue = elementMetadata.defaultValue {
+                    valueBuilder = valueBuilder.default(defaultValue)
+                }
+                
+                separateTableColumns.append(valueBuilder)
+            }
+        }
+        
+        return ZyraTable(
+            name: prefixedTableName,
+            primaryKey: "id",
+            columns: separateTableColumns
+        )
+    }
+    
+    /// Extract separate tables from nested schemas
+    private static func extractSeparateTables(from tables: [ZyraTable], dbPrefix: String = "") -> [ZyraTable] {
+        var separateTables: [ZyraTable] = []
+        
+        for table in tables {
+            for column in table.columns {
+                guard let nestedSchema = column.nestedSchema,
+                      case .separateTable = nestedSchema.strategy else {
+                    continue
+                }
+                
+                if let separateTable = ZyraSchema.generateSeparateTable(
+                    from: nestedSchema,
+                    parentTable: table,
+                    parentColumnName: column.name,
+                    dbPrefix: dbPrefix
+                ) {
+                    separateTables.append(separateTable)
+                }
+            }
+        }
+        
+        return separateTables
+    }
+    
+    /// Collect many-to-many relationships from nested schemas
+    /// Note: Many-to-many relationships within nested objects are only supported for separateTable strategy
+    /// - Parameters:
+    ///   - nestedSchema: The nested schema to process
+    ///   - parentTableName: The parent table name
+    ///   - parentColumnName: The parent column name
+    ///   - visited: Set of visited schema paths to prevent circular references
+    ///   - depth: Current recursion depth (max 10 to prevent infinite loops)
+    private static func collectManyToManyFromNested(
+        _ nestedSchema: NestedSchema,
+        parentTableName: String,
+        parentColumnName: String,
+        visited: Set<String> = [],
+        depth: Int = 0
+    ) -> [(fieldBuilder: ColumnBuilder, parentPath: String)] {
+        // Prevent infinite recursion
+        guard depth < 10 else {
+            print("⚠️ Warning: Maximum recursion depth reached for many-to-many collection at \(parentColumnName)")
+            return []
+        }
+        
+        // Prevent circular references
+        let schemaPath = "\(parentTableName).\(parentColumnName)"
+        if visited.contains(schemaPath) {
+            print("⚠️ Warning: Circular reference detected in many-to-many collection at \(schemaPath)")
+            return []
+        }
+        
+        var newVisited = visited
+        newVisited.insert(schemaPath)
+        var manyToManyRelationships: [(ColumnBuilder, String)] = []
+        
+        switch nestedSchema {
+        case .object(let fields, let strategy):
+            // Many-to-many only makes sense for separateTable strategy
+            if case .separateTable = strategy {
+                for (fieldName, fieldBuilder) in fields {
+                    let fieldMetadata = fieldBuilder.build()
+                    let fieldPath = "\(parentColumnName).\(fieldName)"
+                    
+                    // Check for many-to-many relationship
+                    if fieldBuilder._manyToManyRelationship != nil {
+                        manyToManyRelationships.append((fieldBuilder, fieldPath))
+                    }
+                    
+                    // Recursively check nested schemas
+                    if let nested = fieldMetadata.nestedSchema {
+                        manyToManyRelationships.append(contentsOf: collectManyToManyFromNested(
+                            nested,
+                            parentTableName: parentTableName,
+                            parentColumnName: fieldPath,
+                            visited: newVisited,
+                            depth: depth + 1
+                        ))
+                    }
+                }
+            }
+            
+        case .array(let elementType, let strategy):
+            // Many-to-many only makes sense for separateTable strategy
+            if case .separateTable = strategy {
+                let elementMetadata = elementType.build()
+                if elementType._manyToManyRelationship != nil {
+                    manyToManyRelationships.append((elementType, parentColumnName))
+                }
+                
+                if let nested = elementMetadata.nestedSchema {
+                    manyToManyRelationships.append(contentsOf: collectManyToManyFromNested(
+                        nested,
+                        parentTableName: parentTableName,
+                        parentColumnName: parentColumnName,
+                        visited: newVisited,
+                        depth: depth + 1
+                    ))
+                }
+            }
+        }
+        
+        return manyToManyRelationships
+    }
+    
     private let joinTables: [ZyraTable]
     
     public init(tables: [ZyraTable], enums: [ZyraEnum] = [], dbPrefix: String = "") {
@@ -2565,9 +4431,12 @@ public struct ZyraSchema {
             generatedJoinTables.append(contentsOf: tableJoinTables)
         }
         
-        // Combine regular tables with join tables
+        // Generate separate tables from nested schemas with separateTable strategy
+        let generatedSeparateTables = ZyraSchema.extractSeparateTables(from: processedTables, dbPrefix: dbPrefix)
+        
+        // Combine regular tables with join tables and separate tables
         self.tables = processedTables
-        self.joinTables = generatedJoinTables
+        self.joinTables = generatedJoinTables + generatedSeparateTables
         
         // Collect all enums from tables
         var allEnums = Set(enums)
@@ -2791,15 +4660,29 @@ public struct ZyraSchema {
             sql.append("")
         }
         
-        // 2. Create tables in topological order (including join tables)
-        sql.append("-- Create Tables")
+        // 2. Create tables WITHOUT foreign keys first (to handle circular dependencies)
+        sql.append("-- Create Tables (without foreign keys)")
         let allTables = tables + joinTables
         let orderedTables = topologicalSortTables(allTables: allTables)
         
         for table in orderedTables {
-            sql.append(table.generateCreateTableSQLOnly())
+            sql.append(table.generateCreateTableSQLWithoutFKs())
             sql.append("")
-            
+        }
+        
+        // 3. Add foreign keys with ALTER TABLE (all tables exist now)
+        sql.append("-- Add Foreign Key Constraints")
+        var fkStatements: [String] = []
+        for table in orderedTables {
+            fkStatements.append(contentsOf: table.generateAlterTableForForeignKeys())
+        }
+        if !fkStatements.isEmpty {
+            sql.append(contentsOf: fkStatements)
+            sql.append("")
+        }
+        
+        // 4. Add triggers and RLS
+        for table in orderedTables {
             // Add trigger if updated_at exists
             if let triggerSQL = table.generateUpdatedAtTriggerOnly() {
                 sql.append(triggerSQL)
@@ -2821,15 +4704,29 @@ public struct ZyraSchema {
     public func generateMySQLMigrationSQL() -> String {
         var sql: [String] = []
         
-        // 1. Create tables in topological order (including join tables)
-        sql.append("-- Create Tables")
+        // 1. Create tables WITHOUT foreign keys first (to handle circular dependencies)
+        sql.append("-- Create Tables (without foreign keys)")
         let allTables = tables + joinTables
         let orderedTables = topologicalSortTables(allTables: allTables)
         
         for table in orderedTables {
-            sql.append(table.generateMySQLTableSQL())
+            sql.append(table.generateMySQLTableSQLWithoutFKs())
             sql.append("")
-            
+        }
+        
+        // 2. Add foreign keys with ALTER TABLE (all tables exist now)
+        sql.append("-- Add Foreign Key Constraints")
+        var fkStatements: [String] = []
+        for table in orderedTables {
+            fkStatements.append(contentsOf: table.generateMySQLAlterTableForForeignKeys())
+        }
+        if !fkStatements.isEmpty {
+            sql.append(contentsOf: fkStatements)
+            sql.append("")
+        }
+        
+        // 3. Add triggers
+        for table in orderedTables {
             // Add trigger if updated_at exists
             if table.columns.contains(where: { $0.name.lowercased() == "updated_at" }) {
                 sql.append(table.generateMySQLUpdatedAtTrigger())

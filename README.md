@@ -1,883 +1,627 @@
 # ZyraForm
 
-A comprehensive Swift package for building database schemas, forms, and applications with PowerSync, Supabase, and PostgreSQL. Define your schema once in Swift and generate code for multiple platforms.
+**Version 2.0.0**
 
-## Why Use ZyraForm?
+A comprehensive Swift package for defining database schemas with a fluent API and generating code for multiple platforms. Define your schema once in Swift and generate PostgreSQL migrations, MySQL schemas, Prisma models, Drizzle schemas, Zod validators, Swift models, and PowerSync bucket definitions.
 
-### 🎯 Single Source of Truth
-Define your database schema once in Swift using familiar, fluent syntax. ZyraForm serves as your single source of truth, eliminating schema drift and inconsistencies across your stack.
+## 🎯 Why ZyraForm?
 
-### 🔄 Code Export & Familiarity
+### Single Source of Truth
+Define your database schema once in Swift using a familiar, fluent syntax. ZyraForm serves as your single source of truth, eliminating schema drift and inconsistencies across your stack.
+
+### Multi-Platform Code Generation
 Generate code for multiple platforms from your Swift schema:
+- **PostgreSQL** - Complete migration SQL with circular reference handling
+- **MySQL** - Full schema generation with triggers
 - **Prisma Schema** - For Node.js/TypeScript backends
 - **Drizzle ORM Schema** - For TypeScript projects
 - **Zod Schemas** - For runtime validation
 - **Swift Models** - For SwiftData and your Swift app
+- **PowerSync Buckets** - Automatic bucket definitions for PowerSync
 
-This means your team can work with familiar tools while maintaining consistency.
+### Advanced Features
+- **Nested Objects & Arrays** - Define complex nested structures with flexible storage strategies
+- **Circular Reference Handling** - Automatic detection and resolution of circular dependencies
+- **Many-to-Many Relationships** - Automatic join table generation with `.belongsToMany()`
+- **Row Level Security (RLS)** - Comprehensive RLS policy generation for Supabase
+- **Field Encryption** - Built-in encryption support for sensitive fields
+- **Type Safety** - Full Swift type safety throughout
 
-### 🏗️ Internal App Use
-Beyond schema generation, ZyraForm provides:
-- **Form validation** with multiple validation modes
-- **CRUD operations** via `ZyraSync` service
-- **Automatic encryption** for sensitive fields
-- **Row Level Security (RLS)** policy generation
-- **Many-to-many relationship** handling with automatic join tables
-
-### 📦 Familiar Syntax
-If you've used libraries like Prisma, Drizzle, or Zod, ZyraForm's syntax will feel instantly familiar:
-
-```swift
-zf.text("email").email().unique().notNull()
-zf.text("name").minLength(2).maxLength(50).notNull()
-zf.integer("age").intMin(18).intMax(120).nullable()
-```
-
-## Installation
+## 📦 Installation
 
 Add ZyraForm to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "1.5.0")
+    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "2.0.0")
 ]
 ```
 
 Or add it via Xcode:
 1. File → Add Package Dependencies
 2. Enter the repository URL
-3. Select version `1.7.0` or later
+3. Select version `2.0.0` or later
 
-## Quick Start
+## 🚀 Quick Start
 
 ### 1. Define Your Schema
 
 ```swift
 import ZyraForm
 
-let employeesTable = ZyraTable(
-    name: "\(AppConfig.dbPrefix)employees",
+// Define an enum
+let UserRoleEnum = ZyraEnum(
+    name: "user_role",
+    values: ["admin", "user", "guest"]
+)
+
+// Define a table
+let Users = ZyraTable(
+    name: "users",
+    primaryKey: "id",
     columns: [
+        zf.uuid("id").notNull(),
         zf.text("email").email().unique().notNull(),
-        zf.text("name").minLength(2).maxLength(50).notNull(),
-        zf.integer("age").intMin(18).intMax(120).nullable(),
-        zf.text("website").url().nullable()
+        zf.text("username").minLength(2).maxLength(50).notNull(),
+        zf.text("role").enum(UserRoleEnum).default("user").notNull(),
+        zf.timestampz("created_at").default(.now).notNull()
     ],
     rlsPolicies: [
-        RLSPolicyBuilder(tableName: "\(AppConfig.dbPrefix)employees")
-            .canAccessOwn()
+        RLSPolicyBuilder(tableName: "users").canAccessOwn()
     ]
 )
 
-let schema = ZyraSchema(tables: [employeesTable])
+// Create schema
+let schema = ZyraSchema(
+    tables: [Users],
+    enums: [UserRoleEnum],
+    dbPrefix: ""
+)
 ```
 
-### 2. Initialize ZyraForm
+### 2. Generate Code
 
 ```swift
-import ZyraForm
-import ZyraFormSupabase  // Optional: for Supabase integration
+// Generate PostgreSQL migration
+let postgresSQL = schema.generateMigrationSQL()
+print(postgresSQL)
 
-let connector = SupabaseConnector(
-    supabaseURL: URL(string: "https://your-project.supabase.co")!,
-    supabaseKey: "your-supabase-anon-key"
-)
+// Generate Prisma schema
+let prismaSchema = schema.generatePrismaSchema()
+print(prismaSchema)
 
-let config = ZyraFormConfig(
-    connector: connector,
-    powerSyncEndpoint: "https://your-id.powersync.journeyapps.com",
-    powerSyncPassword: "your-powersync-password",
-    userId: "current-user-id",
-    schema: schema
-)
+// Generate Drizzle schema
+let drizzleSchema = schema.generateDrizzleSchema()
+print(drizzleSchema)
 
-try await ZyraFormManager.initialize(with: config)
+// Generate Zod schemas
+let zodSchemas = schema.generateZodSchemas()
+print(zodSchemas)
+
+// Generate PowerSync buckets
+let powerSyncBuckets = schema.generatePowerSyncBucketDefinitions()
+print(powerSyncBuckets)
 ```
 
-### 3. Use Forms and Services
-
-```swift
-// Get a service for CRUD operations
-let service = ZyraFormManager.shared!.service(for: "\(AppConfig.dbPrefix)employees")
-
-// Create a record
-try await service.createRecord(
-    fields: ["email": "john@example.com", "name": "John Doe"],
-    encryptedFields: ["email", "name"],
-    autoGenerateId: true,
-    autoTimestamp: true
-)
-
-// Load records
-try await service.loadRecords(
-    fields: ["*"],
-    whereClause: "user_id = ?",
-    parameters: [userId],
-    encryptedFields: ["email", "name"]
-)
-```
-
-## Usage
-
-### Schema Definition
-
-ZyraForm uses a fluent API for defining tables and columns:
-
-```swift
-let usersTable = ZyraTable(
-    name: "\(AppConfig.dbPrefix)users",
-    columns: [
-        zf.text("email").email().unique().notNull(),
-        zf.text("username").unique().notNull(),
-        zf.text("password").notNull(),
-        zf.integer("age").intMin(0).intMax(150).nullable(),
-        zf.bool("is_online").default(false).notNull(),
-        zf.text("role").enum(UserRoleEnum).default("user").notNull()
-    ]
-)
-```
+## 📚 Core Concepts
 
 ### Column Types
 
-- **Text**: `zf.text("column_name")`
-- **Integer**: `zf.integer("column_name")` or `zf.text("column_name").int()`
-- **Boolean**: `zf.bool("column_name")` or `zf.text("column_name").bool()`
-- **Double**: `zf.double("column_name")` or `zf.text("column_name").double()`
-- **UUID**: `zf.text("column_name").uuid()`
-- **Date**: `zf.text("column_name").date()` (stored as TIMESTAMPTZ)
+ZyraForm provides a fluent API for defining columns:
+
+```swift
+// Text columns
+zf.text("name").minLength(2).maxLength(100).notNull()
+zf.text("email").email().unique().notNull()
+zf.text("website").url().nullable()
+zf.uuid("id").notNull()
+zf.url("avatar_url").nullable()
+zf.email("contact_email").notNull()
+
+// Numeric columns
+zf.integer("age").intMin(0).intMax(120).nullable()
+zf.bigint("user_count").notNull()  // BIGINT for large integers
+zf.real("price").notNull()
+zf.double("rating").nullable()
+zf.decimal("amount", precision: 10, scale: 2).notNull()  // DECIMAL with precision/scale
+
+// Boolean columns
+zf.bool("is_active").default(false).notNull()
+
+// Date/Time columns
+zf.date("birth_date").nullable()
+zf.time("start_time").nullable()
+zf.timestampz("created_at").default(.now).notNull()
+```
 
 ### Column Modifiers
 
 - `.notNull()` - Column is required
-- `.nullable()` - Column is optional
+- `.nullable()` - Column is optional (default)
 - `.unique()` - Column has unique constraint
 - `.encrypted()` - Column should be encrypted
 - `.default(value)` - Set default value
 - `.default(.now)` - Default to current timestamp
+- `.minLength(n)` - Minimum string length
+- `.maxLength(n)` - Maximum string length
+- `.intMin(n)` - Minimum integer value
+- `.intMax(n)` - Maximum integer value
+- `.email()` - Email validation
+- `.url()` - URL validation
+- `.check(expression)` - Add CHECK constraint (e.g., `.check("age >= 0 AND age <= 150")`)
 
-## Row Level Security (RLS)
+### CHECK Constraints
 
-ZyraForm provides comprehensive RLS support aligned with [Supabase RBAC (Role-Based Access Control)](https://supabase.com/features/role-based-access-control). All policies use role-based permissions instead of superuser flags.
-
-### Quick Start RLS
+Add CHECK constraints to enforce data integrity at the database level:
 
 ```swift
-let postsTable = ZyraTable(
-    name: "\(AppConfig.dbPrefix)posts",
+let Products = ZyraTable(
+    name: "products",
+    primaryKey: "id",
+    columns: [
+        zf.text("name").notNull(),
+        zf.decimal("price", precision: 10, scale: 2)
+            .check("price > 0")
+            .notNull(),
+        zf.integer("stock")
+            .check("stock >= 0")
+            .notNull(),
+        zf.integer("age")
+            .check("age >= 0 AND age <= 150")
+            .nullable()
+    ]
+)
+```
+
+Generated SQL includes CHECK constraints:
+```sql
+CREATE TABLE "products" (
+    "id" TEXT PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "price" DECIMAL(10, 2) CHECK (price > 0) NOT NULL,
+    "stock" INTEGER CHECK (stock >= 0) NOT NULL,
+    "age" INTEGER CHECK (age >= 0 AND age <= 150)
+);
+```
+
+### Relationships
+
+#### One-to-Many Relationships
+
+```swift
+let Posts = ZyraTable(
+    name: "posts",
+    primaryKey: "id",
+    columns: [
+        zf.text("title").notNull(),
+        zf.text("content").notNull()
+    ]
+)
+
+let Comments = ZyraTable(
+    name: "comments",
+    primaryKey: "id",
+    columns: [
+        zf.uuid("post_id").references(Posts).notNull(),  // Foreign key
+        zf.text("content").notNull()
+    ]
+)
+```
+
+#### Many-to-Many Relationships
+
+ZyraForm automatically creates join tables for many-to-many relationships:
+
+```swift
+let Projects = ZyraTable(
+    name: "projects",
+    primaryKey: "id",
+    columns: [
+        zf.text("name").notNull(),
+        // Many-to-many: Projects can belong to many teams
+        zf.uuid("team_id").belongsToMany(
+            "teams",
+            joinTableName: "team_projects",
+            additionalColumns: [
+                zf.timestampz("granted_at").default(.now).notNull(),
+                zf.text("permission_level").default("view").notNull()
+            ]
+        )
+    ]
+)
+```
+
+This automatically creates a `team_projects` join table with:
+- `id` (primary key)
+- `project_id` (FK to projects)
+- `team_id` (FK to teams)
+- `granted_at` (timestamp)
+- `permission_level` (text)
+
+### Nested Objects and Arrays
+
+ZyraForm supports nested objects and arrays with flexible storage strategies:
+
+#### Flattened Strategy
+
+Fields are flattened into the parent table with a prefix:
+
+```swift
+let Users = ZyraTable(
+    name: "users",
+    primaryKey: "id",
+    columns: [
+        zf.text("name").notNull(),
+        zf.object("address", schema: [
+            "street": zf.text("street").notNull(),
+            "city": zf.text("city").notNull(),
+            "zip": zf.text("zip").notNull()
+        ], strategy: .flattened())
+    ]
+)
+```
+
+Generates columns: `address-street`, `address-city`, `address-zip`
+
+#### JSONB Strategy
+
+Store nested data as JSONB (PostgreSQL) or JSON (MySQL):
+
+```swift
+zf.object("metadata", schema: [
+    "preferences": zf.text("preferences").nullable(),
+    "settings": zf.text("settings").nullable()
+], strategy: .jsonb)
+```
+
+#### Separate Table Strategy
+
+Store nested data in a separate table with a foreign key:
+
+```swift
+zf.object("profile", schema: [
+    "bio": zf.text("bio").nullable(),
+    "avatar": zf.url("avatar").nullable()
+], strategy: .separateTable(tableName: "user_profiles", relationshipType: .oneToOne))
+```
+
+#### Arrays
+
+Arrays support the same strategies, with automatic handling for nested structures:
+
+```swift
+// Array of simple values (stored as JSONB)
+zf.array("tags", elementType: zf.text("tag"), strategy: .jsonb)
+
+// Array of objects (separate table with position column)
+zf.array("items", elementType: zf.object("item", schema: [
+    "name": zf.text("name").notNull(),
+    "quantity": zf.integer("quantity").notNull()
+], strategy: .separateTable(relationshipType: .oneToMany))
+```
+
+**Note:** Arrays with `.flattened()` strategy automatically fall back to JSONB, as arrays cannot be truly flattened into columns.
+
+### Circular References
+
+ZyraForm automatically handles circular references by:
+1. Creating all tables without foreign keys first
+2. Adding foreign keys via `ALTER TABLE` statements
+
+This allows tables to reference each other without errors:
+
+```swift
+let Organizations = ZyraTable(
+    name: "organizations",
+    primaryKey: "id",
+    columns: [
+        zf.text("name").notNull(),
+        zf.uuid("creator_user_id").references("users").notNull()
+    ]
+)
+
+let Users = ZyraTable(
+    name: "users",
+    primaryKey: "id",
+    columns: [
+        zf.text("email").notNull(),
+        zf.uuid("primary_organization_id").references(Organizations).nullable()
+    ]
+)
+```
+
+### Row Level Security (RLS)
+
+ZyraForm provides comprehensive RLS support aligned with Supabase RBAC:
+
+```swift
+let Posts = ZyraTable(
+    name: "posts",
+    primaryKey: "id",
     columns: [
         zf.text("title").notNull(),
         zf.text("content").notNull(),
-        zf.text("user_id").notNull()
+        zf.uuid("user_id").notNull()
     ],
     rlsPolicies: [
-        // Users can only access their own posts, admins can access all
-        table.rls().canAccessOwn(allowRoles: ["admin"]),
+        // Users can access their own posts, admins can access all
+        RLSPolicyBuilder(tableName: "posts")
+            .canAccessOwn(allowRoles: ["admin"]),
         
-        // Admins can delete any post
-        table.rls().adminCanDelete()
+        // Public read access
+        RLSPolicyBuilder(tableName: "posts")
+            .canRead()
     ]
 )
 ```
 
-### Shortform RLS Methods
+See the [RLS Guide](Documentation/RLS_GUIDE.md) for more details.
 
-ZyraForm provides convenient shortform methods for common RLS patterns:
+### Enums
 
-```swift
-// Permission-based policies
-table.rls().authenticated()      // Only authenticated users
-table.rls().anonymous()          // Only anonymous users
-table.rls().hasRole("admin")     // Users with specific role
-table.rls().hasRole(["admin", "super_admin"])  // Multiple roles
-table.rls().admin()              // Only admins
-table.rls().editor()             // Admins or editors
-table.rls().online()             // Only online users
-
-// Convenience methods with role support
-table.rls().canRead(allowRoles: ["admin"])           // Read access + roles
-table.rls().canWriteOwn(allowRoles: ["admin"])      // Write own + roles
-table.rls().canUpdateOwn(allowRoles: ["admin"])     // Update own + roles
-table.rls().canDeleteOwn(allowRoles: ["admin"])     // Delete own + roles
-
-// Admin shortcuts
-table.rls().adminCanDelete()     // Admin can delete
-table.rls().adminCanUpdate()     // Admin can update
-table.rls().adminCanInsert()     // Admin can insert
-table.rls().adminCanSelect()     // Admin can select
-```
-
-### Common RLS Patterns
+Define database enums that work across all platforms:
 
 ```swift
-// Users can only access their own rows (no role bypass)
-table.rls().canAccessOwn()
-
-// Users can only access their own rows, admins can access all
-table.rls().canAccessOwn(allowRoles: ["admin"])
-
-// Everyone can read, but only owners (or admins) can modify
-table.rls().canReadAllModifyOwnSeparate(allowRoles: ["admin"])
-
-// Allow all operations (no restrictions)
-table.rls().canAccessAll()
-
-// Custom SQL expression
-table.rls().custom(
-    name: "custom_policy",
-    operation: .select,
-    usingExpression: "published = true OR user_id::uuid = (auth.uid())::uuid"
-)
-```
-
-### User Role Permissions (RBAC)
-
-ZyraForm uses Supabase RBAC for role-based access control. Roles are stored in a `role` column (default) in your users table:
-
-```swift
-// Check for admin role
-table.rls().admin(operation: .delete)
-
-// Check for editor role (admin or editor)
-table.rls().editor(operation: .all)
-
-// Check for specific role(s)
-table.rls().hasRole("moderator", operation: .all)
-table.rls().hasRole(["admin", "super_admin"], operation: .all)
-
-// Custom role check with permission
-table.rls().userOrPermission(
-    name: "moderator_access",
-    operation: .all,
-    permission: "moderator",
-    permissionColumn: "role"
+let ProjectStatusEnum = ZyraEnum(
+    name: "project_status",
+    values: ["active", "archived", "deleted"]
 )
 
-// Allow roles to bypass ownership checks
-table.rls().canAccessOwn(allowRoles: ["admin", "moderator"])
-table.rls().canUpdateOwn(allowRoles: ["admin"])
-```
-
-### isOnline RLS Permissions
-
-Check if users are online before allowing access:
-
-```swift
-let messagesTable = ZyraTable(
-    name: "\(AppConfig.dbPrefix)messages",
-    columns: [...],
-    rlsPolicies: [
-        // Only online users can send messages
-        table.rls(isOnlineColumn: "is_online").online(operation: .insert),
-        
-        // Online users can read all messages
-        table.rls().online(operation: .select)
+let Projects = ZyraTable(
+    name: "projects",
+    primaryKey: "id",
+    columns: [
+        zf.text("name").notNull(),
+        zf.text("status").enum(ProjectStatusEnum).default("active").notNull()
     ]
 )
 ```
 
-### RLS Policy Builder
+## 🔧 Code Generation
 
-The `RLSPolicyBuilder` provides fine-grained control with RBAC:
-
-```swift
-RLSPolicyBuilder(
-    tableName: "posts",
-    userIdColumn: "author_id",
-    usersTableName: "users",
-    roleColumn: "role",           // Role column name (default: "role")
-    isOnlineColumn: "is_online"
-)
-.custom(
-    name: "authors_can_edit",
-    operation: .update,
-    usingExpression: "author_id::uuid = (auth.uid())::uuid",
-    withCheckExpression: "author_id::uuid = (auth.uid())::uuid"
-)
-```
-
-**Note:** All `auth.uid()` comparisons are cast to UUID: `(auth.uid())::uuid`. If your `user_id` columns are TEXT type, they're automatically cast: `user_id::uuid = (auth.uid())::uuid`.
-
-### Special Handling for Users Tables
-
-Tables ending with `"users"` (e.g., `"users"`, `"app_users"`) receive special RLS policies:
-- Users can only `SELECT` and `UPDATE` their own records
-- Direct `INSERT` and `DELETE` are implicitly disallowed (handled by Supabase Auth)
-- This ensures users can view/update their profile but cannot create or delete user accounts directly
-
-See [RLS_GUIDE.md](RLS_GUIDE.md) for complete RLS documentation.
-
-## Validations
-
-ZyraForm provides comprehensive validation rules similar to Zod:
-
-### String Validations
+### PostgreSQL Migration
 
 ```swift
-zf.text("email")
-    .email()                    // Must be valid email
-    .url()                      // Must be valid URL
-    .isHttpUrl()                // Must be HTTP/HTTPS URL
-    .uuid()                     // Must be UUID format
-    .minLength(2)               // Minimum length
-    .maxLength(50)              // Maximum length
-    .exactLength(10)            // Exact length
-    .startsWith("https://")    // Must start with string
-    .endsWith(".com")           // Must end with string
-    .includes("example")        // Must include string
-    .isUppercase()              // Must be uppercase
-    .isLowercase()              // Must be lowercase
-    .regex(pattern: "^[A-Z]")   // Custom regex
+let sql = schema.generateMigrationSQL()
 ```
 
-### Number Validations
+Generates:
+- Enum creation statements
+- Table creation (without foreign keys)
+- Foreign key constraints (via ALTER TABLE)
+- Triggers (for `updated_at` columns)
+- RLS policies
+
+### MySQL Migration
 
 ```swift
-zf.integer("age")
-    .intMin(18)                 // Minimum value
-    .intMax(120)                // Maximum value
-    .positive()                 // Must be positive
-    .negative()                 // Must be negative
-    .isEven()                   // Must be even
-    .isOdd()                    // Must be odd
+let sql = schema.generateMySQLMigrationSQL()
 ```
 
-### Enum Validations
-
-```swift
-let UserRoleEnum = ZyraEnum(
-    name: "user_role",
-    values: ["admin", "editor", "user"]
-)
-
-zf.text("role")
-    .enum(UserRoleEnum)
-    .default("user")
-    .notNull()
-```
-
-### Custom Validations
-
-```swift
-zf.text("custom_field")
-    .customValidation(
-        "Custom Rule",
-        validator: { value in
-            // Your custom validation logic
-            return value.count > 5
-        }
-    )
-```
-
-## Errors
-
-ZyraForm provides comprehensive error handling:
-
-### Form Errors
-
-```swift
-// Check if field has error
-if form.hasError("email") {
-    let errorMessage = form.getError("email")
-    // Display error message
-}
-
-// Clear all errors
-form.errors.clear()
-
-// Remove specific error
-form.errors.remove("email")
-```
-
-### Validation Modes
-
-```swift
-let form = ZyraFormManager.shared!.form(
-    for: table,
-    mode: .onChange    // Validate on every change
-    // .onBlur        // Validate when field loses focus
-    // .onSubmit      // Validate only on submit
-    // .onTouched     // Validate once field is touched
-)
-```
-
-### Error Handling in Services
-
-```swift
-do {
-    try await service.createRecord(fields: fields)
-} catch {
-    // Handle error
-    print("Error: \(error.localizedDescription)")
-}
-```
-
-## Code Output
-
-ZyraForm can generate code for multiple platforms from your Swift schema.
+Generates MySQL-compatible SQL with:
+- ENUM types
+- AUTO_INCREMENT for integer primary keys
+- Triggers for `updated_at` columns
 
 ### Prisma Schema
 
 ```swift
-let prismaSchema = schema.generatePrismaSchema(dbPrefix: "app_")
-print(prismaSchema)
+let prisma = schema.generatePrismaSchema()
 ```
 
-Generates:
-```prisma
-model Employee {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  age       Int?
-  website   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@map("app_employees")
-}
-```
+Generates a complete Prisma schema file with:
+- Models for all tables
+- Relations for foreign keys
+- Enums
+- Many-to-many relationships
 
 ### Drizzle Schema
 
 ```swift
-let drizzleSchema = schema.generateDrizzleSchema(dbPrefix: "app_")
-print(drizzleSchema)
+let drizzle = schema.generateDrizzleSchema()
 ```
 
-Generates:
-```typescript
-export const employees = pgTable("app_employees", {
-  id: text("id").primaryKey(),
-  email: text("email").notNull().unique(),
-  name: text("name").notNull(),
-  age: integer("age"),
-  website: text("website"),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-});
-```
+Generates TypeScript Drizzle ORM schemas with:
+- Table definitions
+- Column types
+- Foreign key relations
+- Enums
 
-### Zod Schema
+### Zod Schemas
 
 ```swift
-let zodSchema = schema.generateZodSchema(dbPrefix: "app_")
-print(zodSchema)
+let zod = schema.generateZodSchemas()
 ```
 
-Generates:
-```typescript
-export const EmployeeSchema = z.object({
-  id: z.string().uuid(),
-  email: z.string().email(),
-  name: z.string().min(2).max(50),
-  age: z.number().int().min(18).max(120).optional(),
-  website: z.string().url().optional(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime().optional()
-});
-```
+Generates Zod validation schemas for:
+- Runtime validation
+- Type inference
+- Nested objects and arrays
 
 ### Swift Models
 
 ```swift
-let swiftModel = table.generateSwiftModel()
-print(swiftModel)
+let swiftModels = schema.generateSwiftModels()
 ```
 
-Generates:
-```swift
-struct Employee: Codable, Identifiable, Hashable {
-    let id: String
-    let email: String
-    let name: String
-    let age: Int?
-    let website: String?
-    let createdAt: String
-    let updatedAt: String?
-}
-```
+Generates Swift structs with:
+- Codable conformance
+- CodingKeys
+- Type-safe properties
 
-### Zera Schema (Swift Code Generation)
-
-Generate Swift code that recreates your schema definition:
+### PowerSync Buckets
 
 ```swift
-let zeraSchema = schema.generateZyraSchema()  // Available in UI
-```
-
-When exporting schemas in the Zyra format, you get Swift code that includes:
-- Complete table definitions with all columns and validations
-- RLS policies (automatically detected and converted back to builder calls)
-- Database enums
-- Foreign key relationships
-
-This is useful for:
-- Sharing schemas between projects
-- Version control of schema definitions
-- Regenerating schemas from exported code
-
-The generator intelligently detects common RLS patterns and converts them back to appropriate builder methods (`.canAccessOwn()`, `.admin()`, `.custom()`, etc.).
-
-### SQL Migrations
-
-```swift
-let sql = schema.generateMigrationSQL()
-print(sql)
-```
-
-Generates:
-```sql
--- Create Tables
-CREATE TABLE "app_employees" (
-    id TEXT PRIMARY KEY,
-    email TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    age TEXT,
-    website TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
-    updated_at TIMESTAMPTZ,
-    CONSTRAINT "app_employees_email_fkey" FOREIGN KEY (email) REFERENCES "users" (email) ON UPDATE CASCADE ON DELETE CASCADE
-);
-
--- Create Trigger
-CREATE OR REPLACE FUNCTION app_employees_update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER app_employees_updated_at_trigger
-BEFORE UPDATE ON "app_employees"
-FOR EACH ROW
-EXECUTE FUNCTION app_employees_update_updated_at();
-
--- Enable Row Level Security
-ALTER TABLE "app_employees" ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies
-CREATE POLICY "app_employees_own_access" 
-ON "app_employees" AS PERMISSIVE FOR ALL 
-USING (user_id::uuid = (auth.uid())::uuid) 
-WITH CHECK (user_id::uuid = (auth.uid())::uuid);
-```
-
-### PowerSync Bucket Definitions
-
-Generate PowerSync bucket definitions for data synchronization:
-
-```swift
-let bucketDefinitions = schema.generatePowerSyncBucketDefinitions(
-    dbPrefix: "app_",
+let buckets = schema.generatePowerSyncBucketDefinitions(
+    dbPrefix: "",
     userIdColumn: "user_id"
 )
-print(bucketDefinitions)
 ```
 
-Generates:
-```yaml
-bucket_definitions:
-  global:
-    data:
-      # Sync all rows
-      - SELECT * FROM "app_tags"
-      - SELECT * FROM "app_categories"
-      
-      # Join Tables
-      - SELECT * FROM "app-JOIN-posts_tags"
-  
-  by_user:
-    # Only sync rows belonging to the user
-    parameters: SELECT request.user_id() as user_id
-    data:
-      - SELECT * FROM "app_posts" WHERE "app_posts"."user_id" = bucket.user_id
-      - SELECT * FROM "app_comments" WHERE "app_comments"."user_id" = bucket.user_id
-      
-      # Join Tables
-      - SELECT * FROM "app-JOIN-posts_tags" WHERE "app-JOIN-posts_tags"."user_id" = bucket.user_id
-```
+Automatically generates PowerSync bucket definitions:
+- Separates tables into global and user-specific buckets
+- Includes all auto-generated tables (join tables, separate tables)
+- Handles table name formatting
 
-**Features:**
-- Automatically separates tables into `global` and `by_user` buckets based on `user_id` column presence
-- Generates proper WHERE clauses for user-specific tables
-- Handles join tables with `JOIN-` prefix
-- Skips `users` table (handled by Supabase Auth)
+## 📖 Documentation
 
-## Encryption
+- [RLS Guide](Documentation/RLS_GUIDE.md) - Comprehensive Row Level Security documentation
+- [Join Tables Guide](Documentation/JOIN_TABLES_GUIDE.md) - Understanding many-to-many relationships
+- [Schema Examples](Documentation/SCHEMA_EXAMPLE_PROJECTS_TEAMS.md) - Real-world schema examples
+- [ORM Comparison](Documentation/ORM_COMPARISON_BELONGSTOMANY.md) - Comparison with other ORMs
+- [Circular Reference Analysis](Documentation/CIRCULAR_REFERENCE_ANALYSIS.md) - How circular references are handled
 
-ZyraForm automatically encrypts sensitive fields:
-
-### Marking Fields as Encrypted
+## 🎨 Example: Complete Schema
 
 ```swift
-let usersTable = ZyraTable(
+import ZyraForm
+
+// Enums
+let ProjectStatusEnum = ZyraEnum(
+    name: "project_status",
+    values: ["active", "archived", "deleted"]
+)
+
+// Tables
+let Users = ZyraTable(
     name: "users",
+    primaryKey: "id",
     columns: [
-        zf.text("email").email().encrypted().notNull(),
-        zf.text("ssn").encrypted().notNull(),
-        zf.text("name").notNull()  // Not encrypted
-    ]
-)
-```
-
-### Using Encrypted Fields
-
-```swift
-// Encryption is handled automatically
-try await service.createRecord(
-    fields: ["email": "user@example.com", "ssn": "123-45-6789"],
-    encryptedFields: ["email", "ssn"]  // Auto-detected from schema
-)
-```
-
-### Encryption Manager
-
-The `SecureEncryptionManager` handles encryption/decryption:
-
-```swift
-// Set encryption password (done automatically during initialization)
-SecureEncryptionManager.shared.setPassword("your-password")
-
-// Fields marked with .encrypted() are automatically encrypted/decrypted
-```
-
-## Many-to-Many Relationships
-
-ZyraForm automatically handles many-to-many relationships by creating join tables:
-
-```swift
-let postsTable = ZyraTable(
-    name: "posts",
-    columns: [
-        zf.text("title").notNull(),
-        zf.text("content").notNull()
+        zf.uuid("id").notNull(),
+        zf.text("email").email().unique().notNull(),
+        zf.text("username").minLength(2).notNull(),
+        zf.url("avatar_url").nullable()
+    ],
+    rlsPolicies: [
+        RLSPolicyBuilder(tableName: "users").canAccessOwn()
     ]
 )
 
-let tagsTable = ZyraTable(
-    name: "tags",
+let Organizations = ZyraTable(
+    name: "organizations",
+    primaryKey: "id",
     columns: [
-        zf.text("name").unique().notNull()
+        zf.uuid("id").notNull(),
+        zf.text("name").minLength(2).notNull(),
+        zf.uuid("creator_user_id").references(Users).notNull()
     ]
 )
 
-// Many-to-many relationship
-let postsWithTagsTable = ZyraTable(
-    name: "posts",
+let Projects = ZyraTable(
+    name: "projects",
+    primaryKey: "id",
     columns: [
-        zf.text("title").notNull(),
-        zf.text("content").notNull(),
-        zf.text("tag_id").belongsToMany(tagsTable)  // Creates join table
+        zf.uuid("id").notNull(),
+        zf.text("name").encrypted().minLength(2).notNull(),
+        zf.text("description").encrypted().nullable(),
+        zf.uuid("owner_id").references(Users).nullable(),
+        zf.uuid("org_id").references(Organizations).nullable(),
+        zf.text("status").enum(ProjectStatusEnum).default("active").notNull(),
+        // Many-to-many with teams
+        zf.uuid("team_id").belongsToMany(
+            "teams",
+            joinTableName: "team_projects",
+            additionalColumns: [
+                zf.timestampz("granted_at").default(.now).notNull(),
+                zf.text("permission_level").default("view").notNull()
+            ]
+        )
+    ],
+    rlsPolicies: [
+        RLSPolicyBuilder(tableName: "projects").canAccessOwn(allowRoles: ["admin"])
     ]
 )
-```
 
-ZyraForm automatically creates:
-- `posts_tags` join table
-- Foreign keys with proper cascade/set null actions
-- Indexes for efficient queries
-
-## Foreign Keys
-
-Define relationships between tables with foreign key constraints:
-
-```swift
-let commentsTable = ZyraTable(
-    name: "comments",
-    columns: [
-        zf.text("post_id")
-            .references("posts", column: "id", 
-                       referenceUpdated: .cascade,
-                       referenceRemoved: .cascade)
-            .notNull(),
-        zf.text("content").notNull()
-    ]
-)
-```
-
-### Foreign Key Actions
-
-- `.cascade` - Cascade updates/deletes
-- `.setNull` - Set to NULL on delete
-- `.restrict` - Prevent delete if referenced
-- `.noAction` - No action (database default)
-
-## Database Enums
-
-Define enums that work across all code generators:
-
-```swift
-let UserRoleEnum = ZyraEnum(
-    name: "user_role",
-    values: ["admin", "editor", "user", "guest"]
+// Schema
+let schema = ZyraSchema(
+    tables: [Users, Organizations, Projects],
+    enums: [ProjectStatusEnum],
+    dbPrefix: ""
 )
 
-let usersTable = ZyraTable(
-    name: "users",
-    columns: [
-        zf.text("role")
-            .enum(UserRoleEnum)
-            .default("user")
-            .notNull()
-    ]
-)
+// Generate code
+let postgresSQL = schema.generateMigrationSQL()
+let prismaSchema = schema.generatePrismaSchema()
+let powerSyncBuckets = schema.generatePowerSyncBucketDefinitions()
 ```
 
-Enums are generated in:
-- Prisma: `enum UserRole { ... }`
-- Drizzle: `pgEnum("user_role", ...)`
-- Zod: `z.enum(["admin", "editor", "user", "guest"])`
-- Swift: Custom enum type
+## 🔒 Security Features
 
-## Logging
+### Field Encryption
 
-ZyraForm includes comprehensive logging for debugging:
-
-### Enable/Disable Logging
+Mark sensitive fields for encryption:
 
 ```swift
-// Disable logging
-ZyraFormLogger.isEnabled = false
-
-// Enable logging
-ZyraFormLogger.isEnabled = true
+zf.text("password").encrypted().notNull()
+zf.text("ssn").encrypted().nullable()
 ```
 
-### Logged Events
+Encrypted fields are stored as TEXT in the database but validated on decrypted values.
 
-- Supabase connection errors
-- PowerSync endpoint issues
-- 404 errors (table/record not found)
-- Authentication errors (401, 403)
-- Encryption/decryption errors
-- RLS policy violations
+### Row Level Security
 
-### Example Log Output
-
-```
-ℹ️ [ZyraForm INFO] 🚀 Initializing ZyraForm...
-ℹ️ [ZyraForm INFO] 📋 Supabase URL: https://your-project.supabase.co
-ℹ️ [ZyraForm INFO] 📋 PowerSync Endpoint: https://id.powersync.journeyapps.com
-❌ [ZyraForm ERROR] ❌ [SUPABASE 404] Resource not found
-❌ [ZyraForm ERROR] 📋 Table: employees
-❌ [ZyraForm ERROR] 💡 Possible causes:
-❌ [ZyraForm ERROR]    1. Table 'employees' does not exist in Supabase
-❌ [ZyraForm ERROR]    2. Record with id 'xxx' was already deleted
-❌ [ZyraForm ERROR]    3. Row Level Security (RLS) policy is blocking access
-```
-
-## Optional Supabase Integration
-
-ZyraForm core is Supabase-agnostic. Use the optional `ZyraFormSupabase` module:
+Comprehensive RLS support with role-based access control using a new fluent API:
 
 ```swift
-import ZyraFormSupabase
+// Simple: Users can only access their own rows
+table.fluentRls()
+    .who([.authenticated])
+    .access([.read, .write, .update, .delete])
+    .own()
+    .build()
 
-let connector = SupabaseConnector(
-    supabaseURL: URL(string: "https://your-project.supabase.co")!,
-    supabaseKey: "your-anon-key"
-)
-
-let config = ZyraFormConfig(
-    connector: connector,  // Uses your connector
-    // ... other config
-)
+// Advanced: Multiple roles with custom matching
+table.fluentRls()
+    .who([.authenticated, .admin])
+    .permissive()
+    .access([.read, .write, .update])
+    .match("user_id = auth.uid() OR team_id IN (SELECT team_id FROM user_teams WHERE user_id = auth.uid())")
+    .build()
 ```
 
-Or implement your own `PowerSyncBackendConnectorProtocol`:
+See [RLS Guide](Documentation/RLS_GUIDE.md) for details.
 
-```swift
-class CustomConnector: PowerSyncBackendConnectorProtocol {
-    // Implement your backend connector
-}
-```
+## 🚨 Important Notes
 
-## Architecture
+### Circular References
 
-### Single Source of Truth
+ZyraForm automatically handles circular references by creating tables without foreign keys first, then adding foreign keys via `ALTER TABLE`. This allows tables to reference each other without errors.
 
-Your Swift schema (`ZyraTable` and `ZyraSchema`) is the single source of truth. All code generation derives from this schema, ensuring consistency.
+### Nested Schema Recursion
 
-### Code Generation Flow
+Nested objects and arrays support deep nesting with automatic cycle detection:
+- Maximum recursion depth: 10 levels
+- Circular references detected and handled gracefully
+- Falls back to JSONB for circular structures
 
-```
-Swift Schema (ZyraTable/ZyraSchema)
-    ↓
-├─→ Prisma Schema
-├─→ Drizzle Schema
-├─→ Zod Schema
-├─→ Swift Models
-├─→ Zera Schema (Swift code)
-├─→ SQL Migrations
-└─→ PowerSync Bucket Definitions
-```
+### Many-to-Many Relationships
+
+- Join tables are automatically created
+- The marker column is removed from the original table
+- Additional columns can be specified inline
+- Many-to-many within nested objects only works with `.separateTable` strategy
 
 ### PowerSync Integration
 
-ZyraForm integrates seamlessly with PowerSync for offline-first applications:
-- Automatic schema generation for PowerSync
-- Encrypted field handling
-- CRUD operations via `ZyraSync`
-- Real-time synchronization
+- All auto-generated tables (join tables, separate tables) are included in bucket definitions
+- Tables are automatically separated into global and user-specific buckets
+- Table names are properly formatted for PowerSync
 
-## Examples
+## 🤝 Contributing
 
-See the example app in `ZyraForm/ZyraForm/` for:
-- Complete schema definitions
-- Form usage examples
-- RLS policy examples
-- CRUD operations
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## PowerSync Bucket Definitions
-
-ZyraForm can generate PowerSync bucket definitions for data synchronization:
-
-```swift
-let bucketYAML = schema.generatePowerSyncBucketDefinitions(
-    dbPrefix: "app_",
-    userIdColumn: "user_id"
-)
-```
-
-This automatically:
-- Separates tables into `global` (no `user_id`) and `by_user` (has `user_id`) buckets
-- Generates proper WHERE clauses: `WHERE "table_name"."user_id" = bucket.user_id`
-- Handles join tables with `JOIN-` prefix
-- Skips `users` table (managed by Supabase Auth)
-
-## Version
-
-Current version: **1.7.0**
-
-### What's New in 1.5.0
-
-- **MySQL Code Generation**: Generate MySQL CREATE TABLE statements and migration SQL
-- **Foreign Key Validation**: Enforced that foreign keys must reference primary keys (with validation)
-- **Table Reference API**: Added `table.id` property and `references(table)` method for cleaner syntax
-- **MySQL-Specific Features**: Proper MySQL data types, triggers, and syntax (backticks, AUTO_INCREMENT, etc.)
-
-### What's New in 1.4.0
-
-- **RLS Code Generation**: RLS policies are now preserved when generating Zera schema code (Swift code export)
-- **Intelligent Pattern Detection**: Automatically detects and converts common RLS patterns back to builder methods
-
-### What's New in 1.3.0
-
-- **RBAC Support**: Replaced superuser permissions with Supabase Role-Based Access Control
-- **PowerSync Bucket Definitions**: Generate bucket definitions for data synchronization (with proper table name quoting)
-- **UUID Casting**: Proper UUID casting for `auth.uid()` comparisons (`user_id::uuid = (auth.uid())::uuid`)
-- **SQL Generation Improvements**: Fixed CREATE TABLE syntax, foreign key constraints, and RLS policy formatting
-- **Enhanced RLS**: Added `hasRole()` methods and `allowRoles` parameters for flexible role-based policies
-
-## License
+## 📄 License
 
 [Add your license here]
 
-## Contributing
+## 🙏 Acknowledgments
 
-[Add contribution guidelines here]
+- Built for Swift and SwiftUI
+- Integrates with PowerSync for offline-first apps
+- Designed for Supabase PostgreSQL databases
+- Inspired by Prisma, Drizzle, and Zod
 
-## Support
+---
 
-[Add support information here]
+**Version 2.0.0** - Major release with nested schemas, circular reference handling, and comprehensive code generation support.
