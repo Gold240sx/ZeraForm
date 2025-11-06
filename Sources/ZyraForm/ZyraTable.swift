@@ -412,23 +412,6 @@ public struct ColumnBuilder {
         )
     }
     
-    /// Legacy method name for backward compatibility
-    /// - Parameters:
-    ///   - table: The referenced table name
-    ///   - column: The referenced column name (defaults to "id")
-    ///   - onDelete: Action when referenced row is deleted (defaults to .setNull)
-    ///   - onUpdate: Action when referenced row is updated (defaults to .cascade)
-    /// - Returns: ColumnBuilder with foreign key relationship
-    @available(*, deprecated, renamed: "references(_:column:referenceUpdated:referenceRemoved:)")
-    public func references(
-        _ table: String,
-        column: String = "id",
-        onDelete: ForeignKeyAction = .setNull,
-        onUpdate: ForeignKeyAction = .cascade
-    ) -> ColumnBuilder {
-        return self.references(table, column: column, referenceUpdated: onUpdate, referenceRemoved: onDelete)
-    }
-    
     /// Create a many-to-many relationship
     /// This automatically creates a join/pivot table
     /// - Parameters:
