@@ -1079,6 +1079,18 @@ public struct zf {
         return PowerSync.Column.text(name).email()
     }
     
+    /// Create a boolean column (BOOLEAN type in SQL)
+    /// - Parameter name: Column name
+    /// - Returns: ColumnBuilder with boolean type
+    /// - Example:
+    ///   ```swift
+    ///   zf.bool("is_active").default(false).notNull()
+    ///   zf.bool("is_template").default(true).nullable()
+    ///   ```
+    public static func bool(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.text(name).bool()
+    }
+    
     /// Create a nested object column
     /// - Parameters:
     ///   - name: Column name (used as prefix for flattened strategy)

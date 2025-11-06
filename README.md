@@ -1,6 +1,6 @@
 # ZyraForm
 
-**Version 2.0.1**
+**Version 2.0.2**
 
 A comprehensive Swift package for defining database schemas with a fluent API and generating code for multiple platforms. Define your schema once in Swift and generate PostgreSQL migrations, MySQL schemas, Prisma models, Drizzle schemas, Zod validators, Swift models, and PowerSync bucket definitions.
 
@@ -623,5 +623,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Inspired by Prisma, Drizzle, and Zod
 
 ---
+
+**Version 2.0.2** - Added `zf.bool()` convenience method for boolean columns.
 
 **Version 2.0.0** - Major release with nested schemas, circular reference handling, and comprehensive code generation support.
