@@ -37,24 +37,6 @@
 		E6B29E3E2EBA51730033C2FA /* ZyraFormUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZyraFormUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		E6B29E282EBA51700033C2FA /* ZyraForm */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ZyraForm;
-			sourceTree = "<group>";
-		};
-		E6B29E372EBA51730033C2FA /* ZyraFormTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ZyraFormTests;
-			sourceTree = "<group>";
-		};
-		E6B29E412EBA51730033C2FA /* ZyraFormUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ZyraFormUITests;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
-
 /* Begin PBXFrameworksBuildPhase section */
 		E6B29E232EBA51700033C2FA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -88,9 +70,6 @@
 		E6B29E1D2EBA51700033C2FA = {
 			isa = PBXGroup;
 			children = (
-				E6B29E282EBA51700033C2FA /* ZyraForm */,
-				E6B29E372EBA51730033C2FA /* ZyraFormTests */,
-				E6B29E412EBA51730033C2FA /* ZyraFormUITests */,
 				E6B29E272EBA51700033C2FA /* Products */,
 			);
 			sourceTree = "<group>";
@@ -120,9 +99,6 @@
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				E6B29E282EBA51700033C2FA /* ZyraForm */,
-			);
 			name = ZyraForm;
 			packageProductDependencies = (
 				E6B29E522EBA52950033C2FA /* PowerSync */,
@@ -148,9 +124,6 @@
 			dependencies = (
 				E6B29E362EBA51730033C2FA /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				E6B29E372EBA51730033C2FA /* ZyraFormTests */,
-			);
 			name = ZyraFormTests;
 			packageProductDependencies = (
 			);
@@ -170,9 +143,6 @@
 			);
 			dependencies = (
 				E6B29E402EBA51730033C2FA /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				E6B29E412EBA51730033C2FA /* ZyraFormUITests */,
 			);
 			name = ZyraFormUITests;
 			packageProductDependencies = (
