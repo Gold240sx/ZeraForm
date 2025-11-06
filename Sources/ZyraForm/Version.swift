@@ -1,4 +1,4 @@
 import Foundation
 
 /// The current version of the ZyraForm package
-public let ZyraFormVersion = "1.4.1"
+public let ZyraFormVersion = "1.5.0"

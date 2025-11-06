@@ -39,14 +39,14 @@ Add ZyraForm to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "1.4.0")
+    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "1.5.0")
 ]
 ```
 
 Or add it via Xcode:
 1. File → Add Package Dependencies
 2. Enter the repository URL
-3. Select version `1.4.0` or later
+3. Select version `1.5.0` or later
 
 ## Quick Start
 
@@ -848,7 +848,14 @@ This automatically:
 
 ## Version
 
-Current version: **1.4.0**
+Current version: **1.5.0**
+
+### What's New in 1.5.0
+
+- **MySQL Code Generation**: Generate MySQL CREATE TABLE statements and migration SQL
+- **Foreign Key Validation**: Enforced that foreign keys must reference primary keys (with validation)
+- **Table Reference API**: Added `table.id` property and `references(table)` method for cleaner syntax
+- **MySQL-Specific Features**: Proper MySQL data types, triggers, and syntax (backticks, AUTO_INCREMENT, etc.)
 
 ### What's New in 1.4.0
 

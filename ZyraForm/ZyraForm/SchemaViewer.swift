@@ -45,6 +45,7 @@ enum SchemaFormat: String, CaseIterable {
     case zod = "Zod"
     case drizzle = "Drizzle"
     case postgres = "Postgres"
+    case mysql = "MySQL"
     
     var highlightLanguage: HighlightLanguage {
         switch self {
@@ -52,7 +53,7 @@ enum SchemaFormat: String, CaseIterable {
             return .swift
         case .zod, .drizzle:
             return .typeScript
-        case .postgres:
+        case .postgres, .mysql:
             return .sql
         }
     }
@@ -124,7 +125,7 @@ struct SchemaCodeView: View {
                 
                 Spacer()
                 
-                if selectedFormat == .postgres {
+                if selectedFormat == .postgres || selectedFormat == .mysql {
                     Button(action: {
                         showingPostgresContent = true
                     }) {
@@ -174,6 +175,8 @@ struct SchemaCodeView: View {
             return schema.generateDrizzleSchema(includeImports: true)
         case .postgres:
             return schema.generateCreateTableSQLOnly()
+        case .mysql:
+            return schema.generateMySQLTableSQL()
         }
     }
     
@@ -417,6 +420,8 @@ struct SchemaViewer: View {
             return schema.generateDrizzleSchema(includeImports: true)
         case .postgres:
             return schema.generateCreateTableSQLOnly()
+        case .mysql:
+            return schema.generateMySQLTableSQL()
         }
     }
     

@@ -368,6 +368,7 @@ public struct ColumnBuilder {
     ///   - referenceUpdated: Action when referenced row is updated (defaults to .cascade)
     ///   - referenceRemoved: Action when referenced row is deleted (defaults to .setNull)
     /// - Returns: ColumnBuilder with foreign key relationship
+    /// - Important: Foreign keys should reference primary keys. The referenced column must be a primary key or unique column.
     public func references(
         _ table: String,
         column: String = "id",
@@ -382,6 +383,40 @@ public struct ColumnBuilder {
             onUpdate: referenceUpdated
         )
         return builder
+    }
+    
+    /// Create a foreign key relationship to another ZyraTable
+    /// Automatically uses the referenced table's primary key (validated)
+    /// - Parameters:
+    ///   - table: The referenced ZyraTable instance
+    ///   - column: The referenced column name (must be the table's primary key, ignored if provided)
+    ///   - referenceUpdated: Action when referenced row is updated (defaults to .cascade)
+    ///   - referenceRemoved: Action when referenced row is deleted (defaults to .setNull)
+    /// - Returns: ColumnBuilder with foreign key relationship
+    /// - Precondition: Foreign keys must reference primary keys. If `column` is provided, it must match the table's primary key.
+    /// - Example:
+    ///   ```swift
+    ///   zf.text("user_type_id").references(UserTypes)
+    ///   // Always references UserTypes.primaryKey, regardless of column parameter
+    ///   ```
+    public func references(
+        _ table: ZyraTable,
+        column: String? = nil,
+        referenceUpdated: ForeignKeyAction = .cascade,
+        referenceRemoved: ForeignKeyAction = .setNull
+    ) -> ColumnBuilder {
+        // Validate that if column is provided, it matches the primary key
+        if let providedColumn = column, providedColumn.lowercased() != table.primaryKey.lowercased() {
+            fatalError("Foreign key must reference the primary key. Table '\(table.name)' has primary key '\(table.primaryKey)', but '\(providedColumn)' was specified. Use '\(table.primaryKey)' or omit the column parameter.")
+        }
+        
+        // Always use the primary key
+        return self.references(
+            table.name,
+            column: table.primaryKey,
+            referenceUpdated: referenceUpdated,
+            referenceRemoved: referenceRemoved
+        )
     }
     
     /// Legacy method name for backward compatibility
@@ -1505,6 +1540,12 @@ public struct ZyraTable: Hashable {
         return Set(columns.compactMap { $0.foreignKey?.referencedTable })
     }
     
+    /// Convenience property to access the primary key column name
+    /// Allows syntax like: `table.id` instead of `table.primaryKey`
+    public var id: String {
+        return primaryKey
+    }
+    
     /// Convert to PowerSync Table (for Schema)
     public func toPowerSyncTable() -> PowerSync.Table {
         return powerSyncTable
@@ -1544,6 +1585,17 @@ public struct ZyraTable: Hashable {
             
             let constraintName = "\(name)_\(column.name)_fkey"
             let constraint = "CONSTRAINT \"\(constraintName)\" FOREIGN KEY (\(column.name)) REFERENCES \"\(fk.referencedTable)\" (\(fk.referencedColumn)) ON UPDATE \(fk.onUpdate.sqlString) ON DELETE \(fk.onDelete.sqlString)"
+            return constraint.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+    
+    /// Generate MySQL foreign key constraints
+    public func generateMySQLForeignKeyConstraints() -> [String] {
+        return columns.compactMap { column in
+            guard let fk = column.foreignKey else { return nil }
+            
+            let constraintName = "\(name)_\(column.name)_fkey"
+            let constraint = "CONSTRAINT `\(constraintName)` FOREIGN KEY (`\(column.name)`) REFERENCES `\(fk.referencedTable)` (`\(fk.referencedColumn)`) ON UPDATE \(fk.onUpdate.sqlString) ON DELETE \(fk.onDelete.sqlString)"
             return constraint.trimmingCharacters(in: .whitespacesAndNewlines)
         }
     }
@@ -1702,6 +1754,121 @@ public struct ZyraTable: Hashable {
         sql += ");"
         
         return sql
+    }
+    
+    // MARK: - MySQL Generation
+    
+    /// Generate MySQL CREATE TABLE statement
+    public func generateMySQLTableSQL() -> String {
+        var columnDefinitions: [String] = []
+        
+        // Find primary key column to determine if it's integer (for AUTO_INCREMENT)
+        let primaryKeyColumn = columns.first { $0.name.lowercased() == primaryKey.lowercased() }
+        let isIntegerPrimaryKey = primaryKeyColumn?.swiftType == .integer
+        
+        // Add primary key
+        if isIntegerPrimaryKey {
+            columnDefinitions.append("`\(primaryKey)` INT AUTO_INCREMENT PRIMARY KEY")
+        } else {
+            // UUID or text primary key
+            if primaryKeyColumn?.isUuid == true {
+                columnDefinitions.append("`\(primaryKey)` CHAR(36) PRIMARY KEY")
+            } else {
+                columnDefinitions.append("`\(primaryKey)` VARCHAR(255) PRIMARY KEY")
+            }
+        }
+        
+        // Add each column with its definition (skip primary key since already added)
+        for column in columns {
+            // Skip primary key column since it's already added above
+            if column.name.lowercased() == primaryKey.lowercased() {
+                continue
+            }
+            
+            var colDef = "`\(column.name)`"
+            
+            // Add MySQL type
+            if let enumType = column.enumType {
+                // MySQL ENUM type
+                let enumValues = enumType.values.map { "'\($0)'" }.joined(separator: ", ")
+                colDef += " ENUM(\(enumValues))"
+            } else {
+                switch column.swiftType {
+                case .integer:
+                    colDef += " INT"
+                case .boolean:
+                    colDef += " BOOLEAN"
+                case .double:
+                    colDef += " DOUBLE"
+                case .uuid:
+                    colDef += " CHAR(36)"
+                case .date:
+                    colDef += " DATETIME"
+                case .string:
+                    // Check if there's a maxLength constraint
+                    if let maxLength = column.maxLength {
+                        colDef += " VARCHAR(\(maxLength))"
+                    } else {
+                        colDef += " TEXT"
+                    }
+                case .enum:
+                    // Shouldn't happen, but fallback
+                    colDef += " VARCHAR(255)"
+                case .object, .array:
+                    colDef += " JSON"
+                }
+            }
+            
+            // Add NOT NULL if required
+            if !column.isNullable {
+                colDef += " NOT NULL"
+            }
+            
+            // Add UNIQUE constraint if required
+            if column.isUnique {
+                colDef += " UNIQUE"
+            }
+            
+            // Add default value if present
+            if let defaultValue = column.defaultValue {
+                if defaultValue.uppercased() == "NOW()" || defaultValue.uppercased() == "CURRENT_TIMESTAMP" {
+                    colDef += " DEFAULT CURRENT_TIMESTAMP"
+                } else if defaultValue.contains("(") {
+                    colDef += " DEFAULT \(defaultValue)"
+                } else {
+                    colDef += " DEFAULT '\(defaultValue)'"
+                }
+            }
+            
+            columnDefinitions.append(colDef)
+        }
+        
+        // Add foreign key constraints
+        let fkConstraints = generateMySQLForeignKeyConstraints()
+        let allConstraints = columnDefinitions + fkConstraints
+        
+        var sql = "CREATE TABLE `\(name)` (\n"
+        sql += "    \(allConstraints.joined(separator: ",\n    "))\n"
+        sql += ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
+        
+        return sql
+    }
+    
+    /// Generate MySQL trigger for automatic updated_at updates
+    public func generateMySQLUpdatedAtTrigger() -> String {
+        let triggerName = "\(name.replacingOccurrences(of: "-", with: "_"))_updated_at_trigger"
+        
+        return """
+        -- Trigger to automatically update updated_at on row update
+        DELIMITER $$
+        CREATE TRIGGER `\(triggerName)`
+        BEFORE UPDATE ON `\(name)`
+        FOR EACH ROW
+        BEGIN
+            SET NEW.updated_at = NOW();
+        END$$
+        DELIMITER ;
+        """
     }
     
     // MARK: - RLS Generation
@@ -2397,6 +2564,46 @@ public struct ZyraSchema {
             allEnums.formUnion(table.getEnums())
         }
         self.enums = Array(allEnums)
+        
+        // Update table map to include join tables for validation
+        var completeTableMap = tableMap
+        for joinTable in generatedJoinTables {
+            completeTableMap[joinTable.name] = joinTable
+        }
+        
+        // Validate foreign keys reference primary keys
+        self.validateForeignKeys(tableMap: completeTableMap)
+    }
+    
+    /// Validate that all foreign keys reference primary keys
+    private func validateForeignKeys(tableMap: [String: ZyraTable]) {
+        let allTables = self.tables + self.joinTables
+        
+        for table in allTables {
+            for column in table.columns {
+                guard let fk = column.foreignKey else { continue }
+                
+                // Check if referenced table exists
+                guard let referencedTable = tableMap[fk.referencedTable] else {
+                    print("⚠️ Warning: Foreign key in table '\(table.name)' references non-existent table '\(fk.referencedTable)'")
+                    continue
+                }
+                
+                // Validate that the referenced column is the primary key
+                if fk.referencedColumn.lowercased() != referencedTable.primaryKey.lowercased() {
+                    fatalError("""
+                    ❌ Foreign Key Validation Error:
+                    Table '\(table.name)' has a foreign key '\(column.name)' that references '\(fk.referencedTable).\(fk.referencedColumn)',
+                    but foreign keys must reference primary keys. Table '\(fk.referencedTable)' has primary key '\(referencedTable.primaryKey)'.
+                    
+                    Fix: Change the reference to use the primary key:
+                    zf.text("\(column.name)").references("\(fk.referencedTable)", column: "\(referencedTable.primaryKey)")
+                    Or use the ZyraTable instance:
+                    zf.text("\(column.name)").references(\(fk.referencedTable))
+                    """)
+                }
+            }
+        }
     }
     
     /// Get all tables including join tables
@@ -2591,6 +2798,34 @@ public struct ZyraSchema {
                 sql.append("")
             }
         }
+        
+        return sql.joined(separator: "\n\n")
+    }
+    
+    /// Generate MySQL migration SQL
+    /// Note: MySQL doesn't support RLS (Row Level Security) like PostgreSQL
+    public func generateMySQLMigrationSQL() -> String {
+        var sql: [String] = []
+        
+        // 1. Create tables in topological order (including join tables)
+        sql.append("-- Create Tables")
+        let allTables = tables + joinTables
+        let orderedTables = topologicalSortTables(allTables: allTables)
+        
+        for table in orderedTables {
+            sql.append(table.generateMySQLTableSQL())
+            sql.append("")
+            
+            // Add trigger if updated_at exists
+            if table.columns.contains(where: { $0.name.lowercased() == "updated_at" }) {
+                sql.append(table.generateMySQLUpdatedAtTrigger())
+                sql.append("")
+            }
+        }
+        
+        // Note: MySQL doesn't support RLS, so we skip RLS policies
+        sql.append("-- Note: MySQL doesn't support Row Level Security (RLS)")
+        sql.append("-- Consider implementing application-level access control")
         
         return sql.joined(separator: "\n\n")
     }
