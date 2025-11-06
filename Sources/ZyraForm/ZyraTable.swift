@@ -1031,6 +1031,30 @@ public struct zf {
         return PowerSync.Column.integer(name)
     }
     
+    /// Create a number column (alias for integer - INTEGER type in SQL)
+    /// - Parameter name: Column name
+    /// - Returns: ColumnBuilder with integer type
+    /// - Example:
+    ///   ```swift
+    ///   zf.number("likes").positive().notNull()
+    ///   zf.number("age").intMin(0).intMax(120)
+    ///   ```
+    public static func number(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.integer(name)
+    }
+    
+    /// Create an integer column (alias for integer - INTEGER type in SQL)
+    /// - Parameter name: Column name
+    /// - Returns: ColumnBuilder with integer type
+    /// - Example:
+    ///   ```swift
+    ///   zf.int("likes").positive().notNull()
+    ///   zf.int("age").intMin(0).intMax(120)
+    ///   ```
+    public static func int(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.integer(name)
+    }
+    
     public static func real(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.real(name)
     }

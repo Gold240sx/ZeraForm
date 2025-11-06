@@ -1,6 +1,6 @@
 # ZyraForm
 
-**Version 2.0.3**
+**Version 2.0.4**
 
 A comprehensive Swift package for defining database schemas with a fluent API and generating code for multiple platforms. Define your schema once in Swift and generate PostgreSQL migrations, MySQL schemas, Prisma models, Drizzle schemas, Zod validators, Swift models, and PowerSync bucket definitions.
 
@@ -120,6 +120,8 @@ zf.email("contact_email").notNull()
 
 // Numeric columns
 zf.integer("age").intMin(0).intMax(120).nullable()
+zf.number("likes").positive().notNull()  // Alias for integer
+zf.int("count").default(0).notNull()     // Alias for integer
 zf.bigint("user_count").notNull()  // BIGINT for large integers
 zf.real("price").notNull()
 zf.double("rating").nullable()
@@ -631,6 +633,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Inspired by Prisma, Drizzle, and Zod
 
 ---
+
+**Version 2.0.4** - Added `zf.number()` and `zf.int()` convenience aliases for integer columns.
 
 **Version 2.0.3** - Added simplified array syntax for `zf.object()` schema definition.
 
