@@ -504,7 +504,7 @@ struct SchemaViewer: View {
             }
             
             code += policyDefs.joined(separator: "\n")
-            code += "\n  ]\n"
+        code += "\n  ]\n"
         }
         
         code += ")\n"

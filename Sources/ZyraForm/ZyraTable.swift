@@ -943,6 +943,21 @@ public struct zf {
     public static func real(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.real(name)
     }
+    
+    /// Create a date column (DATE type in SQL)
+    public static func date(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.text(name).date()
+    }
+    
+    /// Create a time column (TIME type in SQL)
+    public static func time(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.text(name).time()
+    }
+    
+    /// Create a timestamp with timezone column (TIMESTAMPTZ type in PostgreSQL)
+    public static func timestampz(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.text(name).isoDateTime()
+    }
 }
 
 extension PowerSync.Column {
@@ -1620,7 +1635,11 @@ public struct ZyraTable: Hashable {
             var colDef = column.name
             
             // Add type
-            if let enumType = column.enumType {
+            // Encrypted fields are always TEXT (encrypted strings), regardless of swiftType
+            // Validation happens on the decrypted value, but storage is always TEXT
+            if column.isEncrypted {
+                colDef += " TEXT"
+            } else if let enumType = column.enumType {
                 colDef += " \"\(enumType.name)\""
             } else if column.swiftType == .date {
                 colDef += " TIMESTAMPTZ"
@@ -1708,7 +1727,11 @@ public struct ZyraTable: Hashable {
             var colDef = column.name
             
             // Add type
-            if let enumType = column.enumType {
+            // Encrypted fields are always TEXT (encrypted strings), regardless of swiftType
+            // Validation happens on the decrypted value, but storage is always TEXT
+            if column.isEncrypted {
+                colDef += " TEXT"
+            } else if let enumType = column.enumType {
                 colDef += " \"\(enumType.name)\""
             } else if column.swiftType == .date {
                 colDef += " TIMESTAMPTZ"
@@ -2062,10 +2085,10 @@ public struct ZyraTable: Hashable {
             code += "import { createTable, pgTableCreator, text, integer, boolean, timestamp, uuid, pgEnum } from \"drizzle-orm/pg-core\";\n"
             code += "import { foreignKey } from \"drizzle-orm/pg-core\";\n"
             if !dbPrefix.isEmpty {
-                code += "import { AppConfig } from \"AppConfig\";\n\n"
-                code += "const createTable = pgTableCreator(\n"
-                code += "  (name) => `${AppConfig.DBprefix}${name}`,\n"
-                code += ");\n\n"
+            code += "import { AppConfig } from \"AppConfig\";\n\n"
+            code += "const createTable = pgTableCreator(\n"
+            code += "  (name) => `${AppConfig.DBprefix}${name}`,\n"
+            code += ");\n\n"
             } else {
                 code += "\n"
                 code += "const createTable = pgTableCreator(() => \"\");\n\n"
@@ -2335,8 +2358,8 @@ public struct ZyraTable: Hashable {
                 // Map column name if different from field name
                 if column.name != fieldName {
                     attributes.append("@map(\"\(column.name)\")")
-                }
-                
+}
+
                 // Make optional if nullable
                 if column.isNullable {
                     fieldDef += "?"
@@ -2901,10 +2924,10 @@ public struct ZyraSchema {
         code += "import { createTable, pgTableCreator, text, integer, boolean, timestamp, uuid, pgEnum } from \"drizzle-orm/pg-core\";\n"
         code += "import { foreignKey } from \"drizzle-orm/pg-core\";\n"
         if !dbPrefix.isEmpty {
-            code += "import { AppConfig } from \"AppConfig\";\n\n"
-            code += "const createTable = pgTableCreator(\n"
-            code += "  (name) => `${AppConfig.DBprefix}${name}`,\n"
-            code += ");\n\n"
+        code += "import { AppConfig } from \"AppConfig\";\n\n"
+        code += "const createTable = pgTableCreator(\n"
+        code += "  (name) => `${AppConfig.DBprefix}${name}`,\n"
+        code += ");\n\n"
         } else {
             code += "\n"
             code += "const createTable = pgTableCreator(() => \"\");\n\n"

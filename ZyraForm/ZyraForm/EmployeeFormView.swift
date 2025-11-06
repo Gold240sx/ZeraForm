@@ -206,9 +206,9 @@ struct EmployeeFormView: View {
             
             // Email validation
             if column.isEmail == true && !isValidEmail(value) {
-                return false
-            }
-            
+            return false
+        }
+        
             // URL validation
             if column.isUrl == true && !isValidURL(value) {
                 return false
