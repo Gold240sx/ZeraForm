@@ -7469,11 +7469,11 @@
         },
         {
           "kind" : "directory",
-          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/powersync-sqlite-core.framework"
+          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSyncKotlin.framework"
         },
         {
           "kind" : "directory",
-          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/PowerSyncKotlin.framework"
+          "name" : "/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm/.build/arm64-apple-macosx/debug/powersync-sqlite-core.framework"
         },
         {
           "kind" : "file",
