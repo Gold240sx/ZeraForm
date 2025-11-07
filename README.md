@@ -1,6 +1,6 @@
 # ZyraForm
 
-**Version 2.0.4**
+**Version 2.0.6**
 
 A comprehensive Swift package for defining database schemas with a fluent API and generating code for multiple platforms. Define your schema once in Swift and generate PostgreSQL migrations, MySQL schemas, Prisma models, Drizzle schemas, Zod validators, Swift models, and PowerSync bucket definitions.
 
@@ -239,6 +239,64 @@ This automatically creates a `team_projects` join table with:
 - `team_id` (FK to teams)
 - `granted_at` (timestamp)
 - `permission_level` (text)
+
+### Indexes
+
+ZyraForm supports defining indexes on tables, similar to PowerSync. Indexes improve query performance for frequently filtered or sorted columns:
+
+```swift
+import ZyraForm
+import PowerSync
+
+let TODOS_TABLE = "todos"
+
+let todos = ZyraTable(
+    name: TODOS_TABLE,
+    columns: [
+        zf.text("list_id").notNull(),
+        zf.text("photo_id").nullable(),
+        zf.text("description").nullable(),
+        zf.integer("completed").notNull(),
+        zf.text("created_at").notNull(),
+        zf.text("completed_at").nullable(),
+        zf.text("created_by").nullable(),
+        zf.text("completed_by").nullable()
+    ],
+    indexes: [
+        PowerSync.Index(
+            name: "list_id",
+            columns: [PowerSync.IndexedColumn.ascending("list_id")]
+        )
+    ]
+)
+```
+
+Indexes are passed directly to PowerSync tables and are included when generating PowerSync schemas. You can define multiple indexes per table, and each index can include multiple columns:
+
+```swift
+let posts = ZyraTable(
+    name: "posts",
+    columns: [
+        zf.text("user_id").notNull(),
+        zf.text("category_id").nullable(),
+        zf.text("status").notNull(),
+        zf.timestampz("created_at").notNull()
+    ],
+    indexes: [
+        PowerSync.Index(
+            name: "user_id",
+            columns: [PowerSync.IndexedColumn.ascending("user_id")]
+        ),
+        PowerSync.Index(
+            name: "category_status",
+            columns: [
+                PowerSync.IndexedColumn.ascending("category_id"),
+                PowerSync.IndexedColumn.descending("status")
+            ]
+        )
+    ]
+)
+```
 
 ### Nested Objects and Arrays
 
@@ -647,6 +705,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Inspired by Prisma, Drizzle, and Zod
 
 ---
+
+**Version 2.0.6** - Added index support for tables. Indexes are now generated in PostgreSQL migrations, MySQL migrations, Prisma schemas, Drizzle schemas, and PowerSync tables. Use `PowerSync.Index` and `PowerSync.IndexedColumn` to define indexes on your tables.
 
 **Version 2.0.5** - Added light encryption mode (`.encryptedLight()`) for shared/master key encryption. RLS and privacy controls handle access - encryption is just for at-rest protection. Per-user encryption (`.encrypted()`) remains for highly sensitive data.
 

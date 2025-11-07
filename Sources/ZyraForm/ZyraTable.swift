@@ -1954,6 +1954,7 @@ public struct ZyraTable: Hashable {
     public let primaryKey: String
     public let defaultOrderBy: String
     public let rlsPolicies: [RLSPolicy]
+    public let indexes: [PowerSync.Index]
     
     // Store original column builders for many-to-many relationship detection
     private let originalColumnBuilders: [ColumnBuilder]
@@ -1973,12 +1974,14 @@ public struct ZyraTable: Hashable {
         primaryKey: String = "id",
         defaultOrderBy: String = "created_at DESC",
         columns: [ColumnBuilder],
+        indexes: [PowerSync.Index] = [],
         rlsPolicies: [RLSPolicy] = []
     ) {
         self.name = name
         self.primaryKey = primaryKey
         self.defaultOrderBy = defaultOrderBy
         self.rlsPolicies = rlsPolicies
+        self.indexes = indexes
         self.originalColumnBuilders = columns
         
         // Build metadata for all columns
@@ -2022,7 +2025,8 @@ public struct ZyraTable: Hashable {
             .map { $0.powerSyncColumn }
         self.powerSyncTable = PowerSync.Table(
             name: name,
-            columns: powerSyncColumns
+            columns: powerSyncColumns,
+            indexes: indexes
         )
     }
     
@@ -2049,6 +2053,7 @@ public struct ZyraTable: Hashable {
     
     /// Convert to PowerSync Table (for Schema)
     public func toPowerSyncTable() -> PowerSync.Table {
+        // Return the stored PowerSync table which already includes indexes
         return powerSyncTable
     }
     
@@ -2107,6 +2112,46 @@ public struct ZyraTable: Hashable {
             guard let fk = column.foreignKey else { return nil }
             return (column.name, fk)
         }
+    }
+    
+    // MARK: - Index Generation
+    
+    /// Generate PostgreSQL CREATE INDEX statements
+    public func generateIndexSQL() -> [String] {
+        var indexStatements: [String] = []
+        
+        for index in indexes {
+            var columns: [String] = []
+            for indexedColumn in index.columns {
+                let columnName = indexedColumn.column
+                let direction = indexedColumn.ascending ? "ASC" : "DESC"
+                columns.append("\"\(columnName)\" \(direction)")
+            }
+            
+            let indexSQL = "CREATE INDEX \"\(index.name)\" ON \"\(name)\" (\(columns.joined(separator: ", ")));"
+            indexStatements.append(indexSQL)
+        }
+        
+        return indexStatements
+    }
+    
+    /// Generate MySQL CREATE INDEX statements
+    public func generateMySQLIndexSQL() -> [String] {
+        var indexStatements: [String] = []
+        
+        for index in indexes {
+            var columns: [String] = []
+            for indexedColumn in index.columns {
+                let columnName = indexedColumn.column
+                let direction = indexedColumn.ascending ? "ASC" : "DESC"
+                columns.append("`\(columnName)` \(direction)")
+            }
+            
+            let indexSQL = "CREATE INDEX `\(index.name)` ON `\(name)` (\(columns.joined(separator: ", ")));"
+            indexStatements.append(indexSQL)
+        }
+        
+        return indexStatements
     }
     
     // MARK: - SQL Generation
@@ -3373,7 +3418,7 @@ public struct ZyraTable: Hashable {
         // Add imports if requested
         if includeImports {
             code += "import { sql } from \"drizzle-orm\";\n"
-            code += "import { createTable, pgTableCreator, text, integer, boolean, timestamp, uuid, pgEnum } from \"drizzle-orm/pg-core\";\n"
+            code += "import { createTable, pgTableCreator, text, integer, boolean, timestamp, uuid, pgEnum, index } from \"drizzle-orm/pg-core\";\n"
             code += "import { foreignKey } from \"drizzle-orm/pg-core\";\n"
             if !dbPrefix.isEmpty {
             code += "import { AppConfig } from \"AppConfig\";\n\n"
@@ -3426,11 +3471,31 @@ public struct ZyraTable: Hashable {
         code += drizzleColumns.joined(separator: ",\n")
         code += "\n  }),\n"
         
-        // Add foreign key constraints
+        // Add foreign key constraints and indexes
         let fkConstraints = generateDrizzleForeignKeys(dbPrefix: dbPrefix)
+        var tableConstraints: [String] = []
+        
         if !fkConstraints.isEmpty {
+            tableConstraints.append(contentsOf: fkConstraints)
+        }
+        
+        // Add indexes
+        if !indexes.isEmpty {
+            for index in indexes {
+                var indexColumns: [String] = []
+                for indexedColumn in index.columns {
+                    let columnName = indexedColumn.column
+                    let direction = indexedColumn.ascending ? "asc" : "desc"
+                    indexColumns.append("t.\(columnName).\(direction)")
+                }
+                let indexCode = "index(\"\(index.name)\").on(\(indexColumns.joined(separator: ", ")))"
+                tableConstraints.append(indexCode)
+            }
+        }
+        
+        if !tableConstraints.isEmpty {
             code += "  (t) => [\n"
-            code += fkConstraints.map { "    \($0)" }.joined(separator: ",\n")
+            code += tableConstraints.map { "    \($0)" }.joined(separator: ",\n")
             code += "\n  ]\n"
         }
         
@@ -4236,6 +4301,19 @@ public struct ZyraTable: Hashable {
         
         code += fields.joined(separator: "\n")
         
+        // Add indexes
+        if !indexes.isEmpty {
+            code += "\n"
+            for index in indexes {
+                var indexFields: [String] = []
+                for indexedColumn in index.columns {
+                    let fieldName = toCamelCase(indexedColumn.column)
+                    indexFields.append(fieldName)
+                }
+                code += "\n  @@index([\(indexFields.joined(separator: ", "))], name: \"\(index.name)\")"
+            }
+        }
+        
         // Add table mapping
         if tableName != modelName.lowercased() {
             code += "\n\n  @@map(\"\(tableName)\")"
@@ -4665,6 +4743,7 @@ public struct ZyraSchema {
                     primaryKey: table.primaryKey,
                     defaultOrderBy: table.defaultOrderBy,
                     columns: updatedColumns,
+                    indexes: table.indexes,
                     rlsPolicies: table.rlsPolicies
                 )
                 processedTables[index] = newTable
@@ -4925,7 +5004,18 @@ public struct ZyraSchema {
             sql.append("")
         }
         
-        // 4. Add triggers and RLS
+        // 4. Add indexes
+        sql.append("-- Create Indexes")
+        var indexStatements: [String] = []
+        for table in orderedTables {
+            indexStatements.append(contentsOf: table.generateIndexSQL())
+        }
+        if !indexStatements.isEmpty {
+            sql.append(contentsOf: indexStatements)
+            sql.append("")
+        }
+        
+        // 5. Add triggers and RLS
         for table in orderedTables {
             // Add trigger if updated_at exists
             if let triggerSQL = table.generateUpdatedAtTriggerOnly() {
@@ -4977,7 +5067,18 @@ public struct ZyraSchema {
             sql.append("")
         }
         
-        // 3. Add triggers
+        // 3. Add indexes
+        sql.append("-- Create Indexes")
+        var indexStatements: [String] = []
+        for table in orderedTables {
+            indexStatements.append(contentsOf: table.generateMySQLIndexSQL())
+        }
+        if !indexStatements.isEmpty {
+            sql.append(contentsOf: indexStatements)
+            sql.append("")
+        }
+        
+        // 4. Add triggers
         for table in orderedTables {
             // Add trigger if updated_at exists
             if table.columns.contains(where: { $0.name.lowercased() == "updated_at" }) {
