@@ -185,10 +185,12 @@ extension ZyraTable {
 // MARK: - Schema-Based Sync (No Model Generation Needed)
 
 /// Sync service that works directly with schemas (no model generation needed)
+/// Automatically syncs with PowerSync for real-time updates from Supabase
 @MainActor
 public class SchemaBasedSync: ObservableObject {
     private let service: ZyraSync
     public let schema: ZyraTable
+    private var watchTask: Task<Void, Never>?
     
     @Published public var records: [SchemaRecord] = []
     
@@ -196,7 +198,8 @@ public class SchemaBasedSync: ObservableObject {
         schema: ZyraTable,
         userId: String,
         database: PowerSync.PowerSyncDatabaseProtocol,
-        encryptionManager: SecureEncryptionManager? = nil
+        encryptionManager: SecureEncryptionManager? = nil,
+        watchForUpdates: Bool = true
     ) {
         self.schema = schema
         self.service = ZyraSync(
@@ -205,9 +208,36 @@ public class SchemaBasedSync: ObservableObject {
             database: database,
             encryptionManager: encryptionManager
         )
+        
+        // Set up real-time watching if enabled
+        if watchForUpdates {
+            setupWatch()
+        }
+    }
+    
+    deinit {
+        watchTask?.cancel()
+    }
+    
+    /// Set up real-time watch for PowerSync updates
+    private func setupWatch() {
+        watchTask = Task { [weak self] in
+            guard let self = self else { return }
+            
+            // Watch the service's records for changes
+            for await _ in self.service.$records.values {
+                // Convert dictionaries to SchemaRecords whenever records update
+                await MainActor.run {
+                    self.records = self.service.records.map { record in
+                        self.schema.createRecord(from: record)
+                    }
+                }
+            }
+        }
     }
     
     /// Load records as SchemaRecords
+    /// This will also set up real-time watching if not already active
     public func loadRecords(
         fields: [String]? = nil,
         whereClause: String? = nil,
@@ -230,6 +260,7 @@ public class SchemaBasedSync: ObservableObject {
         )
         
         // Convert dictionaries to SchemaRecords
+        // Note: If watch is active, this will also update automatically
         records = service.records.map { record in
             schema.createRecord(from: record)
         }
@@ -273,6 +304,49 @@ public class SchemaBasedSync: ObservableObject {
     /// Delete a record
     public func deleteRecord(_ record: SchemaRecord) async throws {
         try await service.deleteRecord(id: record.id)
+    }
+    
+    // MARK: - Convenience Query Methods
+    
+    /// Get all records (for current user by default)
+    /// - Returns: Array of all SchemaRecords
+    public func getAll() async throws -> [SchemaRecord] {
+        try await loadRecords()
+        return records
+    }
+    
+    /// Get all records matching a WHERE clause
+    /// - Parameters:
+    ///   - whereClause: SQL WHERE clause (without "WHERE" keyword), e.g., "is_completed = ?"
+    ///   - parameters: Parameters for the WHERE clause
+    ///   - orderBy: Optional ORDER BY clause, e.g., "created_at DESC"
+    /// - Returns: Array of matching SchemaRecords
+    public func getAll(where whereClause: String, parameters: [Any] = [], orderBy: String? = nil) async throws -> [SchemaRecord] {
+        try await loadRecords(whereClause: whereClause, parameters: parameters, orderBy: orderBy)
+        return records
+    }
+    
+    /// Get one record by ID
+    /// - Parameter id: Record ID
+    /// - Returns: SchemaRecord if found, nil otherwise
+    public func getOne(id: String) async throws -> SchemaRecord? {
+        try await loadRecords(
+            whereClause: "\(schema.primaryKey) = ?",
+            parameters: [id]
+        )
+        return records.first
+    }
+    
+    /// Get first record matching a WHERE clause
+    /// - Parameters:
+    ///   - whereClause: SQL WHERE clause (without "WHERE" keyword), e.g., "is_completed = ?"
+    ///   - parameters: Parameters for the WHERE clause
+    ///   - orderBy: Optional ORDER BY clause, e.g., "created_at DESC"
+    /// - Returns: First matching SchemaRecord, or nil if none found
+    public func getFirst(where whereClause: String, parameters: [Any] = [], orderBy: String? = nil) async throws -> SchemaRecord? {
+        let orderByClause = orderBy ?? schema.defaultOrderBy
+        try await loadRecords(whereClause: whereClause, parameters: parameters, orderBy: orderByClause)
+        return records.first
     }
 }
 

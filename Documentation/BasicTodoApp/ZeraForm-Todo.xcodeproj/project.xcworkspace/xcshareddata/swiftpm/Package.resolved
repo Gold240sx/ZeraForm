@@ -87,8 +87,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Gold240sx/ZeraForm",
       "state" : {
-        "revision" : "8f4b4e14ccdf1df2402d06accb8362174e9cedbc",
-        "version" : "2.0.6"
+        "revision" : "9c75836153e1dbb2a83d2fe23becf759930c1c6d",
+        "version" : "2.0.7"
       }
     }
   ],
