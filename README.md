@@ -706,6 +706,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
+**Version 2.0.7** - Added `SchemaRecord` and `SchemaBasedSync` for zero-boilerplate schema-driven development. Use your `ZyraTable` schemas directly without code generation - no model structs needed! `SchemaRecord` provides type-safe field access, and `SchemaBasedSync` handles CRUD operations directly with schemas. Perfect for rapid development and multi-table forms.
+
 **Version 2.0.6** - Added index support for tables. Indexes are now generated in PostgreSQL migrations, MySQL migrations, Prisma schemas, Drizzle schemas, and PowerSync tables. Use `PowerSync.Index` and `PowerSync.IndexedColumn` to define indexes on your tables.
 
 **Version 2.0.5** - Added light encryption mode (`.encryptedLight()`) for shared/master key encryption. RLS and privacy controls handle access - encryption is just for at-rest protection. Per-user encryption (`.encrypted()`) remains for highly sensitive data.
