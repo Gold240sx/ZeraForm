@@ -84,26 +84,108 @@ public final class SupabaseConnector: PowerSyncBackendConnectorProtocol {
                 let tableName = entry.table
                 let table = client.from(tableName)
                 
-                ZyraFormLogger.debug("📤 Uploading \(entry.op) to table '\(tableName)' with id '\(entry.id)'")
+                // Extract ID for logging - PowerSync opData values are String?
+                let logId: String
+                if !entry.id.isEmpty {
+                    logId = entry.id
+                } else if let opData = entry.opData, let idValue = opData["id"], let idString = idValue {
+                    logId = idString
+                } else {
+                    logId = "missing"
+                }
+                ZyraFormLogger.debug("📤 Uploading \(entry.op) to table '\(tableName)' with id '\(logId)' (entry.id: '\(entry.id)', opData.id: '\(entry.opData?["id"] ?? "nil")')")
                 
                 switch entry.op {
                 case .put:
-                    var data = entry.opData ?? [:]
-                    data["id"] = entry.id
+                    // PowerSync example pattern: var data = entry.opData ?? [:]; data["id"] = entry.id
+                    // But entry.id might be empty for new records, so we check opData first
+                    var opDataDict = entry.opData ?? [:]
+                    
+                    // Extract ID - PowerSync should have it in entry.id or opData["id"]
+                    // For PUT operations, entry.id should be the record ID
+                    let recordId: String
+                    if !entry.id.isEmpty {
+                        // entry.id is the record ID (PowerSync example pattern)
+                        recordId = entry.id
+                    } else if let idValue = opDataDict["id"], let idString = idValue, !idString.isEmpty {
+                        // ID is in opData
+                        recordId = idString
+                    } else {
+                        // ID is missing - this shouldn't happen if PowerSync is tracking properly
+                        // Log all available info for debugging
+                        ZyraFormLogger.error("❌ Cannot upload record - ID is missing")
+                        ZyraFormLogger.error("📋 Entry ID: '\(entry.id)'")
+                        ZyraFormLogger.error("📋 Client ID: \(entry.clientId)")
+                        ZyraFormLogger.error("📋 OpData keys: \(opDataDict.keys.joined(separator: ", "))")
+                        ZyraFormLogger.error("📋 OpData ID value: \(String(describing: opDataDict["id"]))")
+                        ZyraFormLogger.error("💡 This usually means PowerSync isn't tracking the ID properly")
+                        ZyraFormLogger.error("💡 Check that your INSERT statement includes the 'id' field")
+                        continue
+                    }
+                    
+                    // Ensure ID is in opData (PowerSync example pattern)
+                    opDataDict["id"] = recordId
+                    
+                    // Convert opData from [String: String?] to [String: AnyJSON] for Supabase
+                    // Supabase requires Encodable, and AnyJSON is Encodable
+                    var data: [String: AnyJSON] = [:]
+                    for (key, value) in opDataDict {
+                        if let stringValue = value {
+                            data[key] = .string(stringValue)
+                        } else {
+                            data[key] = .null
+                        }
+                    }
+                    // Ensure ID is set (PowerSync example pattern)
+                    data["id"] = .string(recordId)
+                    
                     try await table.upsert(data).execute()
-                    ZyraFormLogger.debug("✅ Successfully upserted record '\(entry.id)' to '\(tableName)'")
+                    ZyraFormLogger.debug("✅ Successfully upserted record '\(recordId)' to '\(tableName)'")
                     
                 case .patch:
                     guard let opData = entry.opData else {
                         ZyraFormLogger.warning("⚠️ PATCH operation skipped - no data provided for '\(entry.id)'")
                         continue
                     }
-                    try await table.update(opData).eq("id", value: entry.id).execute()
-                    ZyraFormLogger.debug("✅ Successfully updated record '\(entry.id)' in '\(tableName)'")
+                    
+                    // Extract ID - PowerSync opData values are String?
+                    let recordId: String
+                    if !entry.id.isEmpty {
+                        recordId = entry.id
+                    } else if let idValue = opData["id"], let idString = idValue {
+                        recordId = idString
+                    } else {
+                        ZyraFormLogger.error("❌ Cannot update record - ID is missing")
+                        continue
+                    }
+                    
+                    // Convert opData from [String: String?] to [String: AnyJSON] for Supabase
+                    var patchData: [String: AnyJSON] = [:]
+                    for (key, value) in opData {
+                        if let stringValue = value {
+                            patchData[key] = .string(stringValue)
+                        } else {
+                            patchData[key] = .null
+                        }
+                    }
+                    
+                    try await table.update(patchData).eq("id", value: recordId).execute()
+                    ZyraFormLogger.debug("✅ Successfully updated record '\(recordId)' in '\(tableName)'")
                     
                 case .delete:
-                    try await table.delete().eq("id", value: entry.id).execute()
-                    ZyraFormLogger.debug("✅ Successfully deleted record '\(entry.id)' from '\(tableName)'")
+                    // Extract ID from entry.id or from opData if entry.id is empty
+                    let recordId: String
+                    if entry.id.isEmpty, let opData = entry.opData, let id = opData["id"] as? String {
+                        recordId = id
+                    } else {
+                        recordId = entry.id
+                    }
+                    if recordId.isEmpty {
+                        ZyraFormLogger.error("❌ Cannot delete record - ID is missing")
+                        continue
+                    }
+                    try await table.delete().eq("id", value: recordId).execute()
+                    ZyraFormLogger.debug("✅ Successfully deleted record '\(recordId)' from '\(tableName)'")
                 }
             }
             

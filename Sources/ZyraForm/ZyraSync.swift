@@ -22,6 +22,10 @@ public class ZyraSync: ObservableObject {
     @Published public var records: [[String: Any]] = []
     
     private var watchTask: Task<Void, Never>?
+    private var currentWatchQuery: String?
+    private var currentWatchParams: [Any] = []
+    private var currentWatchFields: [String] = []
+    private var currentWatchConfig: (encryptedFields: [String], integerFields: [String], booleanFields: [String]) = ([], [], [])
     
     /// Initialize with table name, user ID, database, and optional encryption manager
     public init(tableName: String, userId: String, database: PowerSync.PowerSyncDatabaseProtocol, encryptionManager: SecureEncryptionManager? = nil) {
@@ -56,9 +60,6 @@ public class ZyraSync: ObservableObject {
         integerFields: [String] = [],
         booleanFields: [String] = []
     ) async throws {
-        // Cancel any existing watch task to prevent multiple concurrent loads
-        watchTask?.cancel()
-        
         // Build SELECT clause
         let selectClause = fields.contains("*") ? "*" : fields.map { "\"\($0)\"" }.joined(separator: ", ")
         var query = "SELECT \(selectClause) FROM \"\(tableName)\""
@@ -77,88 +78,99 @@ public class ZyraSync: ObservableObject {
         // Add ORDER BY
         query += " ORDER BY \(orderBy)"
 
-        do {
-            var allResults: [[String: Any]] = []
+        // Build list of fields to read from cursor
+        let fieldsToRead: [String]
+        if fields.contains("*") {
+            var commonFields = ["id", "user_id", "owner_id", "created_at", "updated_at"]
+            commonFields.append(contentsOf: encryptedFields)
+            commonFields.append(contentsOf: integerFields)
+            commonFields.append(contentsOf: booleanFields)
+            fieldsToRead = Array(Set(commonFields))
+        } else {
+            fieldsToRead = fields
+        }
 
-            // Build list of fields to read from cursor
-            // If using "*", you must provide field names via encryptedFields, integerFields, etc.
-            // OR explicitly specify fields array. For "*", we'll try to read common fields.
-            let fieldsToRead: [String]
-            if fields.contains("*") {
-                // When using "*", attempt to read common fields plus any mentioned in config arrays
-                var commonFields = ["id", "user_id", "owner_id", "created_at", "updated_at"]
-                commonFields.append(contentsOf: encryptedFields)
-                commonFields.append(contentsOf: integerFields)
-                commonFields.append(contentsOf: booleanFields)
-                fieldsToRead = Array(Set(commonFields)) // Remove duplicates
-            } else {
-                fieldsToRead = fields
-            }
+        // Store watch configuration for continuous watching
+        currentWatchQuery = query
+        currentWatchParams = queryParams
+        currentWatchFields = fieldsToRead
+        currentWatchConfig = (encryptedFields, integerFields, booleanFields)
 
-            for try await results in try powerSync.watch(
-                sql: query,
-                parameters: queryParams,
-                mapper: { cursor in
-                    var dict: [String: Any] = [:]
+        // Cancel existing watch if query changed
+        let queryString = "\(query)|\(queryParams.map { "\($0)" }.joined(separator: ","))"
+        if watchTask != nil {
+            watchTask?.cancel()
+        }
 
-                    // Read each field
-                    for fieldName in fieldsToRead {
-                        // Try different types in order of likelihood
-                        if encryptedFields.contains(fieldName) {
-                            // Encrypted field - read as string and decrypt
-                            if let encryptedValue = try? cursor.getStringOptional(name: fieldName) {
-                                if let decrypted = try? self.encryptionManager.decryptIfEnabled(encryptedValue, for: self.userId) {
-                                    // Check if it's an integer field
-                                    if integerFields.contains(fieldName), let intValue = Int(decrypted) {
-                                        dict[fieldName] = intValue
-                                    }
-                                    // Check if it's a boolean field
-                                    else if booleanFields.contains(fieldName) {
-                                        dict[fieldName] = decrypted == "true" || decrypted == "1"}
-                                    else {
-                                        dict[fieldName] = decrypted
+        // Start continuous watch in background task
+        watchTask = Task { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                ZyraFormLogger.debug("🔍 Starting PowerSync watch for \(self.tableName)")
+                
+                for try await results in try self.powerSync.watch(
+                    sql: query,
+                    parameters: queryParams,
+                    mapper: { cursor in
+                        var dict: [String: Any] = [:]
+
+                        // Read each field
+                        for fieldName in fieldsToRead {
+                            if encryptedFields.contains(fieldName) {
+                                if let encryptedValue = try? cursor.getStringOptional(name: fieldName) {
+                                    if let decrypted = try? self.encryptionManager.decryptIfEnabled(encryptedValue, for: self.userId) {
+                                        if integerFields.contains(fieldName), let intValue = Int(decrypted) {
+                                            dict[fieldName] = intValue
+                                        } else if booleanFields.contains(fieldName) {
+                                            dict[fieldName] = decrypted == "true" || decrypted == "1"
+                                        } else {
+                                            dict[fieldName] = decrypted
+                                        }
+                                    } else {
+                                        dict[fieldName] = encryptedValue
                                     }
                                 } else {
-                                    dict[fieldName] = encryptedValue
+                                    dict[fieldName] = nil
+                                }
+                            } else if integerFields.contains(fieldName) {
+                                dict[fieldName] = try? cursor.getIntOptional(name: fieldName)
+                            } else if booleanFields.contains(fieldName) {
+                                if let intValue = try? cursor.getIntOptional(name: fieldName) {
+                                    dict[fieldName] = intValue == 1
+                                } else if let strValue = try? cursor.getStringOptional(name: fieldName) {
+                                    dict[fieldName] = strValue == "true" || strValue == "1"
                                 }
                             } else {
-                                dict[fieldName] = nil
-                            }
-                        } else if integerFields.contains(fieldName) {
-                            // Integer field (not encrypted)
-                            dict[fieldName] = try? cursor.getIntOptional(name: fieldName)
-                        } else if booleanFields.contains(fieldName) {
-                            // Boolean field (not encrypted) - try as int first
-                            if let intValue = try? cursor.getIntOptional(name: fieldName) {
-                                dict[fieldName] = intValue == 1
-                            } else if let strValue = try? cursor.getStringOptional(name: fieldName) {
-                                dict[fieldName] = strValue == "true" || strValue == "1"}
-                        } else {
-                            // Try string first (most common)
-                            if let strValue = try? cursor.getStringOptional(name: fieldName) {
-                                dict[fieldName] = strValue
-                            } else if let intValue = try? cursor.getIntOptional(name: fieldName) {
-                                dict[fieldName] = intValue
-                            } else if let doubleValue = try? cursor.getDoubleOptional(name: fieldName) {
-                                dict[fieldName] = doubleValue
+                                if let strValue = try? cursor.getStringOptional(name: fieldName) {
+                                    dict[fieldName] = strValue
+                                } else if let intValue = try? cursor.getIntOptional(name: fieldName) {
+                                    dict[fieldName] = intValue
+                                } else if let doubleValue = try? cursor.getDoubleOptional(name: fieldName) {
+                                    dict[fieldName] = doubleValue
+                                }
                             }
                         }
+
+                        return dict
                     }
-
-                    return dict
+                ) {
+                    // Update records whenever PowerSync emits new data
+                    await MainActor.run {
+                        self.records = results
+                        ZyraFormLogger.debug("🔄 PowerSync watch updated: \(results.count) records from \(self.tableName)")
+                    }
                 }
-            ) {
-                allResults = results
-                break
+            } catch {
+                if !(error is CancellationError) {
+                    ZyraFormLogger.error("❌ PowerSync watch error for \(self.tableName): \(error.localizedDescription)")
+                }
             }
-
-            records = allResults
-            ZyraFormLogger.debug("🔍 Loaded \(allResults.count) records from \(tableName)")
-
-        } catch {
-            ZyraFormLogger.error("❌ Failed to load records from \(tableName): \(error.localizedDescription)")
-            throw error
         }
+        
+        // Wait for initial load
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+        ZyraFormLogger.debug("✅ Watch started for \(tableName)")
     }
 
 
@@ -231,13 +243,7 @@ public class ZyraSync: ObservableObject {
 
         try await powerSync.execute(sql: query, parameters: parameters)
 
-        // Reload data (use "1 = 1" to load all records without user_id filter)
-        try await loadRecords(
-            fields: ["*"],
-            whereClause: "1 = 1",
-            orderBy: "created_at DESC"
-        )
-
+        // No need to reload - PowerSync watch will automatically update records
         ZyraFormLogger.info("✅ Created record in \(tableName): \(id)")
         return id
     }
@@ -301,13 +307,7 @@ public class ZyraSync: ObservableObject {
 
         try await powerSync.execute(sql: query, parameters: parameters)
 
-        // Reload data (use "1 = 1" to load all records without user_id filter)
-        try await loadRecords(
-            fields: ["*"],
-            whereClause: "1 = 1",
-            orderBy: "created_at DESC"
-        )
-
+        // No need to reload - PowerSync watch will automatically update records
         ZyraFormLogger.info("✅ Updated record in \(tableName): \(id)")
     }
 
@@ -346,16 +346,9 @@ public class ZyraSync: ObservableObject {
 
         try await powerSync.execute(sql: deleteQuery, parameters: [id])
 
+        // No need to reload - PowerSync watch will automatically update records
         ZyraFormLogger.debug("✅ DELETE SQL executed")
         ZyraFormLogger.info("✅ Record deletion completed - PowerSync will handle sync")
-
-        // Refresh data after deletion (use "1 = 1" to load all records without user_id filter)
-        try await loadRecords(
-            fields: ["*"],
-            whereClause: "1 = 1",
-            orderBy: "created_at DESC"
-        )
-        ZyraFormLogger.debug("✅ Records reloaded after deletion")
     }
 
     // MARK: - Batch Operations

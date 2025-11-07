@@ -11,7 +11,7 @@ import ZyraForm
 
 @MainActor
 class TodoService: ObservableObject {
-    private let service: SchemaBasedSync
+    private var service: SchemaBasedSync?
     let userId: String
     private var cancellables = Set<AnyCancellable>()
     
@@ -21,14 +21,21 @@ class TodoService: ObservableObject {
     
     init(userId: String) {
         self.userId = userId
+        // Service will be initialized lazily when loadTodos() is called
+    }
+    
+    private func ensureService() throws -> SchemaBasedSync {
+        if let existingService = service {
+            return existingService
+        }
         
         guard let manager = ZyraFormManager.shared else {
-            fatalError("ZyraFormManager not initialized")
+            throw NSError(domain: "TodoService", code: 1, userInfo: [NSLocalizedDescriptionKey: "ZyraFormManager not initialized"])
         }
         
         // Use SchemaBasedSync - works directly with todoTable schema!
         // watchForUpdates defaults to true, enabling real-time PowerSync sync from Supabase
-        self.service = SchemaBasedSync(
+        let newService = SchemaBasedSync(
             schema: todoTable,
             userId: userId,
             database: manager.database
@@ -37,12 +44,15 @@ class TodoService: ObservableObject {
         
         // Observe service.records for real-time updates
         // When PowerSync detects changes in Supabase, service.records updates automatically
-        service.$records
+        newService.$records
             .receive(on: DispatchQueue.main)
             .sink { [weak self] updatedRecords in
                 self?.todos = updatedRecords
             }
             .store(in: &cancellables)
+        
+        self.service = newService
+        return newService
     }
     
     func loadTodos() async {
@@ -50,6 +60,8 @@ class TodoService: ObservableObject {
         errorMessage = nil
         
         do {
+            let service = try ensureService()
+            
             // This sets up the PowerSync watch query
             // After this, any changes in Supabase will automatically update todos via the Combine publisher
             try await service.loadRecords(
@@ -67,6 +79,8 @@ class TodoService: ObservableObject {
     }
     
     func createTodo(title: String, description: String = "") async throws {
+        let service = try ensureService()
+        
         // Create record directly from schema - clean syntax!
         let record = todoTable.createEmptyRecord()
             .setting([
@@ -77,12 +91,13 @@ class TodoService: ObservableObject {
             ])
         
         _ = try await service.createRecord(record)
-        await loadTodos()
+        // No need to reload - PowerSync watch will automatically update todos
     }
     
     func updateTodo(_ todo: SchemaRecord) async throws {
+        let service = try ensureService()
         try await service.updateRecord(todo)
-        await loadTodos()
+        // No need to reload - PowerSync watch will automatically update todos
     }
     
     func toggleTodo(_ todo: SchemaRecord) async throws {
@@ -92,8 +107,9 @@ class TodoService: ObservableObject {
     }
     
     func deleteTodo(_ todo: SchemaRecord) async throws {
+        let service = try ensureService()
         try await service.deleteRecord(todo)
-        await loadTodos()
+        // No need to reload - PowerSync watch will automatically update todos
     }
     
     // Helper methods for type-safe access
