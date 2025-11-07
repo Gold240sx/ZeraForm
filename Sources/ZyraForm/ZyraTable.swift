@@ -130,7 +130,7 @@ extension ColumnMetadata.SwiftColumnType {
         case .uuid:
             type = "String"
         case .date:
-            type = "String"
+            type = "Date"
         case .enum(let dbEnum):
             // Use the enum name as the Swift type
             // Prefer the passed enumType parameter, otherwise use the associated enum
@@ -2082,6 +2082,39 @@ public struct ZyraTable: Hashable {
         )
     }
     
+    /// Create a filtered version of this table with only specified fields
+    /// Useful for multi-table forms where you only want certain fields from each table
+    public func withFields(_ fields: [String]) -> ZyraTable {
+        let filteredColumns = columns.filter { fields.contains($0.name) }
+        // Create column builders from filtered columns
+        let columnBuilders = filteredColumns.map { column in
+            var builder = ColumnBuilder(name: column.name, powerSyncColumn: column.powerSyncColumn)
+            builder.isNullable = column.isNullable
+            builder.isUnique = column.isUnique
+            builder.defaultValue = column.defaultValue
+            builder.foreignKey = column.foreignKey
+            builder.enumType = column.enumType
+            builder.isEncrypted = column.isEncrypted
+            builder.minLength = column.minLength
+            builder.maxLength = column.maxLength
+            builder.intMin = column.intMin
+            builder.intMax = column.intMax
+            builder.isEmail = column.isEmail
+            builder.isUrl = column.isUrl
+            // Add other properties as needed
+            return builder
+        }
+        
+        return ZyraTable(
+            name: name,
+            primaryKey: primaryKey,
+            defaultOrderBy: defaultOrderBy,
+            columns: columnBuilders,
+            indexes: indexes,
+            rlsPolicies: rlsPolicies
+        )
+    }
+    
     // MARK: - Foreign Key Operations
     
     /// Generate SQL foreign key constraints
@@ -3327,30 +3360,51 @@ public struct ZyraTable: Hashable {
     
     // MARK: - Swift Model Generation
     
-    /// Generate Swift model struct code
-    public func generateSwiftModel(modelName: String? = nil) -> String {
-        // Note: dbPrefix should be provided by the app configuration
+    /// Generate Swift model struct code with ZyraModel conformance
+    public func generateSwiftModel(modelName: String? = nil, schemaVariableName: String? = nil) -> String {
         let structName = modelName ?? toPascalCase(name)
+        let schemaVar = schemaVariableName ?? toCamelCase(name) + "Table"
         
         var code = "// MARK: - \(structName)\n\n"
-        code += "struct \(structName): Codable, Identifiable, Hashable {\n"
+        code += "import Foundation\n"
+        code += "import ZyraForm\n\n"
+        code += "struct \(structName): ZyraModel {\n"
+        code += "    // Reference to the schema - provides automatic validation and type safety\n"
+        code += "    static let schema = \(schemaVar)\n\n"
         
         // Generate properties
         var properties: [String] = []
         var codingKeys: [String] = []
+        var initStatements: [String] = []
+        var toDictStatements: [String] = []
         
         for column in columns {
             let swiftName = toCamelCase(column.name)
-            let swiftType = column.swiftType.toSwiftType(isNullable: column.isNullable, enumType: column.enumType)
+            // Use Date for date types, otherwise use the standard Swift type
+            let swiftType: String
+            if column.swiftType == .date {
+                swiftType = column.isNullable ? "Date?" : "Date"
+            } else {
+                swiftType = column.swiftType.toSwiftType(isNullable: column.isNullable, enumType: column.enumType)
+            }
             
+            // Property declaration
             properties.append("    let \(swiftName): \(swiftType)")
             
-            // Add CodingKey if name differs from Swift name
+            // CodingKey
             if column.name != swiftName {
                 codingKeys.append("        case \(swiftName) = \"\(column.name)\"")
             } else {
                 codingKeys.append("        case \(swiftName)")
             }
+            
+            // Init from record
+            let initLine = generateInitLine(for: column, swiftName: swiftName, swiftType: swiftType)
+            initStatements.append(initLine)
+            
+            // toDictionary
+            let dictLine = generateToDictLine(for: column, swiftName: swiftName)
+            toDictStatements.append(dictLine)
         }
         
         // Add enum definitions if any columns use enums
@@ -3383,27 +3437,148 @@ public struct ZyraTable: Hashable {
         
         if !enumDefinitions.isEmpty {
             code += enumDefinitions.joined(separator: "\n")
-            code += "\n\n"
+            code += "\n"
         }
         
         code += properties.joined(separator: "\n")
         code += "\n\n"
         code += "    enum CodingKeys: String, CodingKey {\n"
         code += codingKeys.joined(separator: "\n")
-        code += "\n    }\n"
+        code += "\n    }\n\n"
+        
+        // Generate init(from record:)
+        code += "    // Initialize from database record dictionary\n"
+        code += "    init(from record: [String: Any]) throws {\n"
+        code += initStatements.joined(separator: "\n")
+        code += "\n    }\n\n"
+        
+        // Generate toDictionary
+        code += "    // Convert to dictionary for saving\n"
+        code += "    func toDictionary(excluding columns: [String] = []) -> [String: Any] {\n"
+        code += "        var dict: [String: Any] = [\n"
+        code += toDictStatements.joined(separator: ",\n")
+        code += "\n        ]\n\n"
+        code += "        // Remove excluded columns\n"
+        code += "        for column in columns {\n"
+        code += "            dict.removeValue(forKey: column)\n"
+        code += "        }\n\n"
+        code += "        return dict\n"
+        code += "    }\n"
         code += "}\n"
         
         return code
     }
     
-    /// Generate standalone Swift model file
-    public func generateSwiftModelFile(modelName: String? = nil) -> String {
-        let structName = modelName ?? toPascalCase(name)
+    /// Generate initialization line for a column
+    private func generateInitLine(for column: ColumnMetadata, swiftName: String, swiftType: String) -> String {
+        let columnName = column.name
+        var line = "        self.\(swiftName) = "
         
-        var code = "import Foundation\n\n"
-        code += generateSwiftModel(modelName: modelName)
+        switch column.swiftType {
+        case .bool:
+            line += """
+            {
+                if let completed = record["\(columnName)"] as? String {
+                    return completed.lowercased() == "true" || completed == "1"
+                } else if let completed = record["\(columnName)"] as? Bool {
+                    return completed
+                } else if let completed = record["\(columnName)"] as? Int {
+                    return completed != 0
+                }
+                return \(column.defaultValue?.lowercased() == "true" ? "true" : "false")
+            }()
+            """
+        case .integer:
+            if column.isNullable {
+                line += """
+                {
+                    if let intValue = record["\(columnName)"] as? Int {
+                        return intValue
+                    } else if let strValue = record["\(columnName)"] as? String, let intValue = Int(strValue) {
+                        return intValue
+                    }
+                    return nil
+                }()
+                """
+            } else {
+                line += """
+                record["\(columnName)"] as? Int ?? (record["\(columnName)"] as? String).flatMap { Int($0) } ?? \(column.defaultValue ?? "0")
+                """
+            }
+        case .double:
+            if column.isNullable {
+                line += """
+                {
+                    if let doubleValue = record["\(columnName)"] as? Double {
+                        return doubleValue
+                    } else if let strValue = record["\(columnName)"] as? String, let doubleValue = Double(strValue) {
+                        return doubleValue
+                    }
+                    return nil
+                }()
+                """
+            } else {
+                line += """
+                record["\(columnName)"] as? Double ?? (record["\(columnName)"] as? String).flatMap { Double($0) } ?? \(column.defaultValue ?? "0.0")
+                """
+            }
+        case .date:
+            if column.isNullable {
+                line += """
+                {
+                    if let dateValue = record["\(columnName)"] as? Date {
+                        return dateValue
+                    } else if let strValue = record["\(columnName)"] as? String {
+                        return ISO8601DateFormatter().date(from: strValue)
+                    }
+                    return nil
+                }()
+                """
+            } else {
+                line += """
+                {
+                    if let dateValue = record["\(columnName)"] as? Date {
+                        return dateValue
+                    } else if let strValue = record["\(columnName)"] as? String {
+                        return ISO8601DateFormatter().date(from: strValue) ?? Date()
+                    }
+                    return Date()
+                }()
+                """
+            }
+        default:
+            if column.isNullable {
+                line += "record[\"\(columnName)\"] as? \(swiftType)"
+            } else {
+                let defaultValue = column.defaultValue ?? (swiftType == "String" ? "\"\"" : "nil")
+                line += "record[\"\(columnName)\"] as? \(swiftType) ?? \(defaultValue)"
+            }
+        }
         
-        return code
+        return line
+    }
+    
+    /// Generate toDictionary line for a column
+    private func generateToDictLine(for column: ColumnMetadata, swiftName: String) -> String {
+        let columnName = column.name
+        
+        switch column.swiftType {
+        case .bool:
+            return "            \"\(columnName)\": \(swiftName) ? \"true\" : \"false\""
+        case .date:
+            if column.isNullable {
+                return "            \"\(columnName)\": \(swiftName) != nil ? ISO8601DateFormatter().string(from: \(swiftName)!) : nil"
+            } else {
+                return "            \"\(columnName)\": ISO8601DateFormatter().string(from: \(swiftName))"
+            }
+        default:
+            return "            \"\(columnName)\": \(swiftName)"
+        }
+    }
+    
+    /// Generate standalone Swift model file with ZyraModel conformance
+    public func generateSwiftModelFile(modelName: String? = nil, schemaVariableName: String? = nil) -> String {
+        return generateSwiftModel(modelName: modelName, schemaVariableName: schemaVariableName)
     }
     
     // MARK: - Drizzle Schema Generation
@@ -5261,7 +5436,11 @@ public struct ZyraSchema {
         
         // Generate table models
         code += "// MARK: - Models\n\n"
-        code += allTables.map { $0.generateSwiftModel() }.joined(separator: "\n\n")
+        // Note: Schema variable names need to be provided - this is a simplified version
+        code += allTables.map { table in
+            let schemaVar = toCamelCase(table.name) + "Table"
+            return table.generateSwiftModel(schemaVariableName: schemaVar)
+        }.joined(separator: "\n\n")
         
         return code
     }
