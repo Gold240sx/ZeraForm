@@ -10,16 +10,26 @@ import ZyraForm
 import ZyraFormSupabase
 
 struct AppConfig {
-    // Supabase Configuration
-    static let supabaseURL = URL(string: "https://your-project.supabase.co")!
-    static let supabaseKey = "your-supabase-anon-key"
+    // MARK: - Supabase Configuration
+    // Get these from your Supabase project dashboard:
+    // 1. Go to https://app.supabase.com
+    // 2. Select your project
+    // 3. Go to Settings → API
+    // 4. Copy "Project URL" and "anon public" key
+    static let supabaseURL = URL(string: "https://YOUR_PROJECT_ID.supabase.co")! // ⚠️ REPLACE WITH YOUR SUPABASE URL
+    static let supabaseKey = "YOUR_SUPABASE_ANON_KEY" // ⚠️ REPLACE WITH YOUR SUPABASE ANON KEY
     
-    // PowerSync Configuration (optional - for offline sync)
-    static let powerSyncEndpoint = "https://your-id.powersync.journeyapps.com"
-    static let powerSyncPassword = "your-powersync-password"
+    // MARK: - PowerSync Configuration
+    // Get these from your PowerSync dashboard:
+    // 1. Go to https://app.powersync.com
+    // 2. Select your instance
+    // 3. Copy the "Instance URL" and "Instance Password"
+    static let powerSyncEndpoint = "https://YOUR_INSTANCE_ID.powersync.journeyapps.com" // ⚠️ REPLACE WITH YOUR POWERSYNC ENDPOINT
+    static let powerSyncPassword = "YOUR_POWERSYNC_PASSWORD" // ⚠️ REPLACE WITH YOUR POWERSYNC PASSWORD
     
-    // User ID (in a real app, get this from authentication)
-    static let userId = "current-user-id"
+    // MARK: - User Configuration
+    // In a real app, get this from Supabase Auth after user signs in
+    static let userId = "YOUR_USER_ID" // ⚠️ REPLACE WITH ACTUAL USER ID FROM AUTH
     
     // Create ZyraForm configuration
     static func createConfig() -> ZyraFormConfig {
