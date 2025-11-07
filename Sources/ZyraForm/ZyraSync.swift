@@ -389,3 +389,114 @@ public class ZyraSync: ObservableObject {
         }
     }
 }
+
+// MARK: - Generic ZyraSync for ZyraModel
+
+/// Generic ZyraSync service that works with ZyraModel types
+@MainActor
+public class TypedZyraSync<Model: ZyraModel>: ObservableObject {
+    internal let baseService: ZyraSync
+    
+    @Published public var records: [Model] = []
+    
+    /// Initialize with model type (infers table name from schema)
+    public init(
+        userId: String,
+        database: PowerSync.PowerSyncDatabaseProtocol,
+        encryptionManager: SecureEncryptionManager? = nil
+    ) {
+        let tableName = Model.schema.name
+        self.baseService = ZyraSync(
+            tableName: tableName,
+            userId: userId,
+            database: database,
+            encryptionManager: encryptionManager
+        )
+    }
+    
+    /// Initialize with explicit table name override
+    public init(
+        tableName: String,
+        userId: String,
+        database: PowerSync.PowerSyncDatabaseProtocol,
+        encryptionManager: SecureEncryptionManager? = nil
+    ) {
+        self.baseService = ZyraSync(
+            tableName: tableName,
+            userId: userId,
+            database: database,
+            encryptionManager: encryptionManager
+        )
+    }
+    
+    /// Load records as typed models
+    public func loadRecords(
+        fields: [String]? = nil,
+        whereClause: String? = nil,
+        parameters: [Any] = [],
+        orderBy: String? = nil
+    ) async throws {
+        let schema = Model.schema
+        let config = schema.toTableFieldConfig()
+        
+        let fieldsToLoad = fields ?? config.allFields
+        let orderByClause = orderBy ?? config.defaultOrderBy
+        
+        try await baseService.loadRecords(
+            fields: fieldsToLoad,
+            whereClause: whereClause,
+            parameters: parameters,
+            orderBy: orderByClause,
+            encryptedFields: config.encryptedFields,
+            integerFields: config.integerFields,
+            booleanFields: config.booleanFields
+        )
+        
+        // Convert dictionaries to typed models
+        records = try baseService.records.map { record in
+            try Model(from: record)
+        }
+    }
+    
+    /// Create a record from a model
+    public func createRecord(
+        _ model: Model,
+        autoGenerateId: Bool = true,
+        autoTimestamp: Bool = true
+    ) async throws -> String {
+        let schema = Model.schema
+        let config = schema.toTableFieldConfig()
+        
+        var dict = model.toDictionary()
+        
+        return try await baseService.createRecord(
+            fields: dict,
+            encryptedFields: config.encryptedFields,
+            autoGenerateId: autoGenerateId,
+            autoTimestamp: autoTimestamp
+        )
+    }
+    
+    /// Update a record from a model
+    public func updateRecord(
+        _ model: Model,
+        autoTimestamp: Bool = true
+    ) async throws {
+        let schema = Model.schema
+        let config = schema.toTableFieldConfig()
+        
+        var dict = model.toDictionary(excluding: ["id", "created_at"])
+        
+        try await baseService.updateRecord(
+            id: model.id as! String,
+            fields: dict,
+            encryptedFields: config.encryptedFields,
+            autoTimestamp: autoTimestamp
+        )
+    }
+    
+    /// Delete a record
+    public func deleteRecord(_ model: Model) async throws {
+        try await baseService.deleteRecord(id: model.id as! String)
+    }
+}
