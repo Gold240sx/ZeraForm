@@ -13,6 +13,7 @@ import ZyraForm
 class TodoService: ObservableObject {
     private let service: SchemaBasedSync
     let userId: String
+    private var cancellables = Set<AnyCancellable>()
     
     @Published var todos: [SchemaRecord] = []
     @Published var isLoading = false
@@ -26,11 +27,22 @@ class TodoService: ObservableObject {
         }
         
         // Use SchemaBasedSync - works directly with todoTable schema!
+        // watchForUpdates defaults to true, enabling real-time PowerSync sync from Supabase
         self.service = SchemaBasedSync(
             schema: todoTable,
             userId: userId,
             database: manager.database
+            // watchForUpdates defaults to true - real-time sync enabled by default!
         )
+        
+        // Observe service.records for real-time updates
+        // When PowerSync detects changes in Supabase, service.records updates automatically
+        service.$records
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] updatedRecords in
+                self?.todos = updatedRecords
+            }
+            .store(in: &cancellables)
     }
     
     func loadTodos() async {
@@ -38,10 +50,13 @@ class TodoService: ObservableObject {
         errorMessage = nil
         
         do {
+            // This sets up the PowerSync watch query
+            // After this, any changes in Supabase will automatically update todos via the Combine publisher
             try await service.loadRecords(
                 whereClause: "user_id = ?",
                 parameters: [userId]
             )
+            // Initial load - subsequent updates come via Combine publisher
             todos = service.records
             isLoading = false
         } catch {

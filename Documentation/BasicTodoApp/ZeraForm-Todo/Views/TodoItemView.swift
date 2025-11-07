@@ -11,6 +11,7 @@ import ZyraForm
 struct TodoItemView: View {
     let todo: SchemaRecord
     @ObservedObject var todoService: TodoService
+    var onTap: (() -> Void)?
     @State private var isToggling = false
     
     var body: some View {
@@ -26,19 +27,25 @@ struct TodoItemView: View {
             }
             .disabled(isToggling)
             
-            VStack(alignment: .leading, spacing: 4) {
-                Text(todoService.getTitle(todo))
-                    .font(.headline)
-                    .strikethrough(todoService.getCompleted(todo))
-                    .foregroundColor(todoService.getCompleted(todo) ? .secondary : .primary)
-                
-                if let description = todo.get("description", as: String.self), !description.isEmpty {
-                    Text(description)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
+            Button(action: {
+                onTap?()
+            }) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(todoService.getTitle(todo))
+                        .font(.headline)
+                        .strikethrough(todoService.getCompleted(todo))
+                        .foregroundColor(todoService.getCompleted(todo) ? .secondary : .primary)
+                    
+                    if let description = todo.get("description", as: String.self), !description.isEmpty {
+                        Text(description)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .buttonStyle(PlainButtonStyle())
             
             Spacer()
         }
@@ -68,7 +75,8 @@ struct TodoItemView: View {
     List {
         TodoItemView(
             todo: sampleTodo,
-            todoService: TodoService(userId: "test-user")
+            todoService: TodoService(userId: "test-user"),
+            onTap: {}
         )
     }
 }

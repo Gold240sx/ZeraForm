@@ -1,6 +1,8 @@
 # Building a Minimal Todo App with ZyraForm
 
-This guide walks you through building the simplest possible todo app using ZyraForm with full CRUD functionality.
+This guide walks you through building the simplest possible todo app using ZyraForm with full CRUD functionality and real-time sync.
+
+**Updated for ZyraForm v2.0.7+** - Uses `SchemaRecord` and `SchemaBasedSync` for zero-boilerplate, schema-first development.
 
 ## Prerequisites
 
@@ -147,9 +149,11 @@ Then in your service, use `SchemaBasedSync`:
 class TodoService: ObservableObject {
     private let service: SchemaBasedSync
     let userId: String
+    private var cancellables = Set<AnyCancellable>()
     
     @Published var todos: [SchemaRecord] = []
     @Published var isLoading = false
+    @Published var errorMessage: String?
     
     init(userId: String) {
         self.userId = userId
@@ -159,20 +163,34 @@ class TodoService: ObservableObject {
         }
         
         // Use SchemaBasedSync - works directly with todoTable schema!
+        // watchForUpdates: true enables real-time PowerSync sync from Supabase
         self.service = SchemaBasedSync(
             schema: todoTable,
             userId: userId,
-            database: manager.database
+            database: manager.database,
+            watchForUpdates: true  // Enable real-time sync!
         )
+        
+        // Observe service.records for real-time updates
+        // When PowerSync detects changes in Supabase, service.records updates automatically
+        service.$records
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] updatedRecords in
+                self?.todos = updatedRecords
+            }
+            .store(in: &cancellables)
     }
     
     func loadTodos() async {
         isLoading = true
         do {
+            // This sets up the PowerSync watch query
+            // After this, any changes in Supabase will automatically update todos via the Combine publisher
             try await service.loadRecords(
                 whereClause: "user_id = ?",
                 parameters: [userId]
             )
+            // Initial load - subsequent updates come via Combine publisher
             todos = service.records
             isLoading = false
         } catch {
@@ -192,15 +210,35 @@ class TodoService: ObservableObject {
             ])
         
         _ = try await service.createRecord(record)
-        await loadTodos()
+        // No need to reload - real-time sync will update automatically!
+    }
+    
+    func updateTodo(_ todo: SchemaRecord) async throws {
+        try await service.updateRecord(todo)
+        // No need to reload - real-time sync will update automatically!
+    }
+    
+    func toggleTodo(_ todo: SchemaRecord) async throws {
+        let currentCompleted = todo.get("is_completed", as: Bool.self) ?? false
+        let updatedTodo = todo.setting("is_completed", to: !currentCompleted ? "true" : "false")
+        try await updateTodo(updatedTodo)
+    }
+    
+    func deleteTodo(_ todo: SchemaRecord) async throws {
+        try await service.deleteRecord(todo)
+        // No need to reload - real-time sync will update automatically!
     }
     
     // Access fields with type safety
-    func getTodoTitle(_ todo: SchemaRecord) -> String {
+    func getTitle(_ todo: SchemaRecord) -> String {
         return todo.get("title", as: String.self) ?? ""
     }
     
-    func getTodoCompleted(_ todo: SchemaRecord) -> Bool {
+    func getDescription(_ todo: SchemaRecord) -> String {
+        return todo.get("description", as: String.self) ?? ""
+    }
+    
+    func getCompleted(_ todo: SchemaRecord) -> Bool {
         return todo.get("is_completed", as: Bool.self) ?? false
     }
 }
@@ -211,8 +249,33 @@ class TodoService: ObservableObject {
 - ✅ **Type-safe access** - `get("field", as: Type.self)`
 - ✅ **No copy/paste** - everything inferred from schema
 - ✅ **Runtime flexibility** - works with any schema
+- ✅ **Real-time sync** - automatically updates when Supabase changes
+- ✅ **Query methods** - `getAll()`, `getOne(id:)`, `getAll(where:)`, `getFirst(where:)`
 
-### Option 2: Generate Model Code (If You Want Strong Typing)
+### Query Examples
+
+```swift
+// Get all todos
+let allTodos = try await service.getAll()
+
+// Get one todo by ID
+let todo = try await service.getOne(id: todoId)
+
+// Get all completed todos
+let completed = try await service.getAll(
+    where: "is_completed = ?",
+    parameters: ["true"]
+)
+
+// Get first incomplete todo
+let firstIncomplete = try await service.getFirst(
+    where: "is_completed = ?",
+    parameters: ["false"],
+    orderBy: "created_at ASC"
+)
+```
+
+### Option 2: Generate Model Code (Advanced - For Compile-Time Types)
 
 If you prefer compile-time type safety with generated structs:
 
@@ -227,7 +290,7 @@ let todoModelCode = todoTable.generateSwiftModel(
 print(todoModelCode)
 ```
 
-Then use `TypedZyraSync<Todo>` as shown in Step 5.
+Then use `TypedZyraSync<Todo>` instead of `SchemaBasedSync`. See Step 5 Option B for details.
 
 ### Generated Model Example (Option 2 Only)
 
@@ -331,7 +394,9 @@ Choose your approach based on Step 4:
 
 If you chose Option 1 in Step 4, your service is already done! See the example in Step 4.
 
-### Option B: Using Generated Model (TypedZyraSync)
+### Option B: Using Generated Model (TypedZyraSync) - Advanced
+
+**Note**: Option 1 (SchemaRecord) is recommended for most use cases. Option 2 provides compile-time type safety but requires code generation and doesn't include built-in real-time sync.
 
 If you chose Option 2 in Step 4, create `TodoService.swift` using the typed `TypedZyraSync` service:
 
@@ -432,20 +497,23 @@ class TodoService: ObservableObject {
 - ✅ **Cleaner code**: No manual field configuration needed
 - ✅ **Compile-time safety**: Type errors caught at compile time
 
+**Note**: `TypedZyraSync` doesn't include built-in real-time sync like `SchemaBasedSync`. You'll need to manually reload after changes or implement Combine publishers yourself.
+
 ## Step 6: Create the Todo List View
 
-Create `TodoListView.swift`:
+Create `TodoListView.swift` with edit and delete functionality:
 
 ```swift
 import SwiftUI
+import ZyraForm
 
 struct TodoListView: View {
     @StateObject private var todoService: TodoService
     @State private var showingAddTodo = false
-    @State private var newTodoTitle = ""
-    @State private var newTodoDescription = ""
+    @State private var showingEditTodo = false
+    @State private var editingTodo: SchemaRecord?
     
-    init(userId: String) {
+    init(userId: String = AppConfig.userId) {
         _todoService = StateObject(wrappedValue: TodoService(userId: userId))
     }
     
@@ -463,15 +531,22 @@ struct TodoListView: View {
                         Text("No todos yet")
                             .font(.headline)
                             .foregroundColor(.secondary)
-                        Text("Tap + to add your first todo")
-                            .font(.caption)
+                        Text("Tap the + button to add your first todo")
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     List {
-                        ForEach(todoService.todos) { todo in
-                            TodoRowView(todo: todo, todoService: todoService)
+                        ForEach(todoService.todos, id: \.id) { todo in
+                            TodoItemView(
+                                todo: todo,
+                                todoService: todoService,
+                                onTap: {
+                                    editingTodo = todo
+                                    showingEditTodo = true
+                                }
+                            )
                         }
                         .onDelete { indexSet in
                             Task {
@@ -480,6 +555,9 @@ struct TodoListView: View {
                                 }
                             }
                         }
+                    }
+                    .refreshable {
+                        await todoService.loadTodos()
                     }
                 }
             }
@@ -496,16 +574,18 @@ struct TodoListView: View {
             .sheet(isPresented: $showingAddTodo) {
                 AddTodoView(todoService: todoService)
             }
-            .task {
-                await todoService.loadTodos()
+            .sheet(isPresented: $showingEditTodo) {
+                if let todo = editingTodo {
+                    EditTodoView(todo: todo, todoService: todoService)
+                }
             }
-            .refreshable {
+            .task {
                 await todoService.loadTodos()
             }
         }
     }
     
-    private func deleteTodo(_ todo: Todo) async {
+    private func deleteTodo(_ todo: SchemaRecord) async {
         do {
             try await todoService.deleteTodo(todo)
         } catch {
@@ -515,64 +595,94 @@ struct TodoListView: View {
 }
 ```
 
-## Step 7: Create the Todo Row View
+## Step 7: Create the Todo Item View
 
-Create `TodoRowView.swift`:
+Create `TodoItemView.swift`:
 
 ```swift
 import SwiftUI
+import ZyraForm
 
-struct TodoRowView: View {
-    let todo: Todo
+struct TodoItemView: View {
+    let todo: SchemaRecord
     @ObservedObject var todoService: TodoService
+    var onTap: (() -> Void)?
+    @State private var isToggling = false
     
     var body: some View {
         HStack {
             Button(action: {
                 Task {
-                    do {
-                        try await todoService.toggleTodo(todo)
-                    } catch {
-                        print("Failed to toggle todo: \(error)")
-                    }
+                    await toggleTodo()
                 }
             }) {
-                Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(todo.isCompleted ? .green : .gray)
+                Image(systemName: todoService.getCompleted(todo) ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(todoService.getCompleted(todo) ? .green : .gray)
+                    .font(.title2)
+            }
+            .disabled(isToggling)
+            
+            Button(action: {
+                onTap?()
+            }) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(todoService.getTitle(todo))
+                        .font(.headline)
+                        .strikethrough(todoService.getCompleted(todo))
+                        .foregroundColor(todoService.getCompleted(todo) ? .secondary : .primary)
+                    
+                    if let description = todo.get("description", as: String.self), !description.isEmpty {
+                        Text(description)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .buttonStyle(PlainButtonStyle())
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(todo.title)
-                    .strikethrough(todo.isCompleted)
-                    .foregroundColor(todo.isCompleted ? .secondary : .primary)
-                
-                if !todo.description.isEmpty {
-                    Text(todo.description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .strikethrough(todo.isCompleted)
-                }
-            }
             
             Spacer()
         }
         .contentShape(Rectangle())
     }
+    
+    private func toggleTodo() async {
+        isToggling = true
+        do {
+            try await todoService.toggleTodo(todo)
+        } catch {
+            print("Failed to toggle todo: \(error)")
+        }
+        isToggling = false
+    }
 }
 ```
 
-## Step 8: Create the Add Todo View
+## Step 8: Create Add and Edit Todo Views
 
-Create `AddTodoView.swift`:
+The `AddTodoView` and `EditTodoView` are included in `TodoListView.swift`. Here's what they do:
+
+### AddTodoView
+- Modal sheet for creating new todos
+- Form with title and description fields
+- Save button validates and creates the todo
+
+### EditTodoView  
+- Modal sheet for editing existing todos
+- Pre-fills with current todo data
+- Save button updates the todo
+- Delete button removes the todo
+
+Both views are included in the `TodoListView.swift` file above. Here's the complete implementation:
 
 ```swift
 import SwiftUI
+import ZyraForm
 
 struct AddTodoView: View {
     @ObservedObject var todoService: TodoService
     @Environment(\.dismiss) var dismiss
-    
     @State private var title = ""
     @State private var description = ""
     @State private var isSaving = false
@@ -616,6 +726,91 @@ struct AddTodoView: View {
         } catch {
             print("Failed to create todo: \(error)")
             isSaving = false
+        }
+    }
+}
+
+struct EditTodoView: View {
+    let todo: SchemaRecord
+    @ObservedObject var todoService: TodoService
+    @Environment(\.dismiss) var dismiss
+    @State private var title: String
+    @State private var description: String
+    @State private var isSaving = false
+    
+    init(todo: SchemaRecord, todoService: TodoService) {
+        self.todo = todo
+        self.todoService = todoService
+        _title = State(initialValue: todoService.getTitle(todo))
+        _description = State(initialValue: todoService.getDescription(todo))
+    }
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Todo Details")) {
+                    TextField("Title", text: $title)
+                    TextField("Description (optional)", text: $description, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+                
+                Section {
+                    Button(role: .destructive, action: {
+                        Task {
+                            await deleteTodo()
+                        }
+                    }) {
+                        HStack {
+                            Spacer()
+                            Text("Delete Todo")
+                            Spacer()
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Edit Todo")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        Task {
+                            await saveTodo()
+                        }
+                    }
+                    .disabled(title.isEmpty || isSaving)
+                }
+            }
+        }
+    }
+    
+    private func saveTodo() async {
+        guard !title.isEmpty else { return }
+        
+        isSaving = true
+        do {
+            let updatedTodo = todo.setting([
+                "title": title,
+                "description": description
+            ])
+            try await todoService.updateTodo(updatedTodo)
+            dismiss()
+        } catch {
+            print("Failed to update todo: \(error)")
+            isSaving = false
+        }
+    }
+    
+    private func deleteTodo() async {
+        do {
+            try await todoService.deleteTodo(todo)
+            dismiss()
+        } catch {
+            print("Failed to delete todo: \(error)")
         }
     }
 }
@@ -705,24 +900,32 @@ WITH CHECK (user_id = auth.uid()::text);
 
 ## Key Concepts Explained
 
-### ZyraModel Protocol
-- `ZyraModel` provides schema-driven type safety
-- Models reference their schema via `static let schema: ZyraTable`
-- Validation rules come automatically from schema (no rewriting!)
-- Runtime schema access: `Todo.schema`, `Todo.requiredFields`, etc.
+### SchemaRecord (Recommended Approach)
+- `SchemaRecord` works directly with `ZyraTable` schemas - **no model generation needed!**
+- Type-safe field access: `todo.get("field", as: Type.self)`
+- Zero boilerplate - use your schema directly
+- Perfect for rapid development and multi-table forms
+- Runtime flexibility - works with any schema
 
-### TypedZyraSync Service
-- `TypedZyraSync<Model: ZyraModel>` provides type-safe CRUD operations
-- Returns `[Model]` instead of `[[String: Any]]`
-- Automatically uses model's schema for field configuration
+### SchemaBasedSync Service
+- `SchemaBasedSync` provides CRUD operations with `SchemaRecord`
+- Automatically uses schema for field configuration
+- **Real-time sync** - automatically updates when Supabase changes (via PowerSync)
 - Handles encryption, validation, and sync automatically
 - Works offline with PowerSync integration
 
-### CRUD Operations (Typed)
-- **Create**: `service.createRecord(_ model: Model)` - takes typed model
-- **Read**: `service.loadRecords(...)` - returns `[Model]`
-- **Update**: `service.updateRecord(_ model: Model)` - takes typed model
-- **Delete**: `service.deleteRecord(_ model: Model)` - takes typed model
+### Query Methods
+- **Get All**: `service.getAll()` - all records for current user
+- **Get One**: `service.getOne(id:)` - single record by ID
+- **Get All Where**: `service.getAll(where:parameters:orderBy:)` - filtered records
+- **Get First Where**: `service.getFirst(where:parameters:orderBy:)` - first matching record
+
+### CRUD Operations
+- **Create**: `service.createRecord(_ record: SchemaRecord)` - creates and syncs
+- **Read**: `service.loadRecords(...)` or use query methods - returns `[SchemaRecord]`
+- **Update**: `service.updateRecord(_ record: SchemaRecord)` - updates and syncs
+- **Delete**: `service.deleteRecord(_ record: SchemaRecord)` - deletes and syncs
+- **Real-time**: Changes automatically sync via PowerSync - no manual reload needed!
 
 ### Schema Definition
 - Use `ZyraTable` to define tables (single source of truth)
@@ -730,6 +933,12 @@ WITH CHECK (user_id = auth.uid()::text);
 - Add validations with `.minLength()`, `.maxLength()`, `.notNull()`, etc.
 - Define RLS policies with `RLSPolicyBuilder`
 - Schema provides validation, types, and structure - define once, use everywhere!
+
+### PowerSync Real-Time Sync
+- Changes in Supabase automatically appear in your app
+- Changes in your app automatically sync to Supabase
+- Works offline - queues changes and syncs when online
+- No manual refresh needed - UI updates automatically via Combine publishers
 
 ### Offline Support
 - PowerSync automatically syncs data when online
@@ -762,15 +971,25 @@ WITH CHECK (user_id = auth.uid()::text);
 
 ```
 TodoApp/
-├── App.swift
-├── AppConfig.swift
-├── TodoSchema.swift
-├── Todo.swift
-├── TodoService.swift
-├── TodoListView.swift
-├── TodoRowView.swift
-└── AddTodoView.swift
+├── App.swift (or ZeraForm_TodoApp.swift)
+├── AppConfig.swift (or Utils/Initialize.swift)
+├── Models/
+│   └── Schema.swift (contains todoTable definition)
+├── Controllers/
+│   └── TodoService.swift (uses SchemaBasedSync)
+├── Views/
+│   ├── TodoListView.swift (includes AddTodoView and EditTodoView)
+│   └── TodoItemView.swift
+└── ContentView.swift
 ```
 
-That's it! You now have a fully functional todo app with offline sync, encryption support, and automatic backend synchronization. 🎉
+**Note**: No `Todo.swift` model file needed! We use `SchemaRecord` directly from the schema.
+
+That's it! You now have a fully functional todo app with:
+- ✅ Zero boilerplate - no model generation needed
+- ✅ Real-time sync - automatic updates from Supabase
+- ✅ Offline support - works completely offline
+- ✅ Full CRUD - Create, Read, Update, Delete
+- ✅ Type-safe access - `get("field", as: Type.self)`
+- ✅ Schema-first - single source of truth 🎉
 

@@ -25,31 +25,22 @@ I've successfully created a complete Todo app using **SchemaRecord** (Option 1 -
 ✅ **Add Todo Sheet** - Modal sheet to add new todos
 ✅ **Swipe to Delete** - Delete todos with swipe gesture
 
-## ⚠️ Build Issue
+## ✅ Package Version
 
-The Xcode project currently references the **remote** ZyraForm package from GitHub:
+The app now uses **ZyraForm v2.0.7** which includes `SchemaRecord` and `SchemaBasedSync`.
+
+If you're using the remote package, make sure your `Package.swift` or Xcode package dependency specifies:
+```swift
+.package(url: "https://github.com/Gold240sx/ZeraForm.git", from: "2.0.7")
 ```
-https://github.com/Gold240sx/ZeraForm
-```
 
-However, `SchemaRecord` and `SchemaBasedSync` are **new types** that exist only in your **local** package. To build the app, you need to:
-
-### Option 1: Use Local Package (Recommended for Development)
+### If You Need to Update Package Reference
 
 1. Open `ZeraForm-Todo.xcodeproj` in Xcode
 2. Select the project in the navigator
 3. Go to **Package Dependencies** tab
-4. Remove the remote ZyraForm package
-5. Click **+** to add a local package
-6. Navigate to: `/Users/michaelmartell/Documents/CODE/Swift/__MyApps/Testing/SwiftSelect/SwiftSelect/ZeraForm`
-7. Select the `Package.swift` file
-8. Add both `ZyraForm` and `ZyraFormSupabase` products
-
-### Option 2: Publish New Version
-
-1. Commit and push the `SchemaRecord.swift` changes to GitHub
-2. Create a new tag (e.g., `2.0.7`)
-3. Update the package dependency version in Xcode
+4. Update ZyraForm package to version `2.0.7` or later
+5. Or switch to local package for development (see FIXES_APPLIED.md)
 
 ## Code Highlights
 
