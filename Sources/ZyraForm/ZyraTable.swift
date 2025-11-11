@@ -79,6 +79,8 @@ public struct ColumnMetadata {
     public let minLength: Int?
     public let maxLength: Int?
     public let exactLength: Int?
+    public let minLengthError: String?
+    public let maxLengthError: String?
     public let startsWith: String?
     public let endsWith: String?
     public let includes: String?
@@ -87,6 +89,37 @@ public struct ColumnMetadata {
     public let isIpv4: Bool?
     public let isIpv6: Bool?
     public let customValidation: (String, (Any) -> Bool)?
+    public let requiredError: String?
+    public let intMinError: String?
+    public let intMaxError: String?
+    public let minimumError: String?
+    public let maximumError: String?
+    public let enumError: String?
+    public let positiveError: String?
+    public let negativeError: String?
+    public let evenError: String?
+    public let oddError: String?
+    public let emailError: String?
+    public let urlError: String?
+    public let httpUrlError: String?
+    public let cuidError: String?
+    public let cuid2Error: String?
+    public let nanoidError: String?
+    public let emojiError: String?
+    public let hexError: String?
+    public let jwtError: String?
+    public let dateError: String?
+    public let timeError: String?
+    public let isoDateTimeError: String?
+    public let isoDateError: String?
+    public let isoTimeError: String?
+    public let startsWithError: String?
+    public let endsWithError: String?
+    public let includesError: String?
+    public let uppercaseError: String?
+    public let lowercaseError: String?
+    public let ipv4Error: String?
+    public let ipv6Error: String?
     
     public indirect enum SwiftColumnType: Equatable {
         case string
@@ -301,6 +334,8 @@ public struct ColumnBuilder {
     public var minLength: Int? = nil
     public var maxLength: Int? = nil
     public var exactLength: Int? = nil
+    public var minLengthError: String? = nil
+    public var maxLengthError: String? = nil
     public var startsWith: String? = nil
     public var endsWith: String? = nil
     public var includes: String? = nil
@@ -309,6 +344,37 @@ public struct ColumnBuilder {
     public var isIpv4: Bool? = nil
     public var isIpv6: Bool? = nil
     public var customValidation: (String, (Any) -> Bool)? = nil
+    public var requiredError: String? = nil
+    public var intMinError: String? = nil
+    public var intMaxError: String? = nil
+    public var minimumError: String? = nil
+    public var maximumError: String? = nil
+    public var enumError: String? = nil
+    public var positiveError: String? = nil
+    public var negativeError: String? = nil
+    public var evenError: String? = nil
+    public var oddError: String? = nil
+    public var emailError: String? = nil
+    public var urlError: String? = nil
+    public var httpUrlError: String? = nil
+    public var cuidError: String? = nil
+    public var cuid2Error: String? = nil
+    public var nanoidError: String? = nil
+    public var emojiError: String? = nil
+    public var hexError: String? = nil
+    public var jwtError: String? = nil
+    public var dateError: String? = nil
+    public var timeError: String? = nil
+    public var isoDateTimeError: String? = nil
+    public var isoDateError: String? = nil
+    public var isoTimeError: String? = nil
+    public var startsWithError: String? = nil
+    public var endsWithError: String? = nil
+    public var includesError: String? = nil
+    public var uppercaseError: String? = nil
+    public var lowercaseError: String? = nil
+    public var ipv4Error: String? = nil
+    public var ipv6Error: String? = nil
     
     // Use indirect reference to break circular dependency
     private var _nestedSchema: NestedSchema?
@@ -423,10 +489,16 @@ public struct ColumnBuilder {
         return builder
     }
     
-    public func notNull() -> ColumnBuilder {
+    public func notNull(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isNullable = false
+        builder.requiredError = errorMessage
         return builder
+    }
+    
+    /// Alias for notNull() with optional error message
+    public func required(errorMessage: String? = nil) -> ColumnBuilder {
+        return notNull(errorMessage: errorMessage)
     }
     
     public func unique() -> ColumnBuilder {
@@ -476,6 +548,24 @@ public struct ColumnBuilder {
     public func `enum`(_ enumType: ZyraEnum) -> ColumnBuilder {
         var builder = self
         builder.enumType = enumType
+        builder.swiftType = .enum(enumType)
+        return builder
+    }
+    
+    /// Set enum values directly (creates a ZyraEnum on the fly)
+    /// - Parameters:
+    ///   - values: Array of allowed enum values
+    ///   - errorMessage: Custom error message if validation fails
+    /// - Returns: ColumnBuilder with enum type
+    /// - Example:
+    ///   ```swift
+    ///   zf.text("gender").values(["male", "female"], errorMessage: "Please choose a gender").nullable()
+    ///   ```
+    public func values(_ enumValues: [String], errorMessage: String? = nil) -> ColumnBuilder {
+        let enumType = ZyraEnum(name: "\(self.name)_enum", values: enumValues)
+        var builder = self
+        builder.enumType = enumType
+        builder.enumError = errorMessage
         builder.swiftType = .enum(enumType)
         return builder
     }
@@ -573,88 +663,102 @@ public struct ColumnBuilder {
     
     // MARK: - Validation Methods
     
-    public func email() -> ColumnBuilder {
+    public func email(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isEmail = true
+        builder.emailError = errorMessage
         return builder
     }
     
-    public func url() -> ColumnBuilder {
+    public func url(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isUrl = true
+        builder.urlError = errorMessage
         return builder
     }
     
-    public func httpUrl() -> ColumnBuilder {
+    public func httpUrl(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isHttpUrl = true
+        builder.httpUrlError = errorMessage
         return builder
     }
     
-    public func cuid() -> ColumnBuilder {
+    public func cuid(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isCuid = true
+        builder.cuidError = errorMessage
         return builder
     }
     
-    public func cuid2() -> ColumnBuilder {
+    public func cuid2(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isCuid2 = true
+        builder.cuid2Error = errorMessage
         return builder
     }
     
-    public func nanoid() -> ColumnBuilder {
+    public func nanoid(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isNanoid = true
+        builder.nanoidError = errorMessage
         return builder
     }
     
-    public func emoji() -> ColumnBuilder {
+    public func emoji(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isEmoji = true
+        builder.emojiError = errorMessage
         return builder
     }
     
-    public func hex() -> ColumnBuilder {
+    public func hex(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isHex = true
+        builder.hexError = errorMessage
         return builder
     }
     
-    public func jwt() -> ColumnBuilder {
+    public func jwt(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isJwt = true
+        builder.jwtError = errorMessage
         return builder
     }
     
-    public func date() -> ColumnBuilder {
+    public func date(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.swiftType = .date
         builder.isDate = true
+        builder.dateError = errorMessage
         return builder
     }
     
-    public func time() -> ColumnBuilder {
+    public func time(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isTime = true
+        builder.timeError = errorMessage
         return builder
     }
     
-    public func isoDateTime() -> ColumnBuilder {
+    public func isoDateTime(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isIsoDateTime = true
+        builder.isoDateTimeError = errorMessage
         return builder
     }
     
-    public func isoDate() -> ColumnBuilder {
+    public func isoDate(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isIsoDate = true
+        builder.isoDateError = errorMessage
         return builder
     }
     
-    public func isoTime() -> ColumnBuilder {
+    public func isoTime(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isIsoTime = true
+        builder.isoTimeError = errorMessage
         return builder
     }
     
@@ -665,15 +769,17 @@ public struct ColumnBuilder {
         return builder
     }
     
-    public func minLength(_ value: Int) -> ColumnBuilder {
+    public func minLength(_ value: Int, errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.minLength = value
+        builder.minLengthError = errorMessage
         return builder
     }
     
-    public func maxLength(_ value: Int) -> ColumnBuilder {
+    public func maxLength(_ value: Int, errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.maxLength = value
+        builder.maxLengthError = errorMessage
         return builder
     }
     
@@ -683,94 +789,119 @@ public struct ColumnBuilder {
         return builder
     }
     
-    public func startsWith(_ prefix: String) -> ColumnBuilder {
+    public func startsWith(_ prefix: String, errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.startsWith = prefix
+        builder.startsWithError = errorMessage
         return builder
     }
     
-    public func endsWith(_ suffix: String) -> ColumnBuilder {
+    public func endsWith(_ suffix: String, errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.endsWith = suffix
+        builder.endsWithError = errorMessage
         return builder
     }
     
-    public func includes(_ substring: String) -> ColumnBuilder {
+    public func includes(_ substring: String, errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.includes = substring
+        builder.includesError = errorMessage
         return builder
     }
     
-    public func uppercase() -> ColumnBuilder {
+    public func uppercase(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isUppercase = true
+        builder.uppercaseError = errorMessage
         return builder
     }
     
-    public func lowercase() -> ColumnBuilder {
+    public func lowercase(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isLowercase = true
+        builder.lowercaseError = errorMessage
         return builder
     }
     
-    public func ipv4() -> ColumnBuilder {
+    public func ipv4(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isIpv4 = true
+        builder.ipv4Error = errorMessage
         return builder
     }
     
-    public func ipv6() -> ColumnBuilder {
+    public func ipv6(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isIpv6 = true
+        builder.ipv6Error = errorMessage
         return builder
     }
     
-    public func positive() -> ColumnBuilder {
+    public func positive(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isPositive = true
+        builder.positiveError = errorMessage
         return builder
     }
     
-    public func negative() -> ColumnBuilder {
+    public func negative(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isNegative = true
+        builder.negativeError = errorMessage
         return builder
     }
     
-    public func even() -> ColumnBuilder {
+    public func even(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isEven = true
+        builder.evenError = errorMessage
         return builder
     }
     
-    public func odd() -> ColumnBuilder {
+    public func odd(errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.isOdd = true
+        builder.oddError = errorMessage
         return builder
     }
     
-    public func minimum(_ value: Double) -> ColumnBuilder {
+    public func minimum(_ value: Double, errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.minimum = value
+        builder.minimumError = errorMessage
         return builder
     }
     
-    public func maximum(_ value: Double) -> ColumnBuilder {
+    public func maximum(_ value: Double, errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.maximum = value
+        builder.maximumError = errorMessage
         return builder
     }
     
-    public func intMin(_ value: Int) -> ColumnBuilder {
+    public func intMin(_ value: Int, errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.intMin = value
+        builder.intMinError = errorMessage
         return builder
     }
     
-    public func intMax(_ value: Int) -> ColumnBuilder {
+    public func intMax(_ value: Int, errorMessage: String? = nil) -> ColumnBuilder {
         var builder = self
         builder.intMax = value
+        builder.intMaxError = errorMessage
         return builder
+    }
+    
+    /// Convenience method for integer min (alias for intMin)
+    public func min(_ value: Int, errorMessage: String? = nil) -> ColumnBuilder {
+        return intMin(value, errorMessage: errorMessage)
+    }
+    
+    /// Convenience method for integer max (alias for intMax)
+    public func max(_ value: Int, errorMessage: String? = nil) -> ColumnBuilder {
+        return intMax(value, errorMessage: errorMessage)
     }
     
     func custom(_ error: String, validator: @escaping (Any) -> Bool) -> ColumnBuilder {
@@ -878,6 +1009,8 @@ public struct ColumnBuilder {
             minLength: minLength,
             maxLength: maxLength,
             exactLength: exactLength,
+            minLengthError: minLengthError,
+            maxLengthError: maxLengthError,
             startsWith: startsWith,
             endsWith: endsWith,
             includes: includes,
@@ -885,7 +1018,38 @@ public struct ColumnBuilder {
             isLowercase: isLowercase,
             isIpv4: isIpv4,
             isIpv6: isIpv6,
-            customValidation: customValidation
+            customValidation: customValidation,
+            requiredError: requiredError,
+            intMinError: intMinError,
+            intMaxError: intMaxError,
+            minimumError: minimumError,
+            maximumError: maximumError,
+            enumError: enumError,
+            positiveError: positiveError,
+            negativeError: negativeError,
+            evenError: evenError,
+            oddError: oddError,
+            emailError: emailError,
+            urlError: urlError,
+            httpUrlError: httpUrlError,
+            cuidError: cuidError,
+            cuid2Error: cuid2Error,
+            nanoidError: nanoidError,
+            emojiError: emojiError,
+            hexError: hexError,
+            jwtError: jwtError,
+            dateError: dateError,
+            timeError: timeError,
+            isoDateTimeError: isoDateTimeError,
+            isoDateError: isoDateError,
+            isoTimeError: isoTimeError,
+            startsWithError: startsWithError,
+            endsWithError: endsWithError,
+            includesError: includesError,
+            uppercaseError: uppercaseError,
+            lowercaseError: lowercaseError,
+            ipv4Error: ipv4Error,
+            ipv6Error: ipv6Error
         )
     }
 }
@@ -1164,6 +1328,17 @@ public struct zf {
     ///   ```
     public static func bool(_ name: String) -> ColumnBuilder {
         return PowerSync.Column.text(name).bool()
+    }
+    
+    /// Create an enum column (alias for text with enum values)
+    /// - Parameter name: Column name
+    /// - Returns: ColumnBuilder that can be chained with .values()
+    /// - Example:
+    ///   ```swift
+    ///   zf.enum("gender").values(["male", "female"]).nullable()
+    ///   ```
+    public static func `enum`(_ name: String) -> ColumnBuilder {
+        return PowerSync.Column.text(name)
     }
     
     /// Create a nested object column

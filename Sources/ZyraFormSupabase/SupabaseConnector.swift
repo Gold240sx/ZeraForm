@@ -13,7 +13,7 @@ import ZyraForm
 
 public final class SupabaseConnector: PowerSyncBackendConnectorProtocol {
     private let supabaseURL: URL
-    private let supabaseKey: String
+    private let supabaseKey: String // Can be publishable or ANON key
     private let powerSyncEndpoint: String
     
     public let client: SupabaseClient
@@ -131,7 +131,14 @@ public final class SupabaseConnector: PowerSyncBackendConnectorProtocol {
                     var data: [String: AnyJSON] = [:]
                     for (key, value) in opDataDict {
                         if let stringValue = value {
-                            data[key] = .string(stringValue)
+                            // Filter out empty strings for UUID fields (like user_id)
+                            // Empty strings cause "invalid input syntax for type uuid" errors
+                            // Convert empty strings to null instead
+                            if stringValue.isEmpty && (key.hasSuffix("_id") || key == "id") {
+                                data[key] = .null
+                            } else {
+                                data[key] = .string(stringValue)
+                            }
                         } else {
                             data[key] = .null
                         }
@@ -163,7 +170,14 @@ public final class SupabaseConnector: PowerSyncBackendConnectorProtocol {
                     var patchData: [String: AnyJSON] = [:]
                     for (key, value) in opData {
                         if let stringValue = value {
-                            patchData[key] = .string(stringValue)
+                            // Filter out empty strings for UUID fields (like user_id)
+                            // Empty strings cause "invalid input syntax for type uuid" errors
+                            // Convert empty strings to null instead
+                            if stringValue.isEmpty && (key.hasSuffix("_id") || key == "id") {
+                                patchData[key] = .null
+                            } else {
+                                patchData[key] = .string(stringValue)
+                            }
                         } else {
                             patchData[key] = .null
                         }
@@ -244,6 +258,52 @@ public final class SupabaseConnector: PowerSyncBackendConnectorProtocol {
         }
     }
     
+    // MARK: - Authentication Methods
+    
+    /// Sign in with email and password
+    /// - Parameters:
+    ///   - email: User's email address
+    ///   - password: User's password
+    /// - Returns: The authenticated session
+    public func signIn(email: String, password: String) async throws -> Session {
+        do {
+            ZyraFormLogger.info("🔄 Signing in with email: \(email)")
+            let session = try await client.auth.signIn(email: email, password: password)
+            ZyraFormLogger.info("✅ Successfully signed in")
+            return session
+        } catch {
+            ZyraFormLogger.error("❌ Failed to sign in: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    /// Sign up with email and password
+    /// - Parameters:
+    ///   - email: User's email address
+    ///   - password: User's password
+    /// - Returns: The authenticated session
+    public func signUp(email: String, password: String) async throws -> Session {
+        do {
+            ZyraFormLogger.info("🔄 Signing up with email: \(email)")
+            let response = try await client.auth.signUp(email: email, password: password)
+            ZyraFormLogger.info("✅ Successfully signed up")
+            
+            // signUp returns AuthResponse, extract the session
+            guard let session = response.session else {
+                throw NSError(
+                    domain: "SupabaseConnector",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Sign up successful but no session returned. Email confirmation may be required."]
+                )
+            }
+            return session
+        } catch {
+            ZyraFormLogger.error("❌ Failed to sign up: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    /// Sign out the current user
     public func signOut() async throws {
         do {
             try await client.auth.signOut()
@@ -254,22 +314,48 @@ public final class SupabaseConnector: PowerSyncBackendConnectorProtocol {
         }
     }
     
+    /// Get the current session (requires user to be signed in)
+    /// - Returns: The current session if authenticated
+    /// - Throws: Error if no session exists (user must sign in first)
     public func getSession() async throws -> Session {
         do {
             if let session = try? await client.auth.session {
                 ZyraFormLogger.debug("✅ Using existing Supabase session")
                 return session
             } else {
-                ZyraFormLogger.info("🔄 No existing session - signing in anonymously")
-                let session = try await client.auth.signInAnonymously()
-                ZyraFormLogger.info("✅ Successfully signed in anonymously")
-                return session
+                ZyraFormLogger.error("❌ No active session - user must sign in first")
+                ZyraFormLogger.error("💡 Call signIn(email:password:) or signUp(email:password:) before accessing data")
+                throw NSError(
+                    domain: "SupabaseConnector",
+                    code: 401,
+                    userInfo: [NSLocalizedDescriptionKey: "No active session. Please sign in first."]
+                )
             }
         } catch {
             ZyraFormLogger.error("❌ Failed to get Supabase session: \(error.localizedDescription)")
-            ZyraFormLogger.error("💡 Ensure anonymous sign-in is enabled in your Supabase dashboard")
-            ZyraFormLogger.error("💡 Check your Supabase URL and key")
             throw error
+        }
+    }
+    
+    /// Check if user is currently signed in
+    /// - Returns: True if user has an active session
+    public func isSignedIn() async -> Bool {
+        do {
+            let session = try? await client.auth.session
+            return session != nil
+        } catch {
+            return false
+        }
+    }
+    
+    /// Get the current user's ID if signed in
+    /// - Returns: User ID string if authenticated, nil otherwise
+    public func getCurrentUserId() async -> String? {
+        do {
+            let session = try? await client.auth.session
+            return session?.user.id.uuidString
+        } catch {
+            return nil
         }
     }
     

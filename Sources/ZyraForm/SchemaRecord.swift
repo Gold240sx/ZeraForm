@@ -238,6 +238,18 @@ public class SchemaBasedSync: ObservableObject {
     
     /// Load records as SchemaRecords
     /// This will also set up real-time watching if not already active
+    ///
+    /// **Filtering Examples:**
+    /// - Load all records: `loadRecords()` or `loadRecords(whereClause: nil)`
+    /// - Filter by user: `loadRecords(whereClause: "user_id = ?", parameters: [userId])`
+    /// - Filter by multiple conditions: `loadRecords(whereClause: "user_id = ? AND is_completed = ?", parameters: [userId, "false"])`
+    /// - Custom SQL: Use `loadRecordsWithRawSQL(sql:parameters:)` for complex queries
+    ///
+    /// - Parameters:
+    ///   - fields: Array of field names to retrieve (nil = all fields)
+    ///   - whereClause: SQL WHERE clause without "WHERE" keyword (e.g., "user_id = ? AND is_completed = ?")
+    ///   - parameters: Parameters for the WHERE clause (use ? placeholders)
+    ///   - orderBy: Optional ORDER BY clause (e.g., "created_at DESC")
     public func loadRecords(
         fields: [String]? = nil,
         whereClause: String? = nil,
@@ -266,6 +278,77 @@ public class SchemaBasedSync: ObservableObject {
         }
     }
     
+    /// Load records using a raw SQL query for advanced filtering
+    /// This allows complete control over the SQL query including JOINs, subqueries, etc.
+    ///
+    /// **Example Usage:**
+    /// ```swift
+    /// // Simple filter
+    /// try await service.loadRecordsWithRawSQL(
+    ///     sql: "SELECT * FROM todos WHERE user_id = ? AND is_completed = ?",
+    ///     parameters: [userId, "false"]
+    /// )
+    ///
+    /// // With ordering
+    /// try await service.loadRecordsWithRawSQL(
+    ///     sql: "SELECT id, title, created_at FROM todos WHERE user_id = ? ORDER BY created_at DESC LIMIT 10",
+    ///     parameters: [userId]
+    /// )
+    ///
+    /// // Complex query with JOIN
+    /// try await service.loadRecordsWithRawSQL(
+    ///     sql: "SELECT t.* FROM todos t JOIN users u ON t.user_id = u.id WHERE u.email = ?",
+    ///     parameters: ["user@example.com"]
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - sql: Complete SQL SELECT query (must include SELECT, FROM, and optionally WHERE, ORDER BY, LIMIT, etc.)
+    ///   - parameters: Parameters for the SQL query (use ? placeholders)
+    public func loadRecordsWithRawSQL(
+        sql: String,
+        parameters: [Any] = []
+    ) async throws {
+        let config = schema.toTableFieldConfig()
+        
+        // Extract field names from SQL for proper mapping
+        // Try to detect fields from SELECT clause, fallback to all fields
+        let fieldsToRead: [String]
+        if sql.uppercased().contains("SELECT *") {
+            // Use all fields if SELECT * is used
+            fieldsToRead = config.allFields
+        } else {
+            // Try to extract field names from SELECT clause
+            // This is a simple extraction - for complex queries, user should specify fields explicitly
+            let selectMatch = sql.uppercased().range(of: "SELECT")?.upperBound
+            let fromMatch = sql.uppercased().range(of: "FROM")?.lowerBound
+            if let selectStart = selectMatch, let fromStart = fromMatch {
+                let selectClause = String(sql[selectStart..<fromStart]).trimmingCharacters(in: .whitespaces)
+                if selectClause.contains(",") {
+                    fieldsToRead = selectClause.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "\"", with: "") }
+                } else {
+                    fieldsToRead = [selectClause.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "\"", with: "")]
+                }
+            } else {
+                fieldsToRead = config.allFields
+            }
+        }
+        
+        try await service.loadRecordsWithRawSQL(
+            sql: sql,
+            parameters: parameters,
+            fieldsToRead: fieldsToRead,
+            encryptedFields: config.encryptedFields,
+            integerFields: config.integerFields,
+            booleanFields: config.booleanFields
+        )
+        
+        // Convert dictionaries to SchemaRecords
+        records = service.records.map { record in
+            schema.createRecord(from: record)
+        }
+    }
+    
     /// Create a record
     public func createRecord(
         _ record: SchemaRecord,
@@ -275,6 +358,21 @@ public class SchemaBasedSync: ObservableObject {
         let config = schema.toTableFieldConfig()
         
         var dict = record.toDictionary()
+        
+        // Ensure id, created_at, and updated_at are present if auto-generation is enabled
+        if autoGenerateId && dict["id"] == nil {
+            dict["id"] = UUID().uuidString
+        }
+        
+        if autoTimestamp {
+            let now = ISO8601DateFormatter().string(from: Date())
+            if dict["created_at"] == nil {
+                dict["created_at"] = now
+            }
+            if dict["updated_at"] == nil {
+                dict["updated_at"] = now
+            }
+        }
         
         return try await service.createRecord(
             fields: dict,
@@ -308,8 +406,13 @@ public class SchemaBasedSync: ObservableObject {
     
     // MARK: - Convenience Query Methods
     
-    /// Get all records (for current user by default)
+    /// Get all records (no filtering)
     /// - Returns: Array of all SchemaRecords
+    ///
+    /// **To filter by user, use:**
+    /// ```swift
+    /// try await service.loadRecords(whereClause: "user_id = ?", parameters: [userId])
+    /// ```
     public func getAll() async throws -> [SchemaRecord] {
         try await loadRecords()
         return records
@@ -321,6 +424,11 @@ public class SchemaBasedSync: ObservableObject {
     ///   - parameters: Parameters for the WHERE clause
     ///   - orderBy: Optional ORDER BY clause, e.g., "created_at DESC"
     /// - Returns: Array of matching SchemaRecords
+    ///
+    /// **Filtering Examples:**
+    /// - Filter by user: `getAll(where: "user_id = ?", parameters: [userId])`
+    /// - Filter by multiple conditions: `getAll(where: "user_id = ? AND is_completed = ?", parameters: [userId, "false"])`
+    /// - Filter with LIKE: `getAll(where: "title LIKE ?", parameters: ["%important%"])`
     public func getAll(where whereClause: String, parameters: [Any] = [], orderBy: String? = nil) async throws -> [SchemaRecord] {
         try await loadRecords(whereClause: whereClause, parameters: parameters, orderBy: orderBy)
         return records

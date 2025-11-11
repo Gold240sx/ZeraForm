@@ -42,11 +42,21 @@ public class ZyraSync: ObservableObject {
 
     // MARK: - Read Operations
 
-    /// Load all records for the current user
+    /// Load records from the table
+    ///
+    /// **Filtering Examples:**
+    /// - Load all records: `loadRecords()` or `loadRecords(whereClause: nil)`
+    /// - Filter by user: `loadRecords(whereClause: "user_id = ?", parameters: [userId])`
+    /// - Filter by multiple conditions: `loadRecords(whereClause: "user_id = ? AND is_completed = ?", parameters: [userId, "false"])`
+    /// - Filter with LIKE: `loadRecords(whereClause: "title LIKE ?", parameters: ["%important%"])`
+    /// - Filter with IN: `loadRecords(whereClause: "id IN (?, ?)", parameters: [id1, id2])`
+    ///
+    /// For complex queries (JOINs, subqueries, etc.), use `loadRecordsWithRawSQL(sql:parameters:)`
+    ///
     /// - Parameters:
     ///   - fields: Array of field names to retrieve (use ["*"] for all fields)
     ///   - whereClause: Optional WHERE clause (without "WHERE" keyword), e.g., "user_id = ? AND is_active = ?"
-    ///   - parameters: Parameters for the WHERE clause
+    ///   - parameters: Parameters for the WHERE clause (use ? placeholders for safety)
     ///   - orderBy: Optional ORDER BY clause, e.g., "created_at DESC"
     ///   - encryptedFields: Array of field names that should be decrypted
     ///   - integerFields: Array of field names that are integers (stored as encrypted text)
@@ -69,11 +79,8 @@ public class ZyraSync: ObservableObject {
         if let whereClause = whereClause, !whereClause.isEmpty {
             query += " WHERE \(whereClause)"
             queryParams.append(contentsOf: parameters)
-        } else {
-            // Default: filter by user_id
-            query += " WHERE user_id = ?"
-            queryParams.append(userId)
         }
+        // Note: Removed default user_id filtering - callers must explicitly provide whereClause if filtering is needed
 
         // Add ORDER BY
         query += " ORDER BY \(orderBy)"
@@ -172,6 +179,128 @@ public class ZyraSync: ObservableObject {
         try await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
         ZyraFormLogger.debug("✅ Watch started for \(tableName)")
     }
+    
+    /// Load records using a raw SQL query for advanced filtering
+    /// This allows complete control over the SQL query including JOINs, subqueries, etc.
+    ///
+    /// **Example Usage:**
+    /// ```swift
+    /// // Simple filter
+    /// try await service.loadRecordsWithRawSQL(
+    ///     sql: "SELECT * FROM todos WHERE user_id = ? AND is_completed = ?",
+    ///     parameters: [userId, "false"]
+    /// )
+    ///
+    /// // With ordering and limit
+    /// try await service.loadRecordsWithRawSQL(
+    ///     sql: "SELECT id, title, created_at FROM todos WHERE user_id = ? ORDER BY created_at DESC LIMIT 10",
+    ///     parameters: [userId]
+    /// )
+    ///
+    /// // Complex query with JOIN
+    /// try await service.loadRecordsWithRawSQL(
+    ///     sql: "SELECT t.* FROM todos t JOIN users u ON t.user_id = u.id WHERE u.email = ?",
+    ///     parameters: ["user@example.com"]
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - sql: Complete SQL SELECT query (must include SELECT, FROM, and optionally WHERE, ORDER BY, LIMIT, etc.)
+    ///   - parameters: Parameters for the SQL query (use ? placeholders)
+    ///   - fieldsToRead: Array of field names to read from the result cursor (used for proper type mapping)
+    ///   - encryptedFields: Array of field names that should be decrypted
+    ///   - integerFields: Array of field names that are integers (stored as encrypted text)
+    ///   - booleanFields: Array of field names that are booleans (stored as encrypted text)
+    public func loadRecordsWithRawSQL(
+        sql: String,
+        parameters: [Any] = [],
+        fieldsToRead: [String],
+        encryptedFields: [String] = [],
+        integerFields: [String] = [],
+        booleanFields: [String] = []
+    ) async throws {
+        // Store watch configuration for continuous watching
+        currentWatchQuery = sql
+        currentWatchParams = parameters
+        currentWatchFields = fieldsToRead
+        currentWatchConfig = (encryptedFields, integerFields, booleanFields)
+        
+        // Cancel existing watch if query changed
+        let queryString = "\(sql)|\(parameters.map { "\($0)" }.joined(separator: ","))"
+        if watchTask != nil {
+            watchTask?.cancel()
+        }
+        
+        // Start continuous watch in background task
+        watchTask = Task { [weak self] in
+            guard let self = self else { return }
+            
+            do {
+                ZyraFormLogger.debug("🔍 Starting PowerSync watch with raw SQL for \(self.tableName)")
+                
+                for try await results in try self.powerSync.watch(
+                    sql: sql,
+                    parameters: parameters,
+                    mapper: { cursor in
+                        var dict: [String: Any] = [:]
+                        
+                        // Read each field
+                        for fieldName in fieldsToRead {
+                            if encryptedFields.contains(fieldName) {
+                                if let encryptedValue = try? cursor.getStringOptional(name: fieldName) {
+                                    if let decrypted = try? self.encryptionManager.decryptIfEnabled(encryptedValue, for: self.userId) {
+                                        if integerFields.contains(fieldName), let intValue = Int(decrypted) {
+                                            dict[fieldName] = intValue
+                                        } else if booleanFields.contains(fieldName) {
+                                            dict[fieldName] = decrypted == "true" || decrypted == "1"
+                                        } else {
+                                            dict[fieldName] = decrypted
+                                        }
+                                    } else {
+                                        dict[fieldName] = encryptedValue
+                                    }
+                                } else {
+                                    dict[fieldName] = nil
+                                }
+                            } else if integerFields.contains(fieldName) {
+                                dict[fieldName] = try? cursor.getIntOptional(name: fieldName)
+                            } else if booleanFields.contains(fieldName) {
+                                if let intValue = try? cursor.getIntOptional(name: fieldName) {
+                                    dict[fieldName] = intValue == 1
+                                } else if let strValue = try? cursor.getStringOptional(name: fieldName) {
+                                    dict[fieldName] = strValue == "true" || strValue == "1"
+                                }
+                            } else {
+                                if let strValue = try? cursor.getStringOptional(name: fieldName) {
+                                    dict[fieldName] = strValue
+                                } else if let intValue = try? cursor.getIntOptional(name: fieldName) {
+                                    dict[fieldName] = intValue
+                                } else if let doubleValue = try? cursor.getDoubleOptional(name: fieldName) {
+                                    dict[fieldName] = doubleValue
+                                }
+                            }
+                        }
+                        
+                        return dict
+                    }
+                ) {
+                    // Update records whenever PowerSync emits new data
+                    await MainActor.run {
+                        self.records = results
+                        ZyraFormLogger.debug("🔄 PowerSync watch updated: \(results.count) records from raw SQL query")
+                    }
+                }
+            } catch {
+                if !(error is CancellationError) {
+                    ZyraFormLogger.error("❌ PowerSync watch error for raw SQL query: \(error.localizedDescription)")
+                }
+            }
+        }
+        
+        // Wait for initial load
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
+        ZyraFormLogger.debug("✅ Watch started for raw SQL query")
+    }
 
 
     // MARK: - Create Operations
@@ -188,13 +317,19 @@ public class ZyraSync: ObservableObject {
         autoGenerateId: Bool = true,
         autoTimestamp: Bool = true
     ) async throws -> String {
-        let id = autoGenerateId ? UUID().uuidString : (fields["id"] as? String ?? UUID().uuidString)
+        let id: String
+        if autoGenerateId {
+            // Always generate a new ID if auto-generating, even if one exists
+            id = UUID().uuidString
+        } else {
+            // Use provided ID or generate one if missing
+            id = fields["id"] as? String ?? UUID().uuidString
+        }
         let now = ISO8601DateFormatter().string(from: Date())
 
         var allFields = fields
-        if autoGenerateId && allFields["id"] == nil {
-            allFields["id"] = id
-        }
+        // Always ensure ID is set (either use provided or generated)
+        allFields["id"] = id
         if autoTimestamp {
             allFields["created_at"] = allFields["created_at"] ?? now
             allFields["updated_at"] = allFields["updated_at"] ?? now
@@ -207,7 +342,12 @@ public class ZyraSync: ObservableObject {
         // }
 
         // Build INSERT query
-        let fieldNames = Array(allFields.keys)
+        // Ensure ID is first in the field list for PowerSync to properly track it
+        var fieldNames = Array(allFields.keys)
+        if let idIndex = fieldNames.firstIndex(of: "id") {
+            fieldNames.remove(at: idIndex)
+            fieldNames.insert("id", at: 0)
+        }
         let placeholders = fieldNames.map { _ in "?" }.joined(separator: ", ")
         let columns = fieldNames.map { "\"\($0)\"" }.joined(separator: ", ")
 
