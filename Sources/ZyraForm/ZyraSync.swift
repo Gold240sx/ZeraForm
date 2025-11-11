@@ -39,6 +39,49 @@ public class ZyraSync: ObservableObject {
     deinit {
         watchTask?.cancel()
     }
+    
+    // MARK: - Watch Control
+    
+    /// Check if watching is currently active
+    public var isWatching: Bool {
+        return watchTask != nil && !watchTask!.isCancelled
+    }
+    
+    /// Stop watching for updates programmatically
+    /// Call this when a view/page is no longer active to free up memory and network resources
+    /// Use `resumeWatching()` to restart watching with the last query configuration
+    public func stopWatching() {
+        guard let task = watchTask else { return }
+        task.cancel()
+        watchTask = nil
+        ZyraFormLogger.debug("⏹️ Watch stopped for \(tableName)")
+    }
+    
+    /// Resume watching with the last query configuration
+    /// This will restart watching using the last query that was executed via `loadRecords()` or `loadRecordsWithRawSQL()`
+    /// If no previous query exists, this method does nothing
+    public func resumeWatching() async throws {
+        guard let query = currentWatchQuery, !currentWatchFields.isEmpty else {
+            ZyraFormLogger.warning("⚠️ Cannot resume watching: no previous query configuration found")
+            return
+        }
+        
+        // Cancel existing watch if any
+        if watchTask != nil {
+            watchTask?.cancel()
+        }
+        
+        // Restart watch with stored configuration
+        // Both loadRecords() and loadRecordsWithRawSQL() store the full SQL in currentWatchQuery
+        try await loadRecordsWithRawSQL(
+            sql: query,
+            parameters: currentWatchParams,
+            fieldsToRead: currentWatchFields,
+            encryptedFields: currentWatchConfig.encryptedFields,
+            integerFields: currentWatchConfig.integerFields,
+            booleanFields: currentWatchConfig.booleanFields
+        )
+    }
 
     // MARK: - Read Operations
 

@@ -1,6 +1,6 @@
 # ZyraForm
 
-**Version 2.1.0**
+**Version 2.3.0**
 
 > ⚠️ **Important:** Users should not use versions less than 2.1.0. Please ensure you are using version 2.1.0 or later.
 
@@ -35,14 +35,14 @@ Add ZyraForm to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "2.1.0")
+    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "2.3.0")
 ]
 ```
 
 Or add it via Xcode:
 1. File → Add Package Dependencies
 2. Enter the repository URL
-3. Select version `2.1.0` or later
+3. Select version `2.3.0` or later
 
 > ⚠️ **Minimum Version Requirement:** Do not use versions less than 2.1.0. Always use version 2.1.0 or later.
 
@@ -710,9 +710,11 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ---
 
-**Version 2.1.0** - Current stable release. Users should not use versions less than 2.1.0.
+**Version 2.3.0** - Current stable release. Added programmatic watch control with `stopWatching()` and `resumeWatching()` methods for `ZyraSync` and `SchemaBasedSync`. Perfect for multi-page apps to free up memory and network resources when views are not active. Users should not use versions less than 2.1.0.
 
-**Version 2.0.10** - Previous release.
+**Version 2.2.0** - Added Multi-Form Definition support and errorMessage passing for enhanced form validation and multi-table form handling.
+
+**Version 2.1.0** - Previous release.
 
 **Version 2.0.8** - Added convenience query methods to `SchemaBasedSync`: `getAll()`, `getOne(id:)`, `getAll(where:parameters:orderBy:)`, and `getFirst(where:parameters:orderBy:)`. These methods provide a cleaner API for common database queries while maintaining type safety with `SchemaRecord`.
 

@@ -219,6 +219,35 @@ public class SchemaBasedSync: ObservableObject {
         watchTask?.cancel()
     }
     
+    // MARK: - Watch Control
+    
+    /// Check if watching is currently active
+    public var isWatching: Bool {
+        return watchTask != nil && !watchTask!.isCancelled
+    }
+    
+    /// Stop watching for updates programmatically
+    /// Call this when a view/page is no longer active to free up memory and network resources
+    /// Use `resumeWatching()` to restart watching
+    public func stopWatching() {
+        guard let task = watchTask else { return }
+        task.cancel()
+        watchTask = nil
+        service.stopWatching()
+        ZyraFormLogger.debug("⏹️ Watch stopped for schema \(schema.name)")
+    }
+    
+    /// Resume watching for updates
+    /// This will restart watching if it was previously stopped
+    public func resumeWatching() {
+        guard watchTask == nil || watchTask!.isCancelled else {
+            // Already watching
+            return
+        }
+        setupWatch()
+        ZyraFormLogger.debug("▶️ Watch resumed for schema \(schema.name)")
+    }
+    
     /// Set up real-time watch for PowerSync updates
     private func setupWatch() {
         watchTask = Task { [weak self] in
