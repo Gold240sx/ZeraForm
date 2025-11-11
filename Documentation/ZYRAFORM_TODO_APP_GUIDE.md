@@ -2,7 +2,7 @@
 
 This guide walks you through building the simplest possible todo app using ZyraForm with full CRUD functionality and real-time sync.
 
-**Updated for ZyraForm v2.0.7+** - Uses `SchemaRecord` and `SchemaBasedSync` for zero-boilerplate, schema-first development.
+**Updated for ZyraForm v2.1.0+** - Uses `SchemaRecord` and `SchemaBasedSync` for zero-boilerplate, schema-first development. Requires version 2.1.0 or later.
 
 ## Prerequisites
 

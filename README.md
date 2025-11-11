@@ -1,6 +1,8 @@
 # ZyraForm
 
-**Version 2.0.10**
+**Version 2.1.0**
+
+> ⚠️ **Important:** Users should not use versions less than 2.1.0. Please ensure you are using version 2.1.0 or later.
 
 A comprehensive Swift package for defining database schemas with a fluent API and generating code for multiple platforms. Define your schema once in Swift and generate PostgreSQL migrations, MySQL schemas, Prisma models, Drizzle schemas, Zod validators, Swift models, and PowerSync bucket definitions.
 
@@ -33,14 +35,16 @@ Add ZyraForm to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "2.0.0")
+    .package(url: "https://github.com/yourusername/ZyraForm.git", from: "2.1.0")
 ]
 ```
 
 Or add it via Xcode:
 1. File → Add Package Dependencies
 2. Enter the repository URL
-3. Select version `2.0.0` or later
+3. Select version `2.1.0` or later
+
+> ⚠️ **Minimum Version Requirement:** Do not use versions less than 2.1.0. Always use version 2.1.0 or later.
 
 ## 🚀 Quick Start
 
@@ -705,6 +709,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 - Inspired by Prisma, Drizzle, and Zod
 
 ---
+
+**Version 2.1.0** - Current stable release. Users should not use versions less than 2.1.0.
+
+**Version 2.0.10** - Previous release.
 
 **Version 2.0.8** - Added convenience query methods to `SchemaBasedSync`: `getAll()`, `getOne(id:)`, `getAll(where:parameters:orderBy:)`, and `getFirst(where:parameters:orderBy:)`. These methods provide a cleaner API for common database queries while maintaining type safety with `SchemaRecord`.
 
