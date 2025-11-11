@@ -425,26 +425,27 @@ public class ZyraMultiTableForm: ObservableObject {
                 // Get value from record using schema-aware type conversion
                 if let column = config.table.columns.first(where: { $0.name == field }) {
                     // Handle different types appropriately
-                    if column.type == .integer {
+                    switch column.swiftType {
+                    case .integer, .bigInt:
                         if let intValue = record.get(field, as: Int.self) {
                             setValue(intValue, for: field)
                         } else if let strValue = record.get(field, as: String.self), let intValue = Int(strValue) {
                             setValue(intValue, for: field)
                         }
-                    } else if column.type == .double {
+                    case .double:
                         if let doubleValue = record.get(field, as: Double.self) {
                             setValue(doubleValue, for: field)
                         } else if let strValue = record.get(field, as: String.self), let doubleValue = Double(strValue) {
                             setValue(doubleValue, for: field)
                         }
-                    } else if column.type == .boolean {
+                    case .bool:
                         if let boolValue = record.get(field, as: Bool.self) {
                             setValue(boolValue ? "true" : "false", for: field)
                         } else if let strValue = record.get(field, as: String.self) {
                             setValue(strValue, for: field)
                         }
-                    } else {
-                        // String, enum, uuid, etc.
+                    default:
+                        // String, enum, uuid, date, etc.
                         if let strValue = record.get(field, as: String.self) {
                             setValue(strValue, for: field)
                         }
