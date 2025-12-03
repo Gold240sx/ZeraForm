@@ -1410,6 +1410,19 @@ public struct zf {
         
         return builder.array(elementType, strategy: finalStrategy)
     }
+    
+    /// Create an unstructured JSONB column for storing arbitrary JSON data
+    /// - Parameter name: Column name
+    /// - Returns: ColumnBuilder with JSONB type for unstructured data
+    /// - Example:
+    ///   ```swift
+    ///   zf.jsonb("metadata").nullable()
+    ///   zf.jsonb("extra_data").default("{}").notNull()
+    ///   ```
+    public static func jsonb(_ name: String) -> ColumnBuilder {
+        let builder = ColumnBuilder(name: name, powerSyncColumn: PowerSync.Column.text(name))
+        return builder.object([:], strategy: .jsonb)
+    }
 }
 
 extension PowerSync.Column {
